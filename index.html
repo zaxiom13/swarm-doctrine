@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Swarm Doctrine</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Scanline overlay effect -->
+    <div class="scanline-overlay"></div>
+    
+    <!-- Main Menu -->
+    <div id="main-menu" class="screen">
+        <div class="menu-container">
+            <div class="menu-header">
+                <h1 class="game-title" data-text="SWARM DOCTRINE">SWARM DOCTRINE</h1>
+                <p class="tagline">The enemy's gate is down</p>
+            </div>
+            <div class="menu-buttons">
+                <button id="btn-play" class="menu-btn"><span class="btn-indicator"></span>CONQUEST MODE</button>
+                <button id="btn-survival" class="menu-btn survival-btn"><span class="btn-indicator"></span>SURVIVAL MODE</button>
+                <button id="btn-tutorial" class="menu-btn"><span class="btn-indicator"></span>TACTICAL BRIEFING</button>
+                <button id="btn-settings" class="menu-btn"><span class="btn-indicator"></span>CONFIGURATION</button>
+            </div>
+            <div class="version">v1.0 | COMMAND SCHOOL</div>
+        </div>
+        <div class="menu-boids-bg"></div>
+    </div>
+
+    <!-- Tutorial Screen (User Guide) -->
+    <div id="tutorial-screen" class="screen hidden">
+        <div class="tutorial-container">
+            <h2>TACTICAL BRIEFING</h2>
+            <div class="tutorial-content">
+                <div class="tutorial-section">
+                    <h3>MISSION OBJECTIVE</h3>
+                    <p><strong>Conquest Mode:</strong> Convert all enemy units to your fleet. Achieve total ideological dominance across 4 armies.</p>
+                    <p><strong>Survival Mode:</strong> Defend against endless waves of enemies. Survive as long as possible.</p>
+                </div>
+                <div class="tutorial-section">
+                    <h3>PEER PRESSURE DOCTRINE</h3>
+                    <p>Units surrounded by enemy forces will defect. When a boid is outnumbered by a single enemy team, 
+                    conversion pressure builds until they switch allegiance.</p>
+                    <p class="tip">💡 Isolate enemy units from their allies to convert them faster.</p>
+                </div>
+                <div class="tutorial-section">
+                    <h3>CONTROLS</h3>
+                    <div class="controls-desktop">
+                        <p><strong>Desktop:</strong></p>
+                        <ul>
+                            <li><span class="key">LEFT CLICK</span> - Scatter Pulse (repels ALL boids from cursor)</li>
+                            <li><span class="key">SPACE / ESC</span> - Pause tactical view</li>
+                            <li><span class="key">R</span> - Restart mission</li>
+                            <li><span class="key">⚙️ Panel</span> - Adjust flocking behavior in real-time</li>
+                        </ul>
+                    </div>
+                    <div class="controls-mobile">
+                        <p><strong>Mobile / Touch:</strong></p>
+                        <ul>
+                            <li><span class="key">💥 BUTTON</span> - Scatter Pulse at touch position</li>
+                            <li><span class="key">DOUBLE TAP</span> - Alternative scatter trigger</li>
+                            <li><span class="key">⏸️ BUTTON</span> - Pause / Resume game</li>
+                            <li><span class="key">DRAG</span> - Move scatter target position</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="tutorial-section">
+                    <h3>TACTICAL CONTROLS (In-Game Panel)</h3>
+                    <ul>
+                        <li><span class="key">Separation</span> - How strongly boids avoid crowding</li>
+                        <li><span class="key">Alignment</span> - How much boids match neighbor velocity</li>
+                        <li><span class="key">Cohesion</span> - How strongly boids group together</li>
+                        <li><span class="key">Max Speed</span> - Movement speed of all units</li>
+                        <li><span class="key">Perception</span> - How far boids can sense neighbors</li>
+                    </ul>
+                </div>
+                <div class="tutorial-section">
+                    <h3>POWERUPS</h3>
+                    <ul>
+                        <li><span class="key">⚡ Speed Boost</span> - Temporarily increases fleet speed</li>
+                        <li><span class="key">🛡️ Shield</span> - Protects your fleet from conversion</li>
+                        <li><span class="key">🧲 Magnet</span> - Attracts nearby enemy units</li>
+                        <li><span class="key">👥 Clone</span> - Duplicates nearby friendly units</li>
+                    </ul>
+                </div>
+                <div class="tutorial-section">
+                    <h3>HAZARDS</h3>
+                    <p>Watch out for obstacles that appear on the battlefield:</p>
+                    <ul>
+                        <li><span class="key">Black Holes</span> - Pull in and destroy nearby boids</li>
+                        <li><span class="key">Asteroids</span> - Moving obstacles that destroy on contact</li>
+                    </ul>
+                </div>
+                <div class="tutorial-section">
+                    <h3>TACTICAL ADVANTAGE</h3>
+                    <p>Your units flock together naturally. Use the scatter pulse to herd enemies into traps, 
+                    split enemy formations, and create local superiority. Encircle. Convert. Dominate.</p>
+                </div>
+            </div>
+            <div class="tutorial-buttons">
+                <button id="btn-start-interactive-tutorial" class="menu-btn primary-btn">BEGIN TRAINING</button>
+                <button id="btn-back-tutorial" class="menu-btn">RETURN TO COMMAND</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Tutorial Mode -->
+    <div id="interactive-tutorial-screen" class="screen hidden">
+        <canvas id="tutorial-canvas"></canvas>
+        
+        <!-- Tutorial Stage Overlay -->
+        <div id="tutorial-stage-overlay" class="tutorial-stage-overlay">
+            <div class="stage-content">
+                <div class="stage-number">STAGE <span id="tutorial-stage-num">1</span></div>
+                <h2 id="tutorial-stage-title">THE FIRST LESSON</h2>
+                <p id="tutorial-stage-desc">Description here</p>
+                <div id="tutorial-objective" class="tutorial-objective">
+                    <span class="objective-label">OBJECTIVE:</span>
+                    <span id="tutorial-objective-text">Objective text</span>
+                </div>
+                <button id="btn-tutorial-start-stage" class="menu-btn">BEGIN</button>
+            </div>
+        </div>
+        
+        <!-- Tutorial HUD -->
+        <div id="tutorial-hud" class="tutorial-hud hidden">
+            <div class="tutorial-progress">
+                <div class="progress-bar">
+                    <div id="tutorial-progress-fill" class="progress-fill"></div>
+                </div>
+                <span id="tutorial-progress-text">Stage 1/5</span>
+            </div>
+            <div id="tutorial-hint" class="tutorial-hint">
+                <span class="hint-icon">💡</span>
+                <span id="tutorial-hint-text">Hint text here</span>
+            </div>
+            <div id="tutorial-fleet-count" class="tutorial-fleet-count">
+                <span class="fleet-label">YOUR FLEET:</span>
+                <span id="tutorial-your-count">0</span>
+                <span class="vs">vs</span>
+                <span class="enemy-label">ENEMY:</span>
+                <span id="tutorial-enemy-count">0</span>
+            </div>
+        </div>
+        
+        <!-- Tutorial Completion Overlay -->
+        <div id="tutorial-complete-overlay" class="overlay hidden">
+            <div class="overlay-content victory">
+                <h2>STAGE COMPLETE</h2>
+                <p id="tutorial-complete-message">Well done, Commander.</p>
+                <button id="btn-tutorial-next" class="menu-btn">NEXT STAGE</button>
+            </div>
+        </div>
+        
+        <!-- Tutorial Final Overlay -->
+        <div id="tutorial-final-overlay" class="overlay hidden">
+            <div class="overlay-content victory">
+                <h2>TRAINING COMPLETE</h2>
+                <p class="victory-quote">"The enemy's gate is down."</p>
+                <p>You have mastered the fundamentals of swarm warfare. Now go forth and conquer.</p>
+                <button id="btn-tutorial-to-conquest" class="menu-btn">BEGIN CONQUEST</button>
+                <button id="btn-tutorial-to-menu" class="menu-btn">RETURN TO COMMAND</button>
+            </div>
+        </div>
+        
+        <!-- Tutorial Quit Button -->
+        <button id="btn-tutorial-quit" class="tutorial-quit-btn">✕ EXIT TRAINING</button>
+    </div>
+
+    <!-- Team Selection Screen -->
+    <div id="team-select-screen" class="screen hidden">
+        <div class="team-select-container">
+            <h2>SELECT YOUR ARMY</h2>
+            <p class="team-select-subtitle">Choose wisely. Your allegiance defines your destiny.</p>
+            <div class="team-grid">
+                <button class="team-btn" data-team="dragon">
+                    <span class="team-icon">🐉</span>
+                    <span class="team-name">DRAGON ARMY</span>
+                    <span class="team-desc">"The enemy's gate is down."</span>
+                </button>
+                <button class="team-btn" data-team="salamander">
+                    <span class="team-icon">🦎</span>
+                    <span class="team-name">SALAMANDER</span>
+                    <span class="team-desc">"Strength through unity."</span>
+                </button>
+                <button class="team-btn" data-team="phoenix">
+                    <span class="team-icon">🔥</span>
+                    <span class="team-name">PHOENIX ARMY</span>
+                    <span class="team-desc">"From ashes, we rise."</span>
+                </button>
+                <button class="team-btn" data-team="rat">
+                    <span class="team-icon">🐀</span>
+                    <span class="team-name">RAT ARMY</span>
+                    <span class="team-desc">"Survive. Adapt. Overcome."</span>
+                </button>
+            </div>
+            <button id="btn-back-team-select" class="menu-btn">RETURN TO COMMAND</button>
+        </div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settings-screen" class="screen hidden">
+        <div class="settings-container">
+            <h2>CONFIGURATION</h2>
+            <div class="settings-content">
+                <div class="setting-row">
+                    <label>FLEET SIZE</label>
+                    <input type="range" id="setting-boid-count" min="50" max="300" value="150">
+                    <span id="boid-count-value">150</span>
+                </div>
+                <div class="setting-row">
+                    <label>CONVERSION THRESHOLD</label>
+                    <input type="range" id="setting-conversion" min="2" max="6" value="3">
+                    <span id="conversion-value">3</span>
+                </div>
+                <div class="setting-row">
+                    <label>DIFFICULTY</label>
+                    <select id="setting-difficulty">
+                        <option value="easy">CADET</option>
+                        <option value="medium" selected>COMMANDER</option>
+                        <option value="hard">HEGEMON</option>
+                    </select>
+                </div>
+                <div class="setting-row">
+                    <label>SOUND</label>
+                    <input type="checkbox" id="setting-sound" checked>
+                </div>
+            </div>
+            <button id="btn-back-settings" class="menu-btn">RETURN TO COMMAND</button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen hidden">
+        <canvas id="game-canvas"></canvas>
+        
+        <!-- Control Panel - Bottom Left -->
+        <div id="control-panel" class="control-panel">
+            <button id="panel-toggle" class="panel-toggle">⚙️</button>
+            <div id="panel-content" class="panel-content collapsible-settings">
+                <h3>TACTICAL CONTROLS</h3>
+                <div class="control-row">
+                    <label>Separation</label>
+                    <input type="range" id="ctrl-separation" min="0" max="5" step="0.1" value="1.5">
+                    <span id="sep-value">1.5</span>
+                </div>
+                <div class="control-row">
+                    <label>Alignment</label>
+                    <input type="range" id="ctrl-alignment" min="0" max="3" step="0.1" value="0.0">
+                    <span id="align-value">0.0</span>
+                </div>
+                <div class="control-row">
+                    <label>Cohesion</label>
+                    <input type="range" id="ctrl-cohesion" min="0" max="3" step="0.1" value="0.0">
+                    <span id="cohes-value">0.0</span>
+                </div>
+                <div class="control-row">
+                    <label>Max Speed</label>
+                    <input type="range" id="ctrl-speed" min="1" max="8" step="0.5" value="4">
+                    <span id="speed-value">4</span>
+                </div>
+                <div class="control-row">
+                    <label>Perception</label>
+                    <input type="range" id="ctrl-perception" min="20" max="100" step="5" value="50">
+                    <span id="percep-value">50</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- HUD -->
+        <div id="hud">
+            <div class="hud-left">
+                <div class="hud-panel collapsible">
+                    <div class="panel-header" data-target="fleet-content">
+                        <span class="panel-title">FLEET STATUS</span>
+                        <span class="collapse-icon">▼</span>
+                    </div>
+                    <div id="fleet-content" class="panel-body">
+                        <div class="fleet-bars">
+                            <div id="fleet-bars-container">
+                                <!-- Fleet bars will be dynamically generated -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hud-center">
+                <div id="game-timer">00:00</div>
+                <div id="game-status">BATTLE IN PROGRESS</div>
+            </div>
+            
+            <div class="hud-right">
+                <!-- Right side removed - tactical panel eliminated -->
+            </div>
+        </div>
+
+        <!-- Pause Overlay -->
+        <div id="pause-overlay" class="overlay hidden">
+            <div class="overlay-content">
+                <h2>TACTICAL PAUSE</h2>
+                <button id="btn-resume" class="menu-btn">RESUME</button>
+                <button id="btn-restart" class="menu-btn">RESTART</button>
+                <button id="btn-quit" class="menu-btn">QUIT TO MENU</button>
+            </div>
+        </div>
+
+        <!-- Victory Overlay -->
+        <div id="victory-overlay" class="overlay hidden">
+            <div class="overlay-content victory">
+                <h2>TOTAL VICTORY</h2>
+                <p class="victory-quote">"In the moment when I truly understand my enemy, understand him well enough to defeat him, then in that very moment I also love him."</p>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-label">TIME</span>
+                        <span id="victory-time" class="stat-value">00:00</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">CONVERSIONS</span>
+                        <span id="victory-conversions" class="stat-value">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">RATING</span>
+                        <span id="victory-rating" class="stat-value">S</span>
+                    </div>
+                </div>
+                <button id="btn-play-again" class="menu-btn">DEPLOY AGAIN</button>
+                <button id="btn-victory-quit" class="menu-btn">RETURN TO COMMAND</button>
+            </div>
+        </div>
+
+        <!-- Defeat Overlay -->
+        <div id="defeat-overlay" class="overlay hidden">
+            <div class="overlay-content defeat">
+                <h2>FLEET ASSIMILATED</h2>
+                <p class="defeat-quote">"I've lived too long with pain. I won't know who I am without it."</p>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-label">TIME SURVIVED</span>
+                        <span id="defeat-time" class="stat-value">00:00</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">PEAK STRENGTH</span>
+                        <span id="defeat-peak" class="stat-value">0%</span>
+                    </div>
+                </div>
+                <button id="btn-retry" class="menu-btn">RETRY MISSION</button>
+                <button id="btn-defeat-quit" class="menu-btn">RETURN TO COMMAND</button>
+            </div>
+        </div>
+
+        <!-- Mobile Fleet Status Bar -->
+        <div id="mobile-fleet-bar" class="mobile-fleet-bar">
+            <div id="mobile-fleet-segments" class="mobile-fleet-segments">
+                <!-- Segments will be dynamically generated -->
+            </div>
+        </div>
+
+    </div>
+
+    <script src="js/main.js" type="module"></script>
+</body>
+</html>
