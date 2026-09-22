@@ -1,7 +1,8 @@
 // A lightweight, pointer-responsive swarm sculpture for the title screen.
+import { prefersReducedMotion } from './settings.js';
+
 const canvas = document.getElementById('swarm-preview');
 const ctx = canvas.getContext('2d');
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let width = 0, height = 0, last = 0, time = 0;
 let pointer = null;
 const ships = Array.from({ length: 210 }, (_, i) => ({
@@ -45,7 +46,7 @@ function draw() {
 function frame(now) {
     const dt = Math.min((now - last) / 1000, 0.04); last = now;
     if (!document.hidden && !document.getElementById('main-menu').classList.contains('hidden')) {
-        if (!reducedMotion.matches) time += dt;
+        if (!prefersReducedMotion()) time += dt;
         draw();
     }
     requestAnimationFrame(frame);

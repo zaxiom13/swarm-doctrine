@@ -1,331 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Swarm Doctrine | The power of the many</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="experience.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="description" content="Move together, surround rivals, and turn them into allies. A swarm strategy game for touch and mouse.">
+    <meta name="theme-color" content="#090f11">
+    <meta name="color-scheme" content="dark">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Swarm Doctrine</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="stylesheet" href="app.css">
 </head>
 <body>
-    <div class="scanline-overlay"></div>
-
-    <!-- Main Menu -->
-    <div id="main-menu" class="screen">
+    <main id="main-menu" class="screen screen-home">
         <canvas id="swarm-preview" aria-hidden="true"></canvas>
-        <nav class="home-nav"><span class="wordmark">✧ &nbsp; SWARM / DOCTRINE</span><span class="edition">AN EXPERIMENT IN COLLECTIVE POWER</span></nav>
-        <div class="menu-container">
-            <div class="command-badge"><i></i> SMALL SHIPS. EXTRAORDINARY THINGS.</div>
-            <h1 class="game-title">One becomes<br><em>unstoppable.</em></h1>
-            <p class="tagline">Move as one. Surround your rivals.<br>Turn their numbers into your strength.</p>
-            <div class="menu-buttons">
-                <button id="btn-play" class="menu-btn primary-btn">Enter the swarm <span>↗</span></button>
-                <button id="btn-practice" class="menu-btn">Learn by playing <span>14 SHORT LESSONS</span></button>
+        <header class="home-nav"><span class="wordmark">Swarm Doctrine</span></header>
+        <section class="home-hero">
+            <h1 class="home-title">Move<br><em>together.</em></h1>
+            <p class="home-tagline">Hold to move. Release to recruit.</p>
+            <div class="home-actions">
+                <button type="button" id="btn-play" class="btn btn-primary btn-wide" data-nav="mode-screen">Play <span aria-hidden="true">↗</span></button>
+                <button type="button" id="btn-lessons" class="btn btn-wide">Lessons</button>
             </div>
-            <div class="home-links"><button id="btn-survival">Survival ↗</button><button id="btn-tutorial">How to play</button><button id="btn-settings">Settings</button></div>
-            <div class="home-record" id="home-record">No weapons. Just the power of the many.</div>
-        </div>
-        <div class="orbit-caption"><span class="live-dot"></span> A LIVING SYSTEM <span>MOVE YOUR POINTER TO DISTURB IT</span></div>
-        <footer class="home-footer"><span>GATHER. RELEASE. CONVERT.</span><span>Headphones recommended &nbsp; / &nbsp; Mouse or touch</span></footer>
-    </div>
+            <nav class="home-links" aria-label="More">
+                <button type="button" class="pill" data-nav="help-screen">How to play</button>
+                <button type="button" class="pill" data-nav="settings-screen">Settings</button>
+            </nav>
+            <p id="home-record" class="home-record"></p>
+        </section>
+        <footer class="home-footer"><span>Rally · Freeze</span><span>Touch or mouse</span></footer>
+    </main>
 
-    <section id="mode-screen" class="screen hidden">
-        <div class="lessons-container mode-container">
-            <span class="lesson-eyebrow">MAKE SPACE FOR YOUR SWARM</span>
-            <h2>Find your kind of orbit.</h2>
-            <div class="mode-grid">
-                <button class="lesson-card" data-mode="conquest"><span class="lesson-number">01 / COMPETITION</span><span class="lesson-symbol">◈</span><strong>One map. Every rival.</strong><p>Learn the terrain and outmaneuver three swarms. Hazards stay in place for the whole match.</p><span class="lesson-link">Enter competition ↗</span></button>
-                <button class="lesson-card" data-mode="levels"><span class="lesson-number">02 / LEVELS</span><span class="lesson-symbol">✧</span><strong>Beyond the next horizon.</strong><p>A new random map every sector. More terrain and stronger rivals, capped at difficulty 10. Retry the same map or continue your saved expedition.</p><span class="lesson-link">Start an expedition ↗</span></button>
-                <button class="lesson-card" data-mode="zen"><span class="lesson-number">03 / ZEN</span><span class="lesson-symbol">⌁</span><strong>A garden in motion.</strong><p>Terrain changes every 40 seconds. New swarms arrive; yours returns if lost. No game over, no hurry.</p><span class="lesson-link">Find your flow ↗</span></button>
-                <button class="lesson-card" data-mode="survival"><span class="lesson-number">04 / SURVIVAL</span><span class="lesson-symbol">◎</span><strong>Stay together.</strong><p>Hold a fixed arena through incoming waves. Rescue stranded ships and evolve your swarm between waves.</p><span class="lesson-link">Meet the waves ↗</span></button>
-            </div>
-            <div class="lesson-actions"><button id="btn-resume-expedition" class="menu-btn primary-btn">Continue expedition →</button><button id="btn-modes-back" class="menu-btn">Back</button></div>
-            <p id="campaign-status" class="mode-note">Expeditions save at the start of each sector on this device.</p>
-        </div>
-    </section>
-    <section id="lessons-screen" class="screen hidden">
-        <div class="lessons-container">
-            <span class="lesson-eyebrow">LEARN THE RHYTHM</span>
-            <h2>Small lessons.<br>Extraordinary possibilities.</h2>
-            <p id="lesson-progress">0 of 14 complete · Choose any lesson</p>
-            <div id="lesson-grid" class="lesson-grid"></div>
-            <div class="lesson-actions"><button id="btn-continue-lessons" class="menu-btn primary-btn">Start with movement →</button><button id="btn-lessons-back" class="menu-btn">Back</button></div>
+    <section id="mode-screen" class="screen screen-page hidden" aria-labelledby="mode-title">
+        <div class="page">
+            <header class="page-head"><button type="button" class="btn-back" data-back>Back</button><span class="eyebrow">Modes</span><h2 tabindex="-1" id="mode-title">Pick a mode</h2></header>
+            <button type="button" id="btn-continue" class="btn btn-primary hidden">Continue</button>
+            <div id="mode-groups"></div>
+            <p id="mode-note" class="note">Progress saves on this device.</p>
         </div>
     </section>
 
-    <!-- Tactical Briefing Screen -->
-    <div id="tutorial-screen" class="screen hidden">
-        <div class="tutorial-container">
-            <h2>The power of the many.</h2>
-            <div class="tutorial-content simple-guide">
-                <article><b>01</b><h3>Gather your swarm</h3><p>Hold and drag anywhere in the arena. Your ships follow your pointer. While gathering, they cannot convert rivals.</p></article>
-                <article><b>02</b><h3>Release to surround</h3><p>Let go beside a smaller rival group. After a brief recharge, your ships turn outnumbered rivals to your color.</p></article>
-                <article><b>03</b><h3>Change the odds</h3><p>Space or right-click freezes rivals in a wide circle for 10 seconds. Recharge takes 10 seconds; empty casts keep their charge. Freezing releases Rally so you can convert.</p></article>
-                <p>Competition keeps the map fixed. Levels opens a new, harder sector after each win. Zen reshapes the map every 40 seconds. Survival sends incoming waves.</p>
+    <section id="lessons-screen" class="screen screen-page hidden" aria-labelledby="lessons-title">
+        <div class="page">
+            <header class="page-head"><button type="button" class="btn-back" data-back>Back</button><span class="eyebrow">Lessons</span><h2 tabindex="-1" id="lessons-title">Learn the controls</h2></header>
+            <p id="lesson-progress" class="note"></p>
+            <div id="lesson-grid" class="card-grid"></div>
+            <div class="page-actions"><button type="button" id="btn-continue-lessons" class="btn btn-primary">Start</button></div>
+        </div>
+    </section>
+
+    <section id="help-screen" class="screen screen-page hidden" aria-labelledby="help-title">
+        <div class="page page-narrow">
+            <header class="page-head"><button type="button" class="btn-back" data-back>Back</button><span class="eyebrow">Guide</span><h2 tabindex="-1" id="help-title">How to play</h2></header>
+            <ol id="help-steps" class="steps"></ol>
+            <h3 class="section-title">Controls</h3>
+            <dl class="controls">
+                <dt>Rally</dt><dd>Hold and drag in the arena. On touch, you can also tap Rally, then tap destinations.</dd>
+                <dt>Freeze</dt><dd>Space or right-click (Q, E, 1 and 2 also work). On touch, tap Freeze, then tap the arena.</dd>
+                <dt>Pause</dt><dd>Escape or P. R restarts the match.</dd>
+            </dl>
+            <h3 class="section-title">Rules</h3>
+            <ul id="help-rules" class="rule-list"></ul>
+            <div class="page-actions"><button type="button" id="btn-help-lessons" class="btn btn-primary">Open lessons</button></div>
+        </div>
+    </section>
+
+    <section id="team-select-screen" class="screen screen-page hidden" aria-labelledby="team-title">
+        <div class="page">
+            <header class="page-head"><button type="button" class="btn-back" data-back>Back</button><span class="eyebrow">Fleet</span><h2 tabindex="-1" id="team-title">Pick a team</h2></header>
+            <div id="team-grid" class="card-grid card-grid-4"></div>
+        </div>
+    </section>
+
+    <section id="settings-screen" class="screen screen-page hidden" aria-labelledby="settings-title">
+        <div class="page page-narrow">
+            <header class="page-head"><button type="button" class="btn-back" data-back>Done</button><span class="eyebrow">Preferences</span><h2 tabindex="-1" id="settings-title">Settings</h2></header>
+            <form id="settings-form" class="settings" novalidate></form>
+            <div class="page-actions">
+                <button type="button" id="btn-reset-settings" class="btn">Reset settings</button>
+                <button type="button" id="btn-reset-progress" class="btn btn-danger">Clear progress and records</button>
             </div>
-            <div class="tutorial-buttons">
-                <button id="btn-start-interactive-tutorial" class="menu-btn primary-btn">Explore the lessons</button>
-                <button id="btn-back-tutorial" class="menu-btn">Back</button>
+            <p class="note">Jev duels need a local key: <a href="connect.html">connect Jev</a>.</p>
+        </div>
+    </section>
+
+    <section id="game-screen" class="screen screen-game hidden">
+        <canvas id="game-canvas" aria-label="Arena. Hold to Rally, release to recruit."></canvas>
+        <div class="hud-top">
+            <button type="button" id="btn-pause" class="chip">Pause</button>
+            <div class="hud-status">
+                <span id="hud-timer">00:00</span>
+                <span id="hud-score" class="hud-sub">0</span>
+                <span id="hud-matchup" class="hud-sub hidden">You <b id="hud-you">0</b> · <span id="hud-rival-name">Rival</span> <b id="hud-rival">0</b></span>
+            </div>
+            <div class="hud-chips">
+                <button type="button" id="btn-guide" class="chip" aria-expanded="false" aria-controls="coach">Guide</button>
+                <button type="button" id="btn-details" class="chip" aria-expanded="false" aria-controls="details-sheet">Details</button>
             </div>
         </div>
-    </div>
+        <div id="hud-combo" class="hud-combo hidden"></div>
+        <p id="rival-status" class="rival-status" aria-live="polite"></p>
 
-    <!-- Team Selection Screen -->
-    <div id="team-select-screen" class="screen hidden">
-        <div class="team-select-container">
-            <h2>Choose your nature.</h2>
-            <p class="team-select-subtitle">Four ways to move as one. Pick a swarm to begin.</p>
-            <div class="team-grid">
-                <button class="team-btn" data-team="dragon">
-                    <span class="team-icon">◇</span>
-                    <span class="team-name">DRAGON FLEET</span>
-                    <span class="team-perk">ϟ +15% Speed & Piercing Vector</span>
-                    <span class="team-desc">"The enemy's gate is down."</span>
-                </button>
-                <button class="team-btn" data-team="salamander">
-                    <span class="team-icon">⬡</span>
-                    <span class="team-name">SALAMANDER CORPS</span>
-                    <span class="team-perk">🛡️ +35% Defense & Anti-Defection</span>
-                    <span class="team-desc">"Strength through unbreakable cohesion."</span>
-                </button>
-                <button class="team-btn" data-team="phoenix">
-                    <span class="team-icon">✳</span>
-                    <span class="team-name">PHOENIX LEGION</span>
-                    <span class="team-perk">◌ +35% Conversion Pressure Surge</span>
-                    <span class="team-desc">"From ashes, we rise and assimilate."</span>
-                </button>
-                <button class="team-btn" data-team="rat">
-                    <span class="team-icon">⌁</span>
-                    <span class="team-name">RAT SYNDICATE</span>
-                    <span class="team-perk">🌀 High Agility & Rapid Swarm Tightness</span>
-                    <span class="team-desc">"Survive. Adapt. Swarm."</span>
-                </button>
-            </div>
-            <button id="btn-back-team-select" class="menu-btn">Back</button>
-        </div>
-    </div>
+        <aside id="coach" class="coach hidden" role="status">
+            <span id="coach-step" class="eyebrow"></span>
+            <strong id="coach-title"></strong>
+            <p id="coach-detail"></p>
+            <ul id="coach-checklist" class="checklist"></ul>
+        </aside>
 
-    <!-- Settings Screen -->
-    <div id="settings-screen" class="screen hidden">
-        <div class="settings-container">
-            <h2>Make it yours.</h2>
-            <div class="settings-content">
-                <div class="setting-row">
-                    <label>TOTAL BATTLEFIELD UNITS</label>
-                    <input type="range" id="setting-boid-count" min="60" max="320" value="160">
-                    <span id="boid-count-value">160</span>
-                </div>
-                <div class="setting-row">
-                    <label>PEER PRESSURE THRESHOLD</label>
-                    <input type="range" id="setting-conversion" min="2" max="6" value="3">
-                    <span id="conversion-value">3</span>
-                </div>
-                <div class="setting-row">
-                    <label>AI DIFFICULTY</label>
-                    <select id="setting-difficulty">
-                        <option value="easy">CADET (Mild)</option>
-                        <option value="medium" selected>COMMANDER (Standard)</option>
-                        <option value="hard">HEGEMON (Relentless)</option>
-                    </select>
-                </div>
-                <div class="setting-row">
-                    <label>SOUND EFFECTS</label>
-                    <input type="checkbox" id="setting-sound" checked>
-                </div>
-                <div class="setting-row">
-                    <label>AMBIENT CYBER-SYNTH</label>
-                    <input type="checkbox" id="setting-music" checked>
-                </div>
-            </div>
-            <button id="btn-back-settings" class="menu-btn">SAVE & RETURN</button>
-        </div>
-    </div>
+        <div id="details-scrim" class="scrim hidden"></div>
+        <aside id="details-sheet" class="sheet hidden" aria-label="Match details">
+            <header class="sheet-head"><strong>Details</strong><button type="button" id="btn-close-details" class="chip">Hide</button></header>
+            <section class="sheet-section"><h3 id="world-label"></h3><p id="world-detail" class="note"></p><p id="match-status" class="note"></p></section>
+            <section class="sheet-section"><h3 id="share-label">Your share</h3><strong id="share-value" class="big-number">0%</strong><div class="meter"><div id="share-fill"></div></div></section>
+            <section class="sheet-section"><h3>Fleets</h3><div id="fleet-bars" class="fleet-bars"></div></section>
+        </aside>
 
-    <!-- Game Screen -->
-    <div id="game-screen" class="screen hidden">
-        <canvas id="game-canvas"></canvas>
-
-        <div id="world-info"><strong id="world-label"></strong><span id="world-detail"></span></div>
-        <!-- Live HUD Top -->
-        <div id="hud">
-            <div class="hud-left">
-                <div class="hud-panel collapsible">
-                    <div class="panel-header" data-target="fleet-content">
-                        <span class="panel-title">BALANCE OF POWER</span>
-                        <span class="collapse-icon">▼</span>
-                    </div>
-                    <div id="fleet-content" class="panel-body">
-                        <div class="fleet-bars">
-                            <div id="fleet-bars-container"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="hud-center">
-                <div id="hud-combo-badge" class="combo-badge hidden"><span id="hud-combo-val">1x</span> CONVERSION STREAK</div>
-                <div id="hud-rally-warning" class="rally-warning-badge hidden">⚠️ TRANSIT LOCK: CONVERTERS RECHARGING</div>
-                <div id="game-timer">00:00</div>
-                <div id="game-score-display">SCORE: <span id="game-score-val">0</span></div>
-                <div id="game-status">BATTLE IN PROGRESS</div>
-            </div>
-
-            <div class="hud-right">
-                <div class="audio-toggles">
-                    <button id="btn-toggle-sfx" class="tactical-hud-btn" title="Toggle SFX">🔊 SFX</button>
-                    <button id="btn-toggle-music" class="tactical-hud-btn" title="Toggle Music">🎵 MUSIC</button>
-                    <button id="btn-hud-pause" class="tactical-hud-btn">Ⅱ Pause</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="swarm-objective"><span id="objective-label">UNITE THE ARENA</span><strong id="territory-value">25%</strong><div class="territory-track"><div id="territory-fill"></div></div></div>
-        <div id="swarm-coach" role="status" aria-live="polite"><span id="coach-step">01 / GATHER</span><strong id="coach-title">Hold to gather your swarm</strong><p id="coach-detail">Drag toward a smaller rival group.</p><ul id="lesson-checklist" class="hidden"></ul><button id="coach-dismiss" aria-label="Hide guidance">×</button></div>
-        <!-- Tactical Command Ability Bar (Bottom Center) -->
-        <div id="ability-bar" class="ability-bar">
-            <button type="button" class="ability-slot" id="slot-beacon" title="Hold Left-Click to Rally Fleet (Disarms conversion while rallying)">
-                <div class="slot-key">HOLD</div>
-                <div class="slot-icon">◎</div>
-                <div class="slot-label">RALLY</div>
-                <div class="slot-cooldown" id="cd-beacon"></div>
-                <div class="slot-status" id="status-beacon">READY</div>
+        <div class="ability-bar">
+            <button type="button" id="slot-rally" class="ability" aria-pressed="false" title="Hold to move. Release to recruit.">
+                <span class="ability-key">Hold</span><span class="ability-icon" aria-hidden="true">◎</span><span class="ability-label">Rally</span>
+                <span id="rally-status" class="ability-status"></span><span id="rally-cooldown" class="ability-cooldown"></span>
             </button>
-            <button type="button" class="ability-slot" id="slot-emp" title="Space / right-click: Freeze rivals for 10 seconds">
-                <div class="slot-key">SPACE</div>
-                <div class="slot-icon">❄</div>
-                <div class="slot-label">FREEZE</div>
-                <div class="slot-cooldown" id="cd-emp"></div>
-                <div class="slot-status" id="status-emp">READY</div>
+            <button type="button" id="slot-freeze" class="ability">
+                <span class="ability-key">Space</span><span class="ability-icon" aria-hidden="true">❄</span><span class="ability-label">Freeze</span>
+                <span id="freeze-status" class="ability-status"></span><span id="freeze-cooldown" class="ability-cooldown"></span>
             </button>
         </div>
 
-        <!-- Real-time Flocking Physics Panel (Collapsible) -->
-        <div id="control-panel" class="control-panel">
-            <button id="panel-toggle" class="panel-toggle" title="Tactical Simulation Physics">⚙️</button>
-            <div id="panel-content" class="panel-content collapsible-settings">
-                <h3>SIMULATION PARAMETERS</h3>
-                <div class="control-row">
-                    <label>Separation</label>
-                    <input type="range" id="ctrl-separation" min="0" max="5" step="0.1" value="1.6">
-                    <span id="sep-value">1.6</span>
-                </div>
-                <div class="control-row">
-                    <label>Alignment</label>
-                    <input type="range" id="ctrl-alignment" min="0" max="3" step="0.1" value="1.1">
-                    <span id="align-value">1.1</span>
-                </div>
-                <div class="control-row">
-                    <label>Cohesion</label>
-                    <input type="range" id="ctrl-cohesion" min="0" max="3" step="0.1" value="1.2">
-                    <span id="cohes-value">1.2</span>
-                </div>
-                <div class="control-row">
-                    <label>Max Speed</label>
-                    <input type="range" id="ctrl-speed" min="1" max="8" step="0.5" value="4.2">
-                    <span id="speed-value">4.2</span>
-                </div>
-                <div class="control-row">
-                    <label>Perception</label>
-                    <input type="range" id="ctrl-perception" min="20" max="100" step="5" value="55">
-                    <span id="percep-value">55</span>
-                </div>
+        <div id="pause-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+            <div class="dialog">
+                <h2 tabindex="-1" id="pause-title">Paused</h2>
+                <p id="pause-status" class="note" aria-live="polite"></p>
+                <a id="rival-reconnect" class="btn hidden" href="connect.html" target="_blank" rel="noopener">Reconnect Jev</a>
+                <button type="button" id="btn-resume" class="btn btn-primary">Resume</button>
+                <button type="button" id="btn-restart" class="btn">Restart</button>
+                <button type="button" id="btn-pause-settings" class="btn">Settings</button>
+                <button type="button" id="btn-pause-lessons" class="btn hidden">All lessons</button>
+                <button type="button" id="btn-quit" class="btn">Quit</button>
             </div>
         </div>
 
-        <!-- Tactical Doctrine Draft Modal (Roguelike Upgrade Selection) -->
-        <div id="doctrine-overlay" class="overlay hidden">
-            <div class="overlay-content doctrine-modal">
-                <div class="doctrine-header">
-                    <span class="alert-tag">YOUR SWARM IS GROWING</span>
-                    <h2>How will you evolve?</h2>
-                    <p>Choose one upgrade. Find your own way to win.</p>
-                </div>
-                <div id="doctrine-cards" class="doctrine-cards-grid"></div>
+        <div id="result-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+            <div class="dialog">
+                <h2 tabindex="-1" id="result-title"></h2>
+                <p id="result-quote" class="note"></p>
+                <dl id="result-stats" class="stats"></dl>
+                <button type="button" id="btn-result-primary" class="btn btn-primary"></button>
+                <button type="button" id="btn-result-replay" class="btn hidden">Replay</button>
+                <button type="button" id="btn-result-quit" class="btn">Back</button>
             </div>
         </div>
 
-        <div id="lesson-intro" class="overlay hidden">
-            <div class="overlay-content lesson-intro-card">
-                <span id="lesson-intro-number" class="lesson-eyebrow"></span>
-                <h2 id="lesson-intro-title"></h2>
-                <p id="lesson-intro-description"></p>
-                <p id="lesson-intro-instruction" class="lesson-instruction"></p>
-                <button id="btn-lesson-begin" class="menu-btn primary-btn">Let’s try it →</button>
-                <button id="btn-lesson-library" class="menu-btn">All lessons</button>
-            </div>
-        </div>
-        <div id="sector-intro" class="overlay hidden">
-            <div class="overlay-content lesson-intro-card">
-                <span id="sector-number" class="lesson-eyebrow"></span><h2 id="sector-title"></h2><p id="sector-description"></p>
-                <p class="lesson-instruction">Optional detour: gather five ships near the stranded cluster for two seconds to bring six new allies home.</p>
-                <button id="btn-sector-begin" class="menu-btn primary-btn">Enter sector →</button><button id="btn-sector-quit" class="menu-btn">Save & return</button>
-            </div>
-        </div>
-        <!-- Pause Overlay -->
-        <div id="pause-overlay" class="overlay hidden">
-            <div class="overlay-content">
-                <h2>Take a breath.</h2>
-                <button id="btn-resume" class="menu-btn primary-btn">Back to the swarm</button>
-                <button id="btn-restart" class="menu-btn">Restart</button><button id="btn-pause-lessons" class="menu-btn hidden">All lessons</button>
-                <button id="btn-quit" class="menu-btn">Main menu</button>
+        <div id="upgrade-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
+            <div class="dialog dialog-wide">
+                <span class="eyebrow">Upgrade</span>
+                <h2 tabindex="-1" id="upgrade-title">Pick one</h2>
+                <div id="upgrade-cards" class="card-grid card-grid-3"></div>
+                <button type="button" id="btn-upgrade-quit" class="btn btn-quiet">Quit match</button>
             </div>
         </div>
 
-        <!-- Victory Overlay -->
-        <div id="victory-overlay" class="overlay hidden">
-            <div class="overlay-content victory">
-                <h2>One swarm. Yours.</h2>
-                <p class="victory-quote">Every rival became part of something bigger.</p>
-                <div class="stats">
-                    <div class="stat">
-                        <span class="stat-label">TIME</span>
-                        <span id="victory-time" class="stat-value">00:00</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">CONVERSIONS</span>
-                        <span id="victory-conversions" class="stat-value">0</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">FINAL SCORE</span>
-                        <span id="victory-score" class="stat-value">0</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">RANK</span>
-                        <span id="victory-rating" class="stat-value">S+</span>
-                    </div>
-                </div>
-                <button id="btn-play-again" class="menu-btn primary-btn">Play again</button><button id="btn-replay-lesson" class="menu-btn hidden">Replay this lesson</button>
-                <button id="btn-victory-quit" class="menu-btn">Back</button>
+        <div id="intro-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+            <div class="dialog">
+                <span id="intro-eyebrow" class="eyebrow"></span>
+                <h2 tabindex="-1" id="intro-title"></h2>
+                <p id="intro-description"></p>
+                <p id="intro-instruction" class="callout"></p>
+                <button type="button" id="btn-intro-start" class="btn btn-primary">Start</button>
+                <button type="button" id="btn-intro-secondary" class="btn"></button>
             </div>
         </div>
+    </section>
 
-        <!-- Defeat Overlay -->
-        <div id="defeat-overlay" class="overlay hidden">
-            <div class="overlay-content defeat">
-                <h2>A new beginning.</h2>
-                <p class="defeat-quote">Gather a tight group. Release beside a smaller rival. Every conversion changes the odds.</p>
-                <div class="stats">
-                    <div class="stat">
-                        <span class="stat-label">TIME SURVIVED</span>
-                        <span id="defeat-time" class="stat-value">00:00</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-label">PEAK STRENGTH</span>
-                        <span id="defeat-peak" class="stat-value">0%</span>
-                    </div>
-                </div>
-                <button id="btn-retry" class="menu-btn primary-btn">RETRY MISSION</button>
-                <button id="btn-defeat-quit" class="menu-btn">Back</button>
-            </div>
-        </div>
-
-        <!-- Mobile Fleet Segments -->
-        <div id="mobile-fleet-bar" class="mobile-fleet-bar">
-            <div id="mobile-fleet-segments" class="mobile-fleet-segments"></div>
-        </div>
-    </div>
-
-    <script src="js/main.js" type="module"></script>
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+    <div id="busy" class="busy hidden" role="status">Connecting…</div>
+    <noscript><p class="noscript">Swarm Doctrine needs JavaScript. Run <code>node server.mjs</code> and open the address it prints.</p></noscript>
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

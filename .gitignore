@@ -1,0 +1,11 @@
+
+# Fresh URL for the browser so an open tab cannot keep old scripts
+build/
+
+# Local API credentials
+.env
+.env.*
+!.env.example
+
+# Local resumable RL runs (keep on disk; export models/ for the game).
+training/

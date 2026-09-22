@@ -48,7 +48,9 @@ export class Circle {
         const w = range.w;
         const h = range.h;
 
-        const edges = Math.pow(xDist - w, 2) + Math.pow(yDist - h, 2);
+        const edgeX = xDist - w;
+        const edgeY = yDist - h;
+        const edges = edgeX * edgeX + edgeY * edgeY;
 
         // No intersection
         if (xDist > (r + w) || yDist > (r + h)) return false;
@@ -106,20 +108,27 @@ export class QuadTree {
             this.subdivide();
         }
 
-        return (
-            this.northeast.insert(point) ||
-            this.northwest.insert(point) ||
-            this.southeast.insert(point) ||
-            this.southwest.insert(point)
-        );
+        // A point can only belong to one child. Selecting the quadrant first
+        // avoids up to three failed recursive insert calls for every boid.
+        const east = point.pos.x >= this.boundary.x;
+        const south = point.pos.y >= this.boundary.y;
+        const child = south
+            ? (east ? this.southeast : this.southwest)
+            : (east ? this.northeast : this.northwest);
+        return child.insert(point);
     }
 
     query(range, found = []) {
-        if (!this.boundary.intersects(range)) {
+        // Dispatch through the query shape. Rectangle.intersects expects a
+        // rectangle's w/h fields, while Circle.intersects expects the tree
+        // node rectangle; calling the former with a Circle makes NaN
+        // comparisons and causes every node to be visited.
+        if (!range.intersects(this.boundary)) {
             return found;
         }
 
-        for (const p of this.points) {
+        for (let i = 0; i < this.points.length; i++) {
+            const p = this.points[i];
             if (range.contains(p)) {
                 found.push(p);
             }

@@ -1,0 +1,16 @@
+{
+    "name": "swarm-doctrine",
+    "version": "2.0.0",
+    "private": true,
+    "description": "Move together, surround rivals, and turn them into allies. A dependency-free browser game with trainable opponents.",
+    "type": "module",
+    "engines": { "node": ">=22" },
+    "scripts": {
+        "start": "node server.mjs",
+        "test": "node --test \"tests/*.test.mjs\"",
+        "train": "node scripts/train-local.mjs",
+        "evaluate": "node scripts/evaluate.mjs",
+        "jev:cost": "node scripts/jev-cost.mjs",
+        "icons": "node scripts/make-icons.mjs"
+    }
+}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#090f11">
+    <title>Connect Jev · Swarm Doctrine</title>
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+<main class="screen screen-page">
+    <div class="page page-narrow">
+        <header class="page-head"><a class="btn-back" href="./">Back</a><span class="eyebrow">Duel</span><h2>Connect Jev</h2></header>
+        <p class="note">Jev is an online decision model on OpenRouter. Your key is saved only in this computer's local <code>.env</code> file and never reaches the browser.</p>
+        <form id="connect-form" class="settings">
+            <fieldset class="settings-group">
+                <legend>OpenRouter</legend>
+                <div class="setting-row"><label for="key">API key</label><input id="key" name="key" type="password" autocomplete="off" required class="field"></div>
+                <details>
+                    <summary class="note">Advanced</summary>
+                    <div class="setting-row"><label for="model">Jev model ID</label><input id="model" name="model" value="typesafe/jev-1.13" autocomplete="off" spellcheck="false" class="field"></div>
+                </details>
+            </fieldset>
+            <div class="page-actions"><button type="submit" class="btn btn-primary">Save and connect</button><a id="play" class="btn hidden" href="./?duel=jev">Play Jev</a></div>
+        </form>
+        <p id="status" class="note" role="status" aria-live="polite"></p>
+        <p class="note">Cost: Jev bills input tokens only. A typical duel costs well under one cent; the server stops at its <code>JEV_BUDGET_USD</code> cap (default $2).</p>
+    </div>
+</main>
+<script type="module">
+    import { configureOpponent, getOpponentStatus } from './js/ai/jev.js';
+    const form = document.querySelector('#connect-form');
+    const status = document.querySelector('#status');
+    const play = document.querySelector('#play');
+    const describe = current => `Ready · ${current.model || 'configured model'} · $${(current.spentUsd || 0).toFixed(4)} of $${(current.budgetUsd ?? 2).toFixed(2)} used`;
+    try {
+        const current = await getOpponentStatus();
+        if (current.configured) { status.textContent = describe(current); play.classList.remove('hidden'); }
+    } catch { status.textContent = 'The local server is offline. Start it with: node server.mjs'; }
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const button = form.querySelector('button');
+        button.disabled = true;
+        status.textContent = 'Connecting…';
+        try {
+            const result = await configureOpponent({ apiKey: form.key.value, model: form.model.value });
+            form.key.value = '';
+            status.textContent = describe(result);
+            play.classList.remove('hidden');
+        } catch (error) {
+            status.textContent = error.message || 'Unable to connect';
+        } finally {
+            button.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,4 +1,6 @@
 // Seeded worlds are data: retries replay the map, while new sectors get a new seed.
+import { TEAM_IDS } from './catalog.js';
+
 export const DIFFICULTY_CAP = 10;
 export function randomFrom(seed) {
     let value = seed >>> 0;
@@ -26,12 +28,11 @@ export function buildWorld(seed, level = 4, width = 1280, height = 720) {
         const radius = scale * (type === 'blackHole' ? .026 + random() * .012 : .062 + random() * .018);
         return { type, x: x * width, y: y * height, radius, id: `terrain-${i}` };
     });
-    return { seed: seed >>> 0, name: NAMES[Math.floor(random() * NAMES.length)], terrain,
-        // A small optional detour: rescue neutral ships by staying nearby with a group.
-        rescue: { x: width * .5, y: height * .5, radius: Math.max(24, scale * .045), progress: 0, claimed: false } };
+    return { seed: seed >>> 0, name: NAMES[Math.floor(random() * NAMES.length)], terrain
+        };
 }
 export function validCheckpoint(value) {
     return value && Number.isSafeInteger(value.level) && value.level >= 1 && value.level <= 100000 &&
         Number.isInteger(value.seed) && value.seed >= 0 && value.seed <= 0xffffffff &&
-        ['dragon','salamander','phoenix','rat'].includes(value.team);
+        TEAM_IDS.includes(value.team);
 }
