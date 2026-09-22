@@ -1,151 +1,282 @@
-// Renderer - Handles all canvas drawing
-import { CONFIG } from './config.js';
+// Enhanced Renderer - High-tech tactical HUD, radar sweep, energy tethers, and combat fx
+import { CONFIG, TEAMS } from './config.js';
 
 export class Renderer {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.time = 0;
+        this.radarAngle = 0;
+        this.floatingTexts = [];
+        this.shockwaveRings = [];
+        this.vignetteGradient = null;
     }
     
     resize() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
-        // Regenerate stars on resize
-        this.starsCanvas = null;
         this.vignetteGradient = null;
+    }
+
+    addFloatingText(text, x, y, color = '#00ffff', size = 14) {
+        this.floatingTexts.push({
+            text,
+            x,
+            y,
+            vy: -35,
+            color,
+            size,
+            alpha: 1.0,
+            life: 1.0
+        });
+    }
+
+    addShockwave(x, y, maxRadius = 220, color = '#00ffff') {
+        this.shockwaveRings.push({
+            x,
+            y,
+            radius: 10,
+            maxRadius,
+            color,
+            alpha: 0.9,
+            lineWidth: 4
+        });
     }
     
     clear(screenShake = 0) {
         this.ctx.save();
         
-        // Apply screen shake
-        if (screenShake > 0) {
-            const shakeX = (Math.random() - 0.5) * screenShake * 10;
-            const shakeY = (Math.random() - 0.5) * screenShake * 10;
+        if (screenShake > 0 && CONFIG.screenShakeEnabled && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            const shakeX = (Math.random() - 0.5) * screenShake * 14;
+            const shakeY = (Math.random() - 0.5) * screenShake * 14;
             this.ctx.translate(shakeX, shakeY);
         }
         
-        // Clear canvas to transparent to let CSS background show
-        this.ctx.clearRect(-10, -10, this.canvas.width + 20, this.canvas.height + 20);
+        this.ctx.clearRect(-20, -20, this.canvas.width + 40, this.canvas.height + 40);
     }
     
-    drawGrid() {
-        // Grid is now handled by CSS on the body element for consistency
+    drawTacticalGrid() {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        
+        // Faint tactical grid
+        const step = 80;
+        ctx.strokeStyle = 'rgba(0, 247, 255, 0.035)';
+        ctx.lineWidth = 1;
+        
+        ctx.beginPath();
+        for (let x = 0; x < w; x += step) {
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, h);
+        }
+        for (let y = 0; y < h; y += step) {
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+        }
+        ctx.stroke();
+
+
     }
     
-    drawMouseInfluence(mousePos, mouseDown, rightMouseDown, scatterActive) {
-        if (!mouseDown && !rightMouseDown) return;
+    // Draw Tactical Command Beacon & Influence Radius
+    drawTacticalBeacon(mousePos, beaconActive, playerTeam, shockwaveCooldown, maxCooldown, rallyCoolOffTimer = 0, rallyCoolOffDuration = 1.0) {
+        const ctx = this.ctx;
+        const teamData = TEAMS[playerTeam] || TEAMS.dragon;
+        const color = teamData.color;
+        const colorRgb = teamData.colorRgb;
+        const x = mousePos.x;
+        const y = mousePos.y;
         
-        const radius = CONFIG.influenceRadius * (scatterActive ? 1.5 : 1);
-        const color = mouseDown ? (scatterActive ? '0, 255, 136' : '0, 255, 255') : '255, 100, 100';
+        ctx.save();
         
-        // Outer ring with expanding animation when scatter is active
-        this.ctx.beginPath();
-        this.ctx.arc(mousePos.x, mousePos.y, radius, 0, Math.PI * 2);
-        this.ctx.strokeStyle = `rgba(${color}, 0.3)`;
-        this.ctx.lineWidth = scatterActive ? 4 : 2;
-        this.ctx.stroke();
+        // Beacon Range Ring
+        const radius = CONFIG.beaconRadius;
+        const pulse = Math.sin(this.time * 4) * 5;
         
-        // Radial gradient for scatter effect
-        if (scatterActive) {
-            const gradient = this.ctx.createRadialGradient(
-                mousePos.x, mousePos.y, 0,
-                mousePos.x, mousePos.y, radius
-            );
-            gradient.addColorStop(0, `rgba(${color}, 0.4)`);
-            gradient.addColorStop(0.5, `rgba(${color}, 0.1)`);
-            gradient.addColorStop(1, 'transparent');
+        const isDisarmed = beaconActive || (rallyCoolOffTimer > 0);
+        const ringColor = beaconActive ? '255, 170, 0' : (rallyCoolOffTimer > 0 ? '255, 68, 68' : colorRgb);
+        
+        ctx.beginPath();
+        ctx.arc(x, y, radius + pulse, 0, Math.PI * 2);
+        ctx.strokeStyle = beaconActive ? `rgba(${ringColor}, 0.5)` : (rallyCoolOffTimer > 0 ? `rgba(${ringColor}, 0.35)` : 'rgba(255, 255, 255, 0.08)');
+        ctx.lineWidth = beaconActive ? 2.5 : 1.5;
+        ctx.setLineDash(beaconActive ? [6, 4] : (rallyCoolOffTimer > 0 ? [3, 3] : [2, 8]));
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        if (beaconActive) {
+            // Glow gradient when actively ordering fleet (amber alert: transit disarm)
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+            grad.addColorStop(0, `rgba(${ringColor}, 0.22)`);
+            grad.addColorStop(0.5, `rgba(${ringColor}, 0.08)`);
+            grad.addColorStop(1, 'transparent');
             
-            this.ctx.beginPath();
-            this.ctx.arc(mousePos.x, mousePos.y, radius, 0, Math.PI * 2);
-            this.ctx.fillStyle = gradient;
-            this.ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
             
-            // Expanding rings
-            for (let i = 0; i < 3; i++) {
-                const ringPhase = (this.time * 3 + i * 0.3) % 1;
-                const ringRadius = radius * ringPhase;
-                const ringAlpha = (1 - ringPhase) * 0.3;
-                
-                this.ctx.beginPath();
-                this.ctx.arc(mousePos.x, mousePos.y, ringRadius, 0, Math.PI * 2);
-                this.ctx.strokeStyle = `rgba(${color}, ${ringAlpha})`;
-                this.ctx.lineWidth = 2;
-                this.ctx.stroke();
-            }
+            // Inward converging energy ring
+            const inwards = ((this.time * 2) % 1);
+            const inRadius = radius * (1 - inwards);
+            ctx.beginPath();
+            ctx.arc(x, y, inRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(${ringColor}, ${inwards * 0.4})`;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
         }
         
-        // Pulsing center
-        const pulse = Math.sin(Date.now() / 100) * 5 + 10;
-        this.ctx.beginPath();
-        this.ctx.arc(mousePos.x, mousePos.y, pulse, 0, Math.PI * 2);
-        this.ctx.fillStyle = `rgba(${color}, 0.5)`;
-        this.ctx.fill();
+        // Reticle Center
+        const reticleAngle = this.time * (beaconActive ? 3.5 : 1.5);
+        ctx.translate(x, y);
+        ctx.rotate(reticleAngle);
+        
+        ctx.strokeStyle = beaconActive ? '#ffaa00' : (rallyCoolOffTimer > 0 ? '#ff4444' : color);
+        ctx.lineWidth = 1.5;
+        
+        // Rotating brackets
+        const bSize = 16;
+        for (let i = 0; i < 4; i++) {
+            ctx.rotate(Math.PI / 2);
+            ctx.beginPath();
+            ctx.moveTo(bSize, -4);
+            ctx.lineTo(bSize, 4);
+            ctx.stroke();
+        }
+        
+        ctx.restore();
+        
+        // Center core
+        ctx.beginPath();
+        ctx.arc(x, y, beaconActive ? 6 : 3, 0, Math.PI * 2);
+        ctx.fillStyle = beaconActive ? '#ffaa00' : (rallyCoolOffTimer > 0 ? '#ff4444' : color);
+        ctx.fill();
+
+        // Beacon state text with high visual clarity
+        ctx.font = "bold 10px 'Orbitron', sans-serif";
+        ctx.textAlign = 'center';
+        if (beaconActive) {
+            ctx.fillStyle = '#ffaa00';
+            ctx.fillText('GATHERING · RELEASE TO CONVERT', x, y + 26);
+            ctx.font = "9px 'Rajdhani', sans-serif";
+            ctx.fillStyle = 'rgba(255, 200, 100, 0.8)';
+            ctx.fillText('', x, y + 38);
+        } else if (rallyCoolOffTimer > 0) {
+            ctx.fillStyle = '#ff5555';
+            ctx.fillText(`SPREADING · ${rallyCoolOffTimer.toFixed(1)}s`, x, y + 26);
+        }
+    }
+
+    // Draw Peer Pressure Conversion Tethers (makes conversion visually intuitive!)
+    drawConversionTethers(boids, playerTeam, isPlayerDisarmed = false) {
+        const ctx = this.ctx;
+        
+        for (let i = 0; i < boids.length; i++) {
+            const victim = boids[i];
+            if (victim.conversionPressure > 8 && victim.conversionSource) {
+                // If the player is disarmed and would be the source, don't draw tether
+                if (isPlayerDisarmed && victim.conversionSource.team === playerTeam) {
+                    continue;
+                }
+                
+                const teamData = TEAMS[victim.conversionSource.team] || TEAMS[playerTeam];
+                const ratio = Math.min(1, victim.conversionPressure / CONFIG.peerPressureTime);
+                
+                ctx.beginPath();
+                ctx.moveTo(victim.conversionSource.pos.x, victim.conversionSource.pos.y);
+                ctx.lineTo(victim.pos.x, victim.pos.y);
+                ctx.strokeStyle = `rgba(${teamData.colorRgb}, ${ratio * 0.75})`;
+                ctx.lineWidth = 1.2 + ratio * 1.5;
+                ctx.stroke();
+            }
+        }
+    }
+
+    // Shockwave Rings animation
+    drawShockwaves(deltaTime) {
+        const ctx = this.ctx;
+        for (let i = this.shockwaveRings.length - 1; i >= 0; i--) {
+            const sw = this.shockwaveRings[i];
+            sw.radius += (sw.maxRadius - sw.radius) * deltaTime * 12 + 10;
+            sw.alpha -= deltaTime * 2.2;
+            
+            if (sw.alpha <= 0 || sw.radius >= sw.maxRadius) {
+                this.shockwaveRings.splice(i, 1);
+                continue;
+            }
+            
+            ctx.beginPath();
+            ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = sw.color;
+            ctx.lineWidth = sw.lineWidth * sw.alpha;
+            ctx.shadowColor = sw.color;
+            ctx.shadowBlur = 12;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        }
+    }
+
+    // Floating text updates and rendering - clamped so text is never cut off by screen borders
+    drawFloatingTexts(deltaTime) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        
+        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+            const ft = this.floatingTexts[i];
+            ft.y += ft.vy * deltaTime;
+            ft.life -= deltaTime;
+            ft.alpha = Math.max(0, ft.life);
+            
+            if (ft.life <= 0) {
+                this.floatingTexts.splice(i, 1);
+                continue;
+            }
+            
+            // Prevent clipping at borders
+            const drawX = Math.max(70, Math.min(w - 70, ft.x));
+            const drawY = Math.max(40, Math.min(h - 30, ft.y));
+            
+            ctx.save();
+            ctx.font = `bold ${ft.size}px 'Orbitron', sans-serif`;
+            ctx.fillStyle = ft.color;
+            ctx.globalAlpha = ft.alpha;
+            ctx.textAlign = 'center';
+            ctx.shadowColor = ft.color;
+            ctx.shadowBlur = 8;
+            ctx.fillText(ft.text, drawX, drawY);
+            ctx.restore();
+        }
     }
     
     drawBoids(boids, powerupManager, playerTeam) {
-        // Draw shield effect around player boids if shield is active
-        const hasShield = powerupManager && powerupManager.isShielded();
+        const hasShield = powerupManager && powerupManager.isShielded(playerTeam);
         
-        for (const boid of boids) {
-            // Draw shield glow for player boids
+        for (let i = 0; i < boids.length; i++) {
+            const boid = boids[i];
+            
             if (hasShield && boid.team === playerTeam) {
                 this.ctx.beginPath();
-                this.ctx.arc(boid.pos.x, boid.pos.y, 12, 0, Math.PI * 2);
-                this.ctx.fillStyle = 'rgba(68, 136, 255, 0.15)';
-                this.ctx.fill();
+                this.ctx.arc(boid.pos.x, boid.pos.y, 14, 0, Math.PI * 2);
+                this.ctx.strokeStyle = 'rgba(68, 136, 255, 0.4)';
+                this.ctx.lineWidth = 1.5;
+                this.ctx.stroke();
             }
+            
             boid.draw(this.ctx);
         }
     }
     
-    drawVignette() {
-        // Cache vignette gradient
-        if (!this.vignetteGradient) {
-            this.vignetteGradient = this.ctx.createRadialGradient(
-                this.canvas.width / 2, this.canvas.height / 2, this.canvas.height * 0.3,
-                this.canvas.width / 2, this.canvas.height / 2, this.canvas.height * 0.9
-            );
-            this.vignetteGradient.addColorStop(0, 'transparent');
-            this.vignetteGradient.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
-        }
-        
-        this.ctx.fillStyle = this.vignetteGradient;
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    }
-    
-    drawStars() {
-        // Static starfield for atmosphere - cached as image for performance
-        if (!this.starsCanvas) {
-            this.starsCanvas = document.createElement('canvas');
-            this.starsCanvas.width = this.canvas.width;
-            this.starsCanvas.height = this.canvas.height;
-            const starCtx = this.starsCanvas.getContext('2d');
-            
-            for (let i = 0; i < 80; i++) { // Fewer stars
-                const x = Math.random() * this.canvas.width;
-                const y = Math.random() * this.canvas.height;
-                const size = Math.random() * 1.5;
-                const alpha = Math.random() * 0.4 + 0.2;
-                
-                starCtx.beginPath();
-                starCtx.arc(x, y, size, 0, Math.PI * 2);
-                starCtx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-                starCtx.fill();
-            }
-        }
-        
-        this.ctx.drawImage(this.starsCanvas, 0, 0);
-    }
-    
     drawParticles(particles) {
-        for (const p of particles) {
+        const ctx = this.ctx;
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
             const alpha = p.life / p.maxLife;
-            this.ctx.beginPath();
-            this.ctx.arc(p.x, p.y, p.size * alpha, 0, Math.PI * 2);
-            this.ctx.fillStyle = `rgba(${p.colorRgb}, ${alpha})`;
-            this.ctx.fill();
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, Math.max(1, p.size * alpha), 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${p.colorRgb}, ${alpha})`;
+            ctx.fill();
         }
     }
     
@@ -155,117 +286,64 @@ export class Renderer {
         }
     }
     
-    drawScatterCooldown(cooldown, maxCooldown) {
-        // Draw cooldown bar in bottom right
-        const barWidth = 120;
-        const barHeight = 8;
-        const padding = 20;
-        const x = this.canvas.width - barWidth - padding;
-        const y = this.canvas.height - barHeight - padding - 30;
-        
-        // Background
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        this.ctx.fillRect(x - 2, y - 2, barWidth + 4, barHeight + 4);
-        
-        // Border
-        this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(x - 2, y - 2, barWidth + 4, barHeight + 4);
-        
-        // Fill based on cooldown
-        const fillRatio = 1 - (cooldown / maxCooldown);
-        const fillWidth = barWidth * fillRatio;
-        
-        // Gradient fill
-        const gradient = this.ctx.createLinearGradient(x, y, x + barWidth, y);
-        if (fillRatio >= 1) {
-            gradient.addColorStop(0, '#00ff88');
-            gradient.addColorStop(1, '#00ffff');
-        } else {
-            gradient.addColorStop(0, '#ff4444');
-            gradient.addColorStop(fillRatio, '#ffaa00');
-            gradient.addColorStop(1, '#ffaa00');
-        }
-        
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(x, y, fillWidth, barHeight);
-        
-        // Glow effect when ready
-        if (fillRatio >= 1) {
-            this.ctx.shadowColor = '#00ff88';
-            this.ctx.shadowBlur = 10;
-            this.ctx.fillRect(x, y, fillWidth, barHeight);
-            this.ctx.shadowBlur = 0;
-        }
-        
-        // Label
-        this.ctx.font = "11px 'Orbitron', sans-serif";
-        this.ctx.fillStyle = fillRatio >= 1 ? '#00ff88' : '#ffaa00';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText('SCATTER', x + barWidth / 2, y - 6);
-    }
-    
-    drawActiveEffects(powerupManager) {
-        if (!powerupManager) return;
-        
-        const effects = powerupManager.getActiveEffects();
-        if (effects.length === 0) return;
-        
-        const x = this.canvas.width - 140;
-        let y = this.canvas.height - 80;
-        
-        for (const effect of effects) {
-            const barWidth = 100;
-            const barHeight = 6;
-            const fillRatio = effect.remaining / effect.data.duration;
-            
-            // Background
-            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-            this.ctx.fillRect(x, y, barWidth, barHeight);
-            
-            // Fill
-            this.ctx.fillStyle = effect.data.color;
-            this.ctx.fillRect(x, y, barWidth * fillRatio, barHeight);
-            
-            // Label
-            this.ctx.font = "10px 'Rajdhani', sans-serif";
-            this.ctx.fillStyle = effect.data.color;
-            this.ctx.textAlign = 'left';
-            this.ctx.fillText(`${effect.data.icon} ${effect.data.name}`, x, y - 4);
-            
-            y -= 24;
-        }
-    }
-    
     drawObstacles(obstacleManager) {
         if (obstacleManager) {
             obstacleManager.draw(this.ctx);
         }
     }
     
-    render(boids, mousePos, mouseDown, rightMouseDown, gameState, powerupManager, particles, screenShake, scatterCooldown, scatterCooldownMax, scatterActive, playerTeam, obstacleManager) {
-        this.time += 0.016;
+    drawVignette() {
+        if (!this.vignetteGradient) {
+            this.vignetteGradient = this.ctx.createRadialGradient(
+                this.canvas.width / 2, this.canvas.height / 2, this.canvas.height * 0.35,
+                this.canvas.width / 2, this.canvas.height / 2, this.canvas.height * 0.95
+            );
+            this.vignetteGradient.addColorStop(0, 'transparent');
+            this.vignetteGradient.addColorStop(1, 'rgba(2, 4, 10, 0.65)');
+        }
+        
+        this.ctx.fillStyle = this.vignetteGradient;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+    
+    render(
+        boids, 
+        mousePos, 
+        beaconActive, 
+        gameState, 
+        powerupManager, 
+        particles, 
+        screenShake, 
+        shockwaveCooldown, 
+        maxCooldown, 
+        playerTeam, 
+        obstacleManager,
+        deltaTime = 0.016,
+        rallyCoolOffTimer = 0,
+        rallyCoolOffDuration = 1.0
+    ) {
+        this.time += deltaTime;
         this.clear(screenShake);
-        this.drawStars();
-        this.drawGrid();
+        
+        this.drawTacticalGrid();
         
         if (gameState === 'playing') {
-            // Draw obstacles behind everything else
+            const isPlayerDisarmed = beaconActive || (rallyCoolOffTimer > 0);
             this.drawObstacles(obstacleManager);
-            this.drawMouseInfluence(mousePos, mouseDown, rightMouseDown, scatterActive);
+            this.drawConversionTethers(boids, playerTeam, isPlayerDisarmed);
             this.drawPowerups(powerupManager);
             this.drawParticles(particles || []);
+            this.drawShockwaves(deltaTime);
+            this.drawTacticalBeacon(mousePos, beaconActive, playerTeam, shockwaveCooldown, maxCooldown, rallyCoolOffTimer, rallyCoolOffDuration);
         }
         
         this.drawBoids(boids, powerupManager, playerTeam);
         
         if (gameState === 'playing') {
-            this.drawScatterCooldown(scatterCooldown || 0, scatterCooldownMax || 1.2);
-            this.drawActiveEffects(powerupManager);
+            this.drawFloatingTexts(deltaTime);
         }
         
         this.drawVignette();
-        
-        this.ctx.restore(); // Restore from screen shake
+        this.ctx.restore();
     }
 }

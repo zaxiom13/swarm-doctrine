@@ -1,0 +1,214 @@
+/* Quiet space, clear hierarchy, and generous controls. */
+:root { --accent:#a8efd5; --accent-bright:#d1ffe9; --accent-dim:#a8efd51a; --accent-glow:#a8efd522; --text-primary:#eaf0e9; --text-secondary:#92a69e; --text-dim:#75857e; --bg-dark:#090f11; --bg-panel:#101c20ed; --bg-panel-border:#c2e3d71c; }
+body { font-family: 'Segoe UI',sans-serif; background:#090f11; letter-spacing:0; }
+body::before,body::after,.scanline-overlay,.menu-boids-bg { display:none!important; }
+button { font:inherit; }
+button:focus-visible, [tabindex]:focus-visible { outline:2px solid #e4fba7; outline-offset:5px; }
+.screen { background:radial-gradient(ellipse at 75% 40%,#19312d44,transparent 60%); overflow-y:auto; }
+.hidden { display:none!important; }
+#main-menu { display:block; background:#090f11; text-align:left; }
+#swarm-preview { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.home-nav { position:absolute; top:36px; left:5%; right:5%; display:flex; justify-content:space-between; align-items:center; z-index:2; }
+.wordmark { font-size:12px; font-weight:650; letter-spacing:2px; }
+.edition { font-size:9px; letter-spacing:2px; color:#7f9990; }
+#main-menu .menu-container { position:relative; z-index:2; width:54%; max-width:760px; padding:0; margin:0 0 0 9%; top:50%; transform:translateY(-50%); text-align:left; background:none; border:0; box-shadow:none; }
+#main-menu .command-badge { padding:0; background:none; border:0; box-shadow:none; font:10px 'Segoe UI',sans-serif; color:#9bb4a9; letter-spacing:2.4px; margin-bottom:25px; }
+.command-badge i,.live-dot { display:inline-block; width:5px; height:5px; border-radius:50%; background:#b4efd0; margin-right:8px; }
+#main-menu .game-title { font:500 clamp(42px,5.8vw,86px)/1.06 'Segoe UI',sans-serif; color:#edf1e9; letter-spacing:-4px; text-shadow:none; margin:0; animation:none; white-space:normal; background:none; -webkit-text-fill-color:initial; }
+.game-title::before,.game-title::after { display:none!important; }
+#main-menu .game-title em { color:#ace5c8; font-family:Georgia,serif; font-weight:400; letter-spacing:-3px; }
+#main-menu .tagline { font:15px/1.8 'Segoe UI',sans-serif; color:#9aaba3; margin:25px 0 30px; letter-spacing:0; }
+#main-menu .menu-buttons { width:315px; max-width:95%; display:grid; gap:11px; margin:0; }
+.menu-btn { clip-path:none!important; border:1px solid #a1c8b72a; border-radius:7px; font:500 13px 'Segoe UI',sans-serif; letter-spacing:0; padding:16px 22px; background:#14221f; color:#d2e1d9; text-shadow:none; box-shadow:none; min-height:48px; transition:background .18s,transform .18s; }
+.menu-btn::before,.menu-btn::after { display:none!important; }
+.menu-btn:hover { background:#20352d; border-color:#acd6bf77; box-shadow:none; transform:translateY(-2px); }
+.primary-btn { background:#b8edcb; color:#14251e; border-color:#b8edcb; box-shadow:none; }
+.primary-btn:hover { background:#d1f8dc; color:#14251e; }
+#main-menu .menu-btn { width:100%; display:flex; align-items:center; justify-content:space-between; text-align:left; }
+#btn-play { font-size:15px; }
+#btn-play span { font-size:24px; line-height:20px; }
+#btn-practice span { font-size:9px; letter-spacing:1px; color:#9db3a7; }
+.home-links { display:flex; gap:24px; margin-top:24px; }
+.home-links button { color:#9dafa6; font-size:12px; background:none; border:0; cursor:pointer; min-height:35px; }
+.home-links button:hover { color:#d7f4df; }
+.home-record { margin-top:24px; color:#73877c; font-size:10px; letter-spacing:.5px; }
+.orbit-caption { position:absolute; right:12%; bottom:20%; color:#acd0bd; font-size:9px; letter-spacing:2px; }
+.orbit-caption span:last-child { display:block; color:#6e8a7a; font-size:8px; margin-top:9px; letter-spacing:1.4px; }
+.home-footer { position:absolute; bottom:28px; left:5%; right:5%; display:flex; justify-content:space-between; border-top:1px solid #b7d6c51a; padding-top:20px; font-size:9px; letter-spacing:1.8px; color:#7c9487; }
+/* Selection and overlays share one restrained visual language. */
+.team-select-container,.settings-container,.tutorial-container { width:min(900px,92vw); max-height:90dvh; overflow-y:auto; background:#0d1718; border:1px solid #b4d5c522; border-radius:18px; padding:40px; box-shadow:0 25px 100px #0006; }
+h2,.team-select-container h2,.settings-container h2,.tutorial-container h2,.overlay-content h2,.doctrine-header h2 { font:500 clamp(25px,3vw,40px)/1.2 'Segoe UI',sans-serif; color:#e1ecdf; letter-spacing:-1px; text-shadow:none; margin-bottom:14px; }
+.team-select-subtitle { color:#97aca1; font-size:14px; margin-bottom:30px; }
+.team-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:25px; }
+.team-btn { min-height:215px; padding:24px 14px; background:#112121; border:1px solid #9cc3b72a; border-radius:10px; box-shadow:none; clip-path:none; }
+.team-btn:hover { background:#1a3030; box-shadow:none; transform:translateY(-4px); }
+.team-btn .team-icon { font:55px Georgia,serif; margin-bottom:20px; filter:none; }
+.team-name { font:600 12px 'Segoe UI',sans-serif; letter-spacing:1px; }
+.team-perk { font:12px/1.6 'Segoe UI',sans-serif; margin-top:14px; }
+.team-desc { display:none; }
+.overlay { background:#061012b8; backdrop-filter:blur(12px); padding:20px; overflow:auto; }
+.overlay-content,.doctrine-modal { background:#101c1d; border:1px solid #b4d5c533; border-radius:16px; box-shadow:0 30px 100px #0007; padding:35px; max-height:90dvh; overflow-y:auto; }
+.overlay-content .menu-btn { margin:8px 0; }
+.victory-quote,.defeat-quote { font:14px/1.7 'Segoe UI',sans-serif; color:#9bb1a7; }
+.stats { gap:16px; flex-wrap:wrap; }
+.stat-value { font:600 24px 'Segoe UI',sans-serif; text-shadow:none; }
+.stat-label { font:10px 'Segoe UI',sans-serif; color:#91aaa0; }
+.simple-guide { text-align:left; padding:0; }
+.simple-guide article { padding:20px 0; border-bottom:1px solid #abcdb922; }
+.simple-guide b { float:left; color:#a8efd5; margin-right:18px; font-size:13px; }
+.simple-guide h3 { color:#dcebdc; font:500 18px 'Segoe UI',sans-serif; margin-bottom:9px; }
+.simple-guide p { color:#9eafa6; font-size:14px; line-height:1.7; margin-bottom:15px; }
+.setting-row label { font-size:11px; letter-spacing:1px; }
+/* The battlefield gets the space. Details remain in the pause menu. */
+#game-screen { background:radial-gradient(ellipse at 50% 45%,#132626,#080f14 75%); }
+#game-canvas { touch-action:none; }
+#hud { top:22px; left:26px; right:26px; width:auto; padding:0; align-items:flex-start; }
+.hud-left { width:205px; }
+.hud-panel { background:#0c191cc9; border:1px solid #a4c6b520; border-radius:9px; box-shadow:none; padding:12px; min-width:0; }
+.panel-header { padding:0 0 10px; border:0; }
+.panel-title { font:9px 'Segoe UI',sans-serif; letter-spacing:1.5px; color:#8ea99d; }
+.fleet-bar-dynamic { margin-bottom:7px; }
+.fleet-bar-dynamic .bar-label { font:9px 'Segoe UI',sans-serif; letter-spacing:.3px; }
+.fleet-bar-dynamic .bar-container { height:3px; }
+.fleet-bar-dynamic .bar-fill { box-shadow:none!important; }
+.fleet-bar-dynamic .count { font:11px 'Segoe UI',sans-serif; }
+.hud-center { padding:0; background:none; border:0; box-shadow:none; }
+#game-timer { font:500 22px 'Segoe UI',sans-serif; color:#c7dbd0; text-shadow:none; }
+#game-score-display { font:10px 'Segoe UI',sans-serif; color:#91a99d; margin-top:5px; }
+#game-status { font:10px 'Segoe UI',sans-serif; letter-spacing:.4px; margin-top:10px; }
+.tactical-hud-btn { border:1px solid #b7d7c52b; background:#102024; border-radius:6px; color:#b3c8bc; font:10px 'Segoe UI',sans-serif; min-height:38px; padding:10px; box-shadow:none; }
+#btn-toggle-sfx,#btn-toggle-music { display:none; }
+.controls-hint,#control-panel,#hud-rally-warning { display:none!important; }
+#swarm-objective { position:absolute; top:84px; left:50%; transform:translateX(-50%); width:180px; text-align:center; pointer-events:none; }
+#objective-label { display:block; font-size:8px; letter-spacing:1.5px; color:#8ca79a; }
+#territory-value { display:block; font-size:25px; font-weight:400; color:#c5ecda; margin:5px; }
+.territory-track { height:2px; background:#bddcc522; }
+#territory-fill { height:100%; background:var(--player-color); transition:width .3s; }
+#swarm-coach { position:absolute; bottom:125px; left:50%; transform:translateX(-50%); padding:16px 40px 16px 20px; border:1px solid #afd9c12a; border-radius:10px; background:#0b191ded; width:370px; max-width:calc(100% - 32px); pointer-events:none; }
+#coach-step { display:block; color:#a7d9bf; font-size:8px; letter-spacing:1.6px; margin-bottom:7px; }
+#coach-title { font-size:14px; font-weight:500; color:#e0eddf; }
+#coach-detail { color:#94ada1; font-size:11px; line-height:1.6; margin-top:5px; }
+#coach-dismiss { position:absolute; right:7px; top:7px; width:28px; height:28px; background:none; border:0; font-size:20px; color:#8aa99a; cursor:pointer; pointer-events:auto; }
+#ability-bar { bottom:24px; padding:6px; gap:5px; background:#0c191eef; border:1px solid #a6ccb633; border-radius:12px; box-shadow:0 15px 45px #0005; }
+.ability-slot { width:99px; height:77px; min-width:0; background:transparent; border:1px solid transparent; border-radius:7px; color:#bfd4c7; padding:8px; cursor:pointer; overflow:hidden; }
+.ability-slot:hover { background:#213937; border-color:#9ecbb85c; box-shadow:none; transform:translateY(-2px); }
+.ability-slot.active { background:#284a3d; border-color:#a8efd566; box-shadow:none; }
+.slot-key { position:absolute; top:7px; right:7px; left:auto; color:#7f9b8e; font:8px 'Segoe UI',sans-serif; background:none; border:0; }
+.slot-icon { font:24px Georgia,serif; color:#bcebd2; margin:0 0 5px; filter:none; }
+.slot-label { font:9px 'Segoe UI',sans-serif; letter-spacing:1px; }
+.slot-status { font:7px 'Segoe UI',sans-serif; letter-spacing:.5px; margin-top:5px; }
+.slot-cooldown { background:#80b6a022; }
+.combo-badge { font:10px 'Segoe UI',sans-serif; background:#1b3829; border:1px solid #a8efd555; border-radius:30px; color:#bdf1cd; box-shadow:none; animation:none; }
+.doctrine-cards-grid { gap:14px; }
+.doctrine-card { background:#142528; border:1px solid #acd5bd33; border-radius:10px; box-shadow:none; padding:22px; }
+.doctrine-card:hover { box-shadow:none; background:#1b3333; border-color:#b2e4c9; }
+.doctrine-name { font:600 16px 'Segoe UI',sans-serif; letter-spacing:0; }
+.doctrine-category,.doctrine-header .alert-tag { font:9px 'Segoe UI',sans-serif; letter-spacing:1.5px; }
+.doctrine-desc { font:13px/1.6 'Segoe UI',sans-serif; }
+.survival-hud { top:80px; right:26px; left:auto; bottom:auto; transform:none; padding:10px; background:#0c191cd9; border:1px solid #b4d8c122; border-radius:9px; gap:12px; }
+.survival-hud .survival-stat .label { font:8px 'Segoe UI',sans-serif; }
+.survival-hud .survival-stat .val { font:16px 'Segoe UI',sans-serif; }
+.mobile-fleet-bar { display:none!important; }
+@media(max-width:720px) {
+ .home-nav { top:25px; } .edition { display:none; }
+ #main-menu .menu-container { margin-left:7%; width:86%; top:49%; }
+ #main-menu .game-title { font-size:clamp(42px,10vw,66px); letter-spacing:-2.8px; }
+ #main-menu .game-title em { letter-spacing:-2px; }
+ #swarm-preview { opacity:.35; }
+ .orbit-caption { display:none; } .home-footer { font-size:8px; letter-spacing:1px; } .home-footer span:last-child { display:none; }
+ .team-select-container,.settings-container,.tutorial-container { padding:24px; }
+ .team-grid { grid-template-columns:repeat(2,1fr); gap:10px; } .team-btn { min-height:155px; padding:15px 10px; } .team-btn .team-icon { font-size:35px; margin-bottom:10px; }
+ #hud { top:12px; left:12px; right:12px; } .hud-left { width:133px; } .hud-center { position:absolute; right:60px; top:0; width:80px; } #game-status { display:none; }
+ #swarm-objective { top:90px; left:auto; right:12px; transform:none; width:116px; } #objective-label { font-size:7px; } #territory-value { font-size:20px; }
+ #ability-bar { bottom:max(14px,env(safe-area-inset-bottom)); width:calc(100% - 24px); max-width:430px; justify-content:space-between; } .ability-slot { flex:1; width:auto; height:72px; }
+ #swarm-coach { bottom:112px; padding:12px 35px 12px 15px; } #coach-title { font-size:13px; }
+ .survival-hud { top:164px; right:12px; display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+ .doctrine-cards-grid { grid-template-columns:1fr; } .doctrine-card { padding:16px; } .doctrine-icon { font-size:22px; margin-bottom:5px; }
+ .overlay-content { padding:24px; } .stats { gap:12px; } .stat-value { font-size:20px; }
+}
+@media(max-height:620px) and (min-width:721px) {
+ #main-menu .game-title { font-size:52px; } #main-menu .command-badge { margin-bottom:14px; } #main-menu .tagline { margin:15px 0; } .home-record { display:none; } .home-links { margin-top:12px; } #swarm-coach { bottom:115px; }
+}
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; } }
+/* Remove inherited ornamental frames and preserve sentence case. */
+#main-menu .menu-container { clip-path:none; backdrop-filter:none; animation:none; }
+#main-menu .game-title,#main-menu .tagline { text-transform:none; }
+#main-menu .tagline { padding:0; opacity:1; }
+.menu-container::before,.menu-container::after,.tagline::before,.tagline::after,.team-select-container::before,.team-select-container::after,.overlay-content::before,.overlay-content::after,.settings-container::before,.settings-container::after,.tutorial-container::before,.tutorial-container::after { display:none!important; }
+.primary-btn { background:#b8edcb!important; color:#14251e!important; border-color:#b8edcb!important; }
+.primary-btn:hover { background:#d1f8dc!important; color:#14251e!important; box-shadow:none!important; }
+.overlay-content,.team-select-container,.settings-container,.tutorial-container { clip-path:none; }
+.overlay-content h2,.tutorial-container h2,.team-select-container h2,.settings-container h2 { text-transform:none; text-shadow:none!important; color:#e1ecdf!important; }
+.overlay-content .stat-value { color:#c9e8d4; }
+.overlay-content { overflow-x:hidden; }
+#main-menu .home-record { padding-left:0; }
+#game-screen { overflow:hidden; }
+#hud { height:auto; }
+.hud-left,.hud-right { margin-top:0; }
+.hud-right { width:auto; }
+.hud-center { position:absolute; left:50%; top:0; transform:translateX(-50%); }
+.hud-panel { clip-path:none; animation:none; }
+.hud-panel.collapsible .panel-header { padding:0 0 8px; background:none; border:0; }
+.hud-panel .panel-body { padding:0; }
+.fleet-bar-dynamic { display:grid; grid-template-columns:1fr 28px; gap:5px; }
+.fleet-bar-dynamic .bar-label { width:auto; grid-column:1; }
+.fleet-bar-dynamic .bar-container { grid-column:1; grid-row:2; width:100%; }
+.fleet-bar-dynamic .count { grid-column:2; grid-row:1 / 3; }
+#game-status { display:none; }
+#hud-combo-badge { position:absolute; top:125px; width:max-content; }
+@media(max-width:720px) { .hud-center { left:auto; right:58px; top:0; transform:none; width:65px; } #hud-combo-badge { right:0; top:230px; } }
+.lessons-container { width:min(960px,92vw); padding:36px 0; margin:auto; max-height:100dvh; overflow-y:auto; }
+.lesson-eyebrow { display:block; font-size:9px; letter-spacing:2px; color:#9ed1b7; margin-bottom:16px; }
+.lessons-container h2 { margin-bottom:18px; font-size:38px; }
+#lesson-progress { color:#91a99a; font-size:12px; margin-bottom:24px; }
+.lesson-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:13px; }
+.lesson-card { display:flex; flex-direction:column; align-items:flex-start; text-align:left; padding:22px; background:#112020; border:1px solid #b8d6c32b; border-radius:12px; color:#deeddf; cursor:pointer; transition:transform .2s,background .2s; }
+.lesson-card:hover { background:#1b302b; transform:translateY(-3px); }
+.lesson-number { font-size:8px; letter-spacing:1.4px; color:#a6bcad; }
+.lesson-symbol { font-size:28px; color:#b8edcb; margin:15px 0 10px; }
+.lesson-card strong { font-size:17px; font-weight:500; }
+.lesson-card p { color:#90a69a; font-size:12px; line-height:1.6; margin:10px 0 18px; flex:1; }
+.lesson-link { font-size:11px; color:#b8edcb; }
+.lesson-actions { display:flex; gap:12px; margin-top:24px; }
+.lesson-intro-card { width:min(530px,94vw); text-align:left; }
+.lesson-intro-card p { font-size:14px; line-height:1.7; color:#9fb5a7; }
+.lesson-instruction { background:#b8edcb0c; border-left:2px solid #b8edcb; padding:14px 18px; margin:20px 0; color:#d3e6d7!important; }
+#lesson-checklist { list-style:none; padding:10px 0 0; margin:10px 0 0; border-top:1px solid #afd9c11a; }
+#lesson-checklist li { font-size:11px; line-height:1.7; color:#b8ddc7; }
+.ability-slot.lesson-locked { opacity:.24; cursor:default; }
+.ability-slot.lesson-locked:hover { transform:none; background:none; }
+.ability-slot.lesson-locked .slot-status { visibility:hidden; }
+@media(max-width:720px) { .lesson-grid { grid-template-columns:repeat(2,1fr); gap:9px; } .lesson-card { padding:15px; } .lesson-card strong { font-size:14px; } .lessons-container h2 { font-size:29px; } .lesson-card p { font-size:11px; } .lesson-actions { flex-wrap:wrap; } }
+@media(max-width:360px) { .lesson-grid { grid-template-columns:1fr; } }
+/* Two deliberate controls, comfortably within thumb reach. */
+#ability-bar { width:280px; max-width:calc(100% - 24px); }
+#ability-bar .ability-slot { width:130px; flex:1; height:78px; }
+.mode-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px; }
+.mode-note { color:#8ea99b; font-size:12px; margin-top:18px; }
+#world-info { position:absolute; left:26px; bottom:30px; max-width:230px; pointer-events:none; }
+#world-info strong { display:block; color:#a7c7b5; font-size:10px; letter-spacing:1px; font-weight:500; }
+#world-info span { display:block; color:#789687; font-size:9px; margin-top:7px; }
+#slot-emp.active { background:#24404a; }
+.screen { min-height:100dvh; }
+@media (pointer:coarse) { button { touch-action:manipulation; } .slot-key { display:none; } #ability-bar .ability-slot { min-height:78px; } .lesson-card { min-height:180px; } }
+@media(max-width:720px) {
+ #ability-bar { width:calc(100% - 28px); max-width:410px; bottom:calc(12px + env(safe-area-inset-bottom)); }
+ #ability-bar .ability-slot { width:auto; height:80px; }
+ #swarm-coach { bottom:calc(130px + env(safe-area-inset-bottom)); }
+ #world-info { left:16px; bottom:calc(105px + env(safe-area-inset-bottom)); max-width:calc(100% - 32px); }
+ #world-info strong { font-size:9px; } #world-info span { display:inline; margin-left:10px; font-size:8px; }
+ .mode-grid { grid-template-columns:1fr; } .mode-container { padding-top:24px; padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
+ .mode-grid .lesson-card { min-height:0; } .mode-grid .lesson-symbol { display:none; }
+ #main-menu .menu-container { top:auto; transform:none; padding:115px 0 110px; }
+ #main-menu { overflow-y:auto; } .home-footer { position:relative; bottom:auto; padding-bottom:20px; }
+ .home-nav { padding-top:env(safe-area-inset-top); }
+ .lesson-actions .menu-btn { min-height:48px; } .overlay-content { max-height:calc(100dvh - 36px); }
+}
+@media(max-height:500px) and (orientation:landscape) {
+ #swarm-coach { left:16px; bottom:22px; transform:none; width:290px; max-height:125px; overflow:auto; }
+ #ability-bar { left:auto; right:12px; transform:none; width:230px; }
+ #world-info { left:16px; bottom:155px; } .hud-left { width:155px; }
+ .lessons-container { padding:20px 0; } .lesson-grid { grid-template-columns:repeat(3,1fr); }
+}
+#swarm-objective { max-width:160px; } #objective-label { line-height:1.5; }
+@media(max-width:720px) { #swarm-objective { max-width:120px; } .lessons-container { padding-left:2px; padding-right:2px; } #swarm-coach { max-height:185px; overflow-y:auto; } }

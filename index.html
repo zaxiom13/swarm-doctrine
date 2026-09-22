@@ -3,318 +3,280 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Swarm Doctrine</title>
+    <title>Swarm Doctrine | The power of the many</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="experience.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Scanline overlay effect -->
     <div class="scanline-overlay"></div>
-    
+
     <!-- Main Menu -->
     <div id="main-menu" class="screen">
+        <canvas id="swarm-preview" aria-hidden="true"></canvas>
+        <nav class="home-nav"><span class="wordmark">✧ &nbsp; SWARM / DOCTRINE</span><span class="edition">AN EXPERIMENT IN COLLECTIVE POWER</span></nav>
         <div class="menu-container">
-            <div class="menu-header">
-                <h1 class="game-title" data-text="SWARM DOCTRINE">SWARM DOCTRINE</h1>
-                <p class="tagline">The enemy's gate is down</p>
-            </div>
+            <div class="command-badge"><i></i> SMALL SHIPS. EXTRAORDINARY THINGS.</div>
+            <h1 class="game-title">One becomes<br><em>unstoppable.</em></h1>
+            <p class="tagline">Move as one. Surround your rivals.<br>Turn their numbers into your strength.</p>
             <div class="menu-buttons">
-                <button id="btn-play" class="menu-btn"><span class="btn-indicator"></span>CONQUEST MODE</button>
-                <button id="btn-survival" class="menu-btn survival-btn"><span class="btn-indicator"></span>SURVIVAL MODE</button>
-                <button id="btn-tutorial" class="menu-btn"><span class="btn-indicator"></span>TACTICAL BRIEFING</button>
-                <button id="btn-settings" class="menu-btn"><span class="btn-indicator"></span>CONFIGURATION</button>
+                <button id="btn-play" class="menu-btn primary-btn">Enter the swarm <span>↗</span></button>
+                <button id="btn-practice" class="menu-btn">Learn by playing <span>14 SHORT LESSONS</span></button>
             </div>
-            <div class="version">v1.0 | COMMAND SCHOOL</div>
+            <div class="home-links"><button id="btn-survival">Survival ↗</button><button id="btn-tutorial">How to play</button><button id="btn-settings">Settings</button></div>
+            <div class="home-record" id="home-record">No weapons. Just the power of the many.</div>
         </div>
-        <div class="menu-boids-bg"></div>
+        <div class="orbit-caption"><span class="live-dot"></span> A LIVING SYSTEM <span>MOVE YOUR POINTER TO DISTURB IT</span></div>
+        <footer class="home-footer"><span>GATHER. RELEASE. CONVERT.</span><span>Headphones recommended &nbsp; / &nbsp; Mouse or touch</span></footer>
     </div>
 
-    <!-- Tutorial Screen (User Guide) -->
+    <section id="mode-screen" class="screen hidden">
+        <div class="lessons-container mode-container">
+            <span class="lesson-eyebrow">MAKE SPACE FOR YOUR SWARM</span>
+            <h2>Find your kind of orbit.</h2>
+            <div class="mode-grid">
+                <button class="lesson-card" data-mode="conquest"><span class="lesson-number">01 / COMPETITION</span><span class="lesson-symbol">◈</span><strong>One map. Every rival.</strong><p>Learn the terrain and outmaneuver three swarms. Hazards stay in place for the whole match.</p><span class="lesson-link">Enter competition ↗</span></button>
+                <button class="lesson-card" data-mode="levels"><span class="lesson-number">02 / LEVELS</span><span class="lesson-symbol">✧</span><strong>Beyond the next horizon.</strong><p>A new random map every sector. More terrain and stronger rivals, capped at difficulty 10. Retry the same map or continue your saved expedition.</p><span class="lesson-link">Start an expedition ↗</span></button>
+                <button class="lesson-card" data-mode="zen"><span class="lesson-number">03 / ZEN</span><span class="lesson-symbol">⌁</span><strong>A garden in motion.</strong><p>Terrain changes every 40 seconds. New swarms arrive; yours returns if lost. No game over, no hurry.</p><span class="lesson-link">Find your flow ↗</span></button>
+                <button class="lesson-card" data-mode="survival"><span class="lesson-number">04 / SURVIVAL</span><span class="lesson-symbol">◎</span><strong>Stay together.</strong><p>Hold a fixed arena through incoming waves. Rescue stranded ships and evolve your swarm between waves.</p><span class="lesson-link">Meet the waves ↗</span></button>
+            </div>
+            <div class="lesson-actions"><button id="btn-resume-expedition" class="menu-btn primary-btn">Continue expedition →</button><button id="btn-modes-back" class="menu-btn">Back</button></div>
+            <p id="campaign-status" class="mode-note">Expeditions save at the start of each sector on this device.</p>
+        </div>
+    </section>
+    <section id="lessons-screen" class="screen hidden">
+        <div class="lessons-container">
+            <span class="lesson-eyebrow">LEARN THE RHYTHM</span>
+            <h2>Small lessons.<br>Extraordinary possibilities.</h2>
+            <p id="lesson-progress">0 of 14 complete · Choose any lesson</p>
+            <div id="lesson-grid" class="lesson-grid"></div>
+            <div class="lesson-actions"><button id="btn-continue-lessons" class="menu-btn primary-btn">Start with movement →</button><button id="btn-lessons-back" class="menu-btn">Back</button></div>
+        </div>
+    </section>
+
+    <!-- Tactical Briefing Screen -->
     <div id="tutorial-screen" class="screen hidden">
         <div class="tutorial-container">
-            <h2>TACTICAL BRIEFING</h2>
-            <div class="tutorial-content">
-                <div class="tutorial-section">
-                    <h3>MISSION OBJECTIVE</h3>
-                    <p><strong>Conquest Mode:</strong> Convert all enemy units to your fleet. Achieve total ideological dominance across 4 armies.</p>
-                    <p><strong>Survival Mode:</strong> Defend against endless waves of enemies. Survive as long as possible.</p>
-                </div>
-                <div class="tutorial-section">
-                    <h3>PEER PRESSURE DOCTRINE</h3>
-                    <p>Units surrounded by enemy forces will defect. When a boid is outnumbered by a single enemy team, 
-                    conversion pressure builds until they switch allegiance.</p>
-                    <p class="tip">💡 Isolate enemy units from their allies to convert them faster.</p>
-                </div>
-                <div class="tutorial-section">
-                    <h3>CONTROLS</h3>
-                    <div class="controls-desktop">
-                        <p><strong>Desktop:</strong></p>
-                        <ul>
-                            <li><span class="key">LEFT CLICK</span> - Scatter Pulse (repels ALL boids from cursor)</li>
-                            <li><span class="key">SPACE / ESC</span> - Pause tactical view</li>
-                            <li><span class="key">R</span> - Restart mission</li>
-                            <li><span class="key">⚙️ Panel</span> - Adjust flocking behavior in real-time</li>
-                        </ul>
-                    </div>
-                    <div class="controls-mobile">
-                        <p><strong>Mobile / Touch:</strong></p>
-                        <ul>
-                            <li><span class="key">💥 BUTTON</span> - Scatter Pulse at touch position</li>
-                            <li><span class="key">DOUBLE TAP</span> - Alternative scatter trigger</li>
-                            <li><span class="key">⏸️ BUTTON</span> - Pause / Resume game</li>
-                            <li><span class="key">DRAG</span> - Move scatter target position</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="tutorial-section">
-                    <h3>TACTICAL CONTROLS (In-Game Panel)</h3>
-                    <ul>
-                        <li><span class="key">Separation</span> - How strongly boids avoid crowding</li>
-                        <li><span class="key">Alignment</span> - How much boids match neighbor velocity</li>
-                        <li><span class="key">Cohesion</span> - How strongly boids group together</li>
-                        <li><span class="key">Max Speed</span> - Movement speed of all units</li>
-                        <li><span class="key">Perception</span> - How far boids can sense neighbors</li>
-                    </ul>
-                </div>
-                <div class="tutorial-section">
-                    <h3>POWERUPS</h3>
-                    <ul>
-                        <li><span class="key">⚡ Speed Boost</span> - Temporarily increases fleet speed</li>
-                        <li><span class="key">🛡️ Shield</span> - Protects your fleet from conversion</li>
-                        <li><span class="key">🧲 Magnet</span> - Attracts nearby enemy units</li>
-                        <li><span class="key">👥 Clone</span> - Duplicates nearby friendly units</li>
-                    </ul>
-                </div>
-                <div class="tutorial-section">
-                    <h3>HAZARDS</h3>
-                    <p>Watch out for obstacles that appear on the battlefield:</p>
-                    <ul>
-                        <li><span class="key">Black Holes</span> - Pull in and destroy nearby boids</li>
-                        <li><span class="key">Asteroids</span> - Moving obstacles that destroy on contact</li>
-                    </ul>
-                </div>
-                <div class="tutorial-section">
-                    <h3>TACTICAL ADVANTAGE</h3>
-                    <p>Your units flock together naturally. Use the scatter pulse to herd enemies into traps, 
-                    split enemy formations, and create local superiority. Encircle. Convert. Dominate.</p>
-                </div>
+            <h2>The power of the many.</h2>
+            <div class="tutorial-content simple-guide">
+                <article><b>01</b><h3>Gather your swarm</h3><p>Hold and drag anywhere in the arena. Your ships follow your pointer. While gathering, they cannot convert rivals.</p></article>
+                <article><b>02</b><h3>Release to surround</h3><p>Let go beside a smaller rival group. After a brief recharge, your ships turn outnumbered rivals to your color.</p></article>
+                <article><b>03</b><h3>Change the odds</h3><p>Space or right-click freezes rivals in a wide circle for 10 seconds. Recharge takes 10 seconds; empty casts keep their charge. Freezing releases Rally so you can convert.</p></article>
+                <p>Competition keeps the map fixed. Levels opens a new, harder sector after each win. Zen reshapes the map every 40 seconds. Survival sends incoming waves.</p>
             </div>
             <div class="tutorial-buttons">
-                <button id="btn-start-interactive-tutorial" class="menu-btn primary-btn">BEGIN TRAINING</button>
-                <button id="btn-back-tutorial" class="menu-btn">RETURN TO COMMAND</button>
+                <button id="btn-start-interactive-tutorial" class="menu-btn primary-btn">Explore the lessons</button>
+                <button id="btn-back-tutorial" class="menu-btn">Back</button>
             </div>
         </div>
-    </div>
-
-    <!-- Interactive Tutorial Mode -->
-    <div id="interactive-tutorial-screen" class="screen hidden">
-        <canvas id="tutorial-canvas"></canvas>
-        
-        <!-- Tutorial Stage Overlay -->
-        <div id="tutorial-stage-overlay" class="tutorial-stage-overlay">
-            <div class="stage-content">
-                <div class="stage-number">STAGE <span id="tutorial-stage-num">1</span></div>
-                <h2 id="tutorial-stage-title">THE FIRST LESSON</h2>
-                <p id="tutorial-stage-desc">Description here</p>
-                <div id="tutorial-objective" class="tutorial-objective">
-                    <span class="objective-label">OBJECTIVE:</span>
-                    <span id="tutorial-objective-text">Objective text</span>
-                </div>
-                <button id="btn-tutorial-start-stage" class="menu-btn">BEGIN</button>
-            </div>
-        </div>
-        
-        <!-- Tutorial HUD -->
-        <div id="tutorial-hud" class="tutorial-hud hidden">
-            <div class="tutorial-progress">
-                <div class="progress-bar">
-                    <div id="tutorial-progress-fill" class="progress-fill"></div>
-                </div>
-                <span id="tutorial-progress-text">Stage 1/5</span>
-            </div>
-            <div id="tutorial-hint" class="tutorial-hint">
-                <span class="hint-icon">💡</span>
-                <span id="tutorial-hint-text">Hint text here</span>
-            </div>
-            <div id="tutorial-fleet-count" class="tutorial-fleet-count">
-                <span class="fleet-label">YOUR FLEET:</span>
-                <span id="tutorial-your-count">0</span>
-                <span class="vs">vs</span>
-                <span class="enemy-label">ENEMY:</span>
-                <span id="tutorial-enemy-count">0</span>
-            </div>
-        </div>
-        
-        <!-- Tutorial Completion Overlay -->
-        <div id="tutorial-complete-overlay" class="overlay hidden">
-            <div class="overlay-content victory">
-                <h2>STAGE COMPLETE</h2>
-                <p id="tutorial-complete-message">Well done, Commander.</p>
-                <button id="btn-tutorial-next" class="menu-btn">NEXT STAGE</button>
-            </div>
-        </div>
-        
-        <!-- Tutorial Final Overlay -->
-        <div id="tutorial-final-overlay" class="overlay hidden">
-            <div class="overlay-content victory">
-                <h2>TRAINING COMPLETE</h2>
-                <p class="victory-quote">"The enemy's gate is down."</p>
-                <p>You have mastered the fundamentals of swarm warfare. Now go forth and conquer.</p>
-                <button id="btn-tutorial-to-conquest" class="menu-btn">BEGIN CONQUEST</button>
-                <button id="btn-tutorial-to-menu" class="menu-btn">RETURN TO COMMAND</button>
-            </div>
-        </div>
-        
-        <!-- Tutorial Quit Button -->
-        <button id="btn-tutorial-quit" class="tutorial-quit-btn">✕ EXIT TRAINING</button>
     </div>
 
     <!-- Team Selection Screen -->
     <div id="team-select-screen" class="screen hidden">
         <div class="team-select-container">
-            <h2>SELECT YOUR ARMY</h2>
-            <p class="team-select-subtitle">Choose wisely. Your allegiance defines your destiny.</p>
+            <h2>Choose your nature.</h2>
+            <p class="team-select-subtitle">Four ways to move as one. Pick a swarm to begin.</p>
             <div class="team-grid">
                 <button class="team-btn" data-team="dragon">
-                    <span class="team-icon">🐉</span>
-                    <span class="team-name">DRAGON ARMY</span>
+                    <span class="team-icon">◇</span>
+                    <span class="team-name">DRAGON FLEET</span>
+                    <span class="team-perk">ϟ +15% Speed & Piercing Vector</span>
                     <span class="team-desc">"The enemy's gate is down."</span>
                 </button>
                 <button class="team-btn" data-team="salamander">
-                    <span class="team-icon">🦎</span>
-                    <span class="team-name">SALAMANDER</span>
-                    <span class="team-desc">"Strength through unity."</span>
+                    <span class="team-icon">⬡</span>
+                    <span class="team-name">SALAMANDER CORPS</span>
+                    <span class="team-perk">🛡️ +35% Defense & Anti-Defection</span>
+                    <span class="team-desc">"Strength through unbreakable cohesion."</span>
                 </button>
                 <button class="team-btn" data-team="phoenix">
-                    <span class="team-icon">🔥</span>
-                    <span class="team-name">PHOENIX ARMY</span>
-                    <span class="team-desc">"From ashes, we rise."</span>
+                    <span class="team-icon">✳</span>
+                    <span class="team-name">PHOENIX LEGION</span>
+                    <span class="team-perk">◌ +35% Conversion Pressure Surge</span>
+                    <span class="team-desc">"From ashes, we rise and assimilate."</span>
                 </button>
                 <button class="team-btn" data-team="rat">
-                    <span class="team-icon">🐀</span>
-                    <span class="team-name">RAT ARMY</span>
-                    <span class="team-desc">"Survive. Adapt. Overcome."</span>
+                    <span class="team-icon">⌁</span>
+                    <span class="team-name">RAT SYNDICATE</span>
+                    <span class="team-perk">🌀 High Agility & Rapid Swarm Tightness</span>
+                    <span class="team-desc">"Survive. Adapt. Swarm."</span>
                 </button>
             </div>
-            <button id="btn-back-team-select" class="menu-btn">RETURN TO COMMAND</button>
+            <button id="btn-back-team-select" class="menu-btn">Back</button>
         </div>
     </div>
 
     <!-- Settings Screen -->
     <div id="settings-screen" class="screen hidden">
         <div class="settings-container">
-            <h2>CONFIGURATION</h2>
+            <h2>Make it yours.</h2>
             <div class="settings-content">
                 <div class="setting-row">
-                    <label>FLEET SIZE</label>
-                    <input type="range" id="setting-boid-count" min="50" max="300" value="150">
-                    <span id="boid-count-value">150</span>
+                    <label>TOTAL BATTLEFIELD UNITS</label>
+                    <input type="range" id="setting-boid-count" min="60" max="320" value="160">
+                    <span id="boid-count-value">160</span>
                 </div>
                 <div class="setting-row">
-                    <label>CONVERSION THRESHOLD</label>
+                    <label>PEER PRESSURE THRESHOLD</label>
                     <input type="range" id="setting-conversion" min="2" max="6" value="3">
                     <span id="conversion-value">3</span>
                 </div>
                 <div class="setting-row">
-                    <label>DIFFICULTY</label>
+                    <label>AI DIFFICULTY</label>
                     <select id="setting-difficulty">
-                        <option value="easy">CADET</option>
-                        <option value="medium" selected>COMMANDER</option>
-                        <option value="hard">HEGEMON</option>
+                        <option value="easy">CADET (Mild)</option>
+                        <option value="medium" selected>COMMANDER (Standard)</option>
+                        <option value="hard">HEGEMON (Relentless)</option>
                     </select>
                 </div>
                 <div class="setting-row">
-                    <label>SOUND</label>
+                    <label>SOUND EFFECTS</label>
                     <input type="checkbox" id="setting-sound" checked>
                 </div>
+                <div class="setting-row">
+                    <label>AMBIENT CYBER-SYNTH</label>
+                    <input type="checkbox" id="setting-music" checked>
+                </div>
             </div>
-            <button id="btn-back-settings" class="menu-btn">RETURN TO COMMAND</button>
+            <button id="btn-back-settings" class="menu-btn">SAVE & RETURN</button>
         </div>
     </div>
 
     <!-- Game Screen -->
     <div id="game-screen" class="screen hidden">
         <canvas id="game-canvas"></canvas>
-        
-        <!-- Control Panel - Bottom Left -->
-        <div id="control-panel" class="control-panel">
-            <button id="panel-toggle" class="panel-toggle">⚙️</button>
-            <div id="panel-content" class="panel-content collapsible-settings">
-                <h3>TACTICAL CONTROLS</h3>
-                <div class="control-row">
-                    <label>Separation</label>
-                    <input type="range" id="ctrl-separation" min="0" max="5" step="0.1" value="1.5">
-                    <span id="sep-value">1.5</span>
-                </div>
-                <div class="control-row">
-                    <label>Alignment</label>
-                    <input type="range" id="ctrl-alignment" min="0" max="3" step="0.1" value="0.0">
-                    <span id="align-value">0.0</span>
-                </div>
-                <div class="control-row">
-                    <label>Cohesion</label>
-                    <input type="range" id="ctrl-cohesion" min="0" max="3" step="0.1" value="0.0">
-                    <span id="cohes-value">0.0</span>
-                </div>
-                <div class="control-row">
-                    <label>Max Speed</label>
-                    <input type="range" id="ctrl-speed" min="1" max="8" step="0.5" value="4">
-                    <span id="speed-value">4</span>
-                </div>
-                <div class="control-row">
-                    <label>Perception</label>
-                    <input type="range" id="ctrl-perception" min="20" max="100" step="5" value="50">
-                    <span id="percep-value">50</span>
-                </div>
-            </div>
-        </div>
-        
-        <!-- HUD -->
+
+        <div id="world-info"><strong id="world-label"></strong><span id="world-detail"></span></div>
+        <!-- Live HUD Top -->
         <div id="hud">
             <div class="hud-left">
                 <div class="hud-panel collapsible">
                     <div class="panel-header" data-target="fleet-content">
-                        <span class="panel-title">FLEET STATUS</span>
+                        <span class="panel-title">BALANCE OF POWER</span>
                         <span class="collapse-icon">▼</span>
                     </div>
                     <div id="fleet-content" class="panel-body">
                         <div class="fleet-bars">
-                            <div id="fleet-bars-container">
-                                <!-- Fleet bars will be dynamically generated -->
-                            </div>
+                            <div id="fleet-bars-container"></div>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="hud-center">
+                <div id="hud-combo-badge" class="combo-badge hidden"><span id="hud-combo-val">1x</span> CONVERSION STREAK</div>
+                <div id="hud-rally-warning" class="rally-warning-badge hidden">⚠️ TRANSIT LOCK: CONVERTERS RECHARGING</div>
                 <div id="game-timer">00:00</div>
+                <div id="game-score-display">SCORE: <span id="game-score-val">0</span></div>
                 <div id="game-status">BATTLE IN PROGRESS</div>
             </div>
-            
+
             <div class="hud-right">
-                <!-- Right side removed - tactical panel eliminated -->
+                <div class="audio-toggles">
+                    <button id="btn-toggle-sfx" class="tactical-hud-btn" title="Toggle SFX">🔊 SFX</button>
+                    <button id="btn-toggle-music" class="tactical-hud-btn" title="Toggle Music">🎵 MUSIC</button>
+                    <button id="btn-hud-pause" class="tactical-hud-btn">Ⅱ Pause</button>
+                </div>
             </div>
         </div>
 
+        <div id="swarm-objective"><span id="objective-label">UNITE THE ARENA</span><strong id="territory-value">25%</strong><div class="territory-track"><div id="territory-fill"></div></div></div>
+        <div id="swarm-coach" role="status" aria-live="polite"><span id="coach-step">01 / GATHER</span><strong id="coach-title">Hold to gather your swarm</strong><p id="coach-detail">Drag toward a smaller rival group.</p><ul id="lesson-checklist" class="hidden"></ul><button id="coach-dismiss" aria-label="Hide guidance">×</button></div>
+        <!-- Tactical Command Ability Bar (Bottom Center) -->
+        <div id="ability-bar" class="ability-bar">
+            <button type="button" class="ability-slot" id="slot-beacon" title="Hold Left-Click to Rally Fleet (Disarms conversion while rallying)">
+                <div class="slot-key">HOLD</div>
+                <div class="slot-icon">◎</div>
+                <div class="slot-label">RALLY</div>
+                <div class="slot-cooldown" id="cd-beacon"></div>
+                <div class="slot-status" id="status-beacon">READY</div>
+            </button>
+            <button type="button" class="ability-slot" id="slot-emp" title="Space / right-click: Freeze rivals for 10 seconds">
+                <div class="slot-key">SPACE</div>
+                <div class="slot-icon">❄</div>
+                <div class="slot-label">FREEZE</div>
+                <div class="slot-cooldown" id="cd-emp"></div>
+                <div class="slot-status" id="status-emp">READY</div>
+            </button>
+        </div>
+
+        <!-- Real-time Flocking Physics Panel (Collapsible) -->
+        <div id="control-panel" class="control-panel">
+            <button id="panel-toggle" class="panel-toggle" title="Tactical Simulation Physics">⚙️</button>
+            <div id="panel-content" class="panel-content collapsible-settings">
+                <h3>SIMULATION PARAMETERS</h3>
+                <div class="control-row">
+                    <label>Separation</label>
+                    <input type="range" id="ctrl-separation" min="0" max="5" step="0.1" value="1.6">
+                    <span id="sep-value">1.6</span>
+                </div>
+                <div class="control-row">
+                    <label>Alignment</label>
+                    <input type="range" id="ctrl-alignment" min="0" max="3" step="0.1" value="1.1">
+                    <span id="align-value">1.1</span>
+                </div>
+                <div class="control-row">
+                    <label>Cohesion</label>
+                    <input type="range" id="ctrl-cohesion" min="0" max="3" step="0.1" value="1.2">
+                    <span id="cohes-value">1.2</span>
+                </div>
+                <div class="control-row">
+                    <label>Max Speed</label>
+                    <input type="range" id="ctrl-speed" min="1" max="8" step="0.5" value="4.2">
+                    <span id="speed-value">4.2</span>
+                </div>
+                <div class="control-row">
+                    <label>Perception</label>
+                    <input type="range" id="ctrl-perception" min="20" max="100" step="5" value="55">
+                    <span id="percep-value">55</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tactical Doctrine Draft Modal (Roguelike Upgrade Selection) -->
+        <div id="doctrine-overlay" class="overlay hidden">
+            <div class="overlay-content doctrine-modal">
+                <div class="doctrine-header">
+                    <span class="alert-tag">YOUR SWARM IS GROWING</span>
+                    <h2>How will you evolve?</h2>
+                    <p>Choose one upgrade. Find your own way to win.</p>
+                </div>
+                <div id="doctrine-cards" class="doctrine-cards-grid"></div>
+            </div>
+        </div>
+
+        <div id="lesson-intro" class="overlay hidden">
+            <div class="overlay-content lesson-intro-card">
+                <span id="lesson-intro-number" class="lesson-eyebrow"></span>
+                <h2 id="lesson-intro-title"></h2>
+                <p id="lesson-intro-description"></p>
+                <p id="lesson-intro-instruction" class="lesson-instruction"></p>
+                <button id="btn-lesson-begin" class="menu-btn primary-btn">Let’s try it →</button>
+                <button id="btn-lesson-library" class="menu-btn">All lessons</button>
+            </div>
+        </div>
+        <div id="sector-intro" class="overlay hidden">
+            <div class="overlay-content lesson-intro-card">
+                <span id="sector-number" class="lesson-eyebrow"></span><h2 id="sector-title"></h2><p id="sector-description"></p>
+                <p class="lesson-instruction">Optional detour: gather five ships near the stranded cluster for two seconds to bring six new allies home.</p>
+                <button id="btn-sector-begin" class="menu-btn primary-btn">Enter sector →</button><button id="btn-sector-quit" class="menu-btn">Save & return</button>
+            </div>
+        </div>
         <!-- Pause Overlay -->
         <div id="pause-overlay" class="overlay hidden">
             <div class="overlay-content">
-                <h2>TACTICAL PAUSE</h2>
-                <button id="btn-resume" class="menu-btn">RESUME</button>
-                <button id="btn-restart" class="menu-btn">RESTART</button>
-                <button id="btn-quit" class="menu-btn">QUIT TO MENU</button>
+                <h2>Take a breath.</h2>
+                <button id="btn-resume" class="menu-btn primary-btn">Back to the swarm</button>
+                <button id="btn-restart" class="menu-btn">Restart</button><button id="btn-pause-lessons" class="menu-btn hidden">All lessons</button>
+                <button id="btn-quit" class="menu-btn">Main menu</button>
             </div>
         </div>
 
         <!-- Victory Overlay -->
         <div id="victory-overlay" class="overlay hidden">
             <div class="overlay-content victory">
-                <h2>TOTAL VICTORY</h2>
-                <p class="victory-quote">"In the moment when I truly understand my enemy, understand him well enough to defeat him, then in that very moment I also love him."</p>
+                <h2>One swarm. Yours.</h2>
+                <p class="victory-quote">Every rival became part of something bigger.</p>
                 <div class="stats">
                     <div class="stat">
                         <span class="stat-label">TIME</span>
@@ -325,20 +287,24 @@
                         <span id="victory-conversions" class="stat-value">0</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-label">RATING</span>
-                        <span id="victory-rating" class="stat-value">S</span>
+                        <span class="stat-label">FINAL SCORE</span>
+                        <span id="victory-score" class="stat-value">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">RANK</span>
+                        <span id="victory-rating" class="stat-value">S+</span>
                     </div>
                 </div>
-                <button id="btn-play-again" class="menu-btn">DEPLOY AGAIN</button>
-                <button id="btn-victory-quit" class="menu-btn">RETURN TO COMMAND</button>
+                <button id="btn-play-again" class="menu-btn primary-btn">Play again</button><button id="btn-replay-lesson" class="menu-btn hidden">Replay this lesson</button>
+                <button id="btn-victory-quit" class="menu-btn">Back</button>
             </div>
         </div>
 
         <!-- Defeat Overlay -->
         <div id="defeat-overlay" class="overlay hidden">
             <div class="overlay-content defeat">
-                <h2>FLEET ASSIMILATED</h2>
-                <p class="defeat-quote">"I've lived too long with pain. I won't know who I am without it."</p>
+                <h2>A new beginning.</h2>
+                <p class="defeat-quote">Gather a tight group. Release beside a smaller rival. Every conversion changes the odds.</p>
                 <div class="stats">
                     <div class="stat">
                         <span class="stat-label">TIME SURVIVED</span>
@@ -349,18 +315,15 @@
                         <span id="defeat-peak" class="stat-value">0%</span>
                     </div>
                 </div>
-                <button id="btn-retry" class="menu-btn">RETRY MISSION</button>
-                <button id="btn-defeat-quit" class="menu-btn">RETURN TO COMMAND</button>
+                <button id="btn-retry" class="menu-btn primary-btn">RETRY MISSION</button>
+                <button id="btn-defeat-quit" class="menu-btn">Back</button>
             </div>
         </div>
 
-        <!-- Mobile Fleet Status Bar -->
+        <!-- Mobile Fleet Segments -->
         <div id="mobile-fleet-bar" class="mobile-fleet-bar">
-            <div id="mobile-fleet-segments" class="mobile-fleet-segments">
-                <!-- Segments will be dynamically generated -->
-            </div>
+            <div id="mobile-fleet-segments" class="mobile-fleet-segments"></div>
         </div>
-
     </div>
 
     <script src="js/main.js" type="module"></script>

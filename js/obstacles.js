@@ -51,7 +51,7 @@ export class Obstacle {
         this.rotationAngle = 0;
         this.particles = []; // For visual effects
         this.expired = false;
-        
+
         // Dynamic sizing and lifetime for black holes
         if (this.type === 'blackHole') {
             const d = this.data;
@@ -65,11 +65,11 @@ export class Obstacle {
             this.lifetime = this.data.lifetime || null; // null = permanent
         }
     }
-    
+
     update(deltaTime, totalBoids = 0) {
         this.pulsePhase += deltaTime * 2;
         this.rotationAngle += deltaTime * (this.type === 'blackHole' ? 2 : 0.5);
-        
+
         // Update lifetime
         if (this.lifetime !== null) {
             this.lifetime -= deltaTime;
@@ -77,9 +77,9 @@ export class Obstacle {
                 this.expired = true;
             }
         }
-        
+
         // Dynamic sizing for black holes based on total boids
-        if (this.type === 'blackHole') {
+        if (this.type === 'blackHole' && !this.fixed) {
             const d = this.data;
             const targetRadius = Math.min(
                 d.maxRadius,
@@ -90,14 +90,14 @@ export class Obstacle {
             this.pullRadius = d.pullRadiusMultiplier * this.radius;
             this.destroyRadius = d.destroyRadiusMultiplier * this.radius;
         }
-        
+
         // Update particles
         this.particles = this.particles.filter(p => {
             p.life -= deltaTime;
             p.angle += p.speed * deltaTime;
             return p.life > 0;
         });
-        
+
         // Spawn new particles for black holes
         if (this.type === 'blackHole' && Math.random() < 0.3) {
             this.particles.push({
@@ -109,41 +109,39 @@ export class Obstacle {
             });
         }
     }
-    
+
     // Apply effects to a boid, returns true if boid should be destroyed
     affectBoid(boid) {
         const dx = boid.pos.x - this.pos.x;
         const dy = boid.pos.y - this.pos.y;
         const distSq = dx * dx + dy * dy;
         const dist = Math.sqrt(distSq);
-        
+
         switch (this.type) {
             case 'blackHole':
                 // Check if within pull radius (use dynamic pullRadius)
-                if (dist < this.pullRadius) {
+                if (dist < this.destroyRadius) return true;
+                if (dist < this.pullRadius && dist > 0) {
                     // Pull towards center
                     const pullForce = this.data.pullStrength * (1 - dist / this.pullRadius);
                     const fx = -dx / dist * pullForce;
                     const fy = -dy / dist * pullForce;
                     boid.applyForce(new Vector(fx, fy));
-                    
+
                     // Destroy if too close (use dynamic destroyRadius)
                     if (dist < this.destroyRadius) {
                         return true; // Destroy boid
                     }
                 }
                 break;
-                
+
             case 'slowZone':
                 // Check if inside zone
                 if (dist < this.radius) {
                     boid.slowMultiplier = this.data.slowFactor;
-                } else if (boid.slowMultiplier < 1) {
-                    // Gradually restore speed when leaving
-                    boid.slowMultiplier = Math.min(1, boid.slowMultiplier + 0.05);
                 }
                 break;
-                
+
             case 'asteroid':
                 // Scatter boids that enter
                 if (dist < this.radius) {
@@ -155,13 +153,13 @@ export class Obstacle {
                 }
                 break;
         }
-        
+
         return false; // Don't destroy
     }
-    
+
     draw(ctx) {
         const pulse = Math.sin(this.pulsePhase) * 0.15 + 1;
-        
+
         switch (this.type) {
             case 'blackHole':
                 this.drawBlackHole(ctx, pulse);
@@ -174,7 +172,7 @@ export class Obstacle {
                 break;
         }
     }
-    
+
     drawBlackHole(ctx, pulse) {
         // Draw pull radius indicator (use dynamic radii)
         const gradient = ctx.createRadialGradient(
@@ -184,30 +182,30 @@ export class Obstacle {
         gradient.addColorStop(0, 'rgba(136, 0, 255, 0.3)');
         gradient.addColorStop(0.5, 'rgba(136, 0, 255, 0.1)');
         gradient.addColorStop(1, 'transparent');
-        
+
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.pullRadius, 0, Math.PI * 2);
         ctx.fillStyle = gradient;
         ctx.fill();
-        
+
         // Draw swirling particles
         for (const p of this.particles) {
             const px = this.pos.x + Math.cos(p.angle) * p.dist;
             const py = this.pos.y + Math.sin(p.angle) * p.dist;
             const alpha = p.life * 0.5;
-            
+
             ctx.beginPath();
             ctx.arc(px, py, p.size, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(136, 0, 255, ${alpha})`;
             ctx.fill();
         }
-        
+
         // Draw event horizon
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.radius * pulse, 0, Math.PI * 2);
         ctx.fillStyle = this.data.color;
         ctx.fill();
-        
+
         // Inner glow
         const innerGradient = ctx.createRadialGradient(
             this.pos.x, this.pos.y, 0,
@@ -216,12 +214,12 @@ export class Obstacle {
         innerGradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
         innerGradient.addColorStop(0.7, 'rgba(34, 0, 51, 0.8)');
         innerGradient.addColorStop(1, 'rgba(136, 0, 255, 0.3)');
-        
+
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.radius * pulse, 0, Math.PI * 2);
         ctx.fillStyle = innerGradient;
         ctx.fill();
-        
+
         // Accretion disk
         ctx.save();
         ctx.translate(this.pos.x, this.pos.y);
@@ -233,7 +231,7 @@ export class Obstacle {
         ctx.stroke();
         ctx.restore();
     }
-    
+
     drawSlowZone(ctx, pulse) {
         // Nebula effect - multiple overlapping circles
         const gradient = ctx.createRadialGradient(
@@ -243,35 +241,35 @@ export class Obstacle {
         gradient.addColorStop(0, 'rgba(0, 102, 204, 0.3)');
         gradient.addColorStop(0.5, 'rgba(0, 51, 102, 0.2)');
         gradient.addColorStop(1, 'transparent');
-        
+
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.radius * pulse, 0, Math.PI * 2);
         ctx.fillStyle = gradient;
         ctx.fill();
-        
+
         // Inner swirls
         ctx.save();
         ctx.translate(this.pos.x, this.pos.y);
         ctx.rotate(this.rotationAngle * 0.3);
-        
+
         for (let i = 0; i < 3; i++) {
             const angle = (i / 3) * Math.PI * 2 + this.pulsePhase * 0.5;
             const dist = this.radius * 0.4;
             const cx = Math.cos(angle) * dist;
             const cy = Math.sin(angle) * dist;
-            
+
             const swirlGradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, this.radius * 0.4);
             swirlGradient.addColorStop(0, 'rgba(0, 150, 255, 0.2)');
             swirlGradient.addColorStop(1, 'transparent');
-            
+
             ctx.beginPath();
             ctx.arc(cx, cy, this.radius * 0.4, 0, Math.PI * 2);
             ctx.fillStyle = swirlGradient;
             ctx.fill();
         }
-        
+
         ctx.restore();
-        
+
         // Border
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.radius * pulse, 0, Math.PI * 2);
@@ -280,30 +278,30 @@ export class Obstacle {
         ctx.setLineDash([10, 10]);
         ctx.stroke();
         ctx.setLineDash([]);
-        
+
         // Label
         ctx.font = "10px 'Rajdhani', sans-serif";
         ctx.fillStyle = 'rgba(0, 150, 255, 0.6)';
         ctx.textAlign = 'center';
         ctx.fillText('SLOW ZONE', this.pos.x, this.pos.y - this.radius - 10);
     }
-    
+
     drawAsteroid(ctx, pulse) {
         // Draw scattered rocks
         ctx.save();
         ctx.translate(this.pos.x, this.pos.y);
         ctx.rotate(this.rotationAngle * 0.2);
-        
+
         // Background dust
         const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
         gradient.addColorStop(0, 'rgba(100, 100, 100, 0.15)');
         gradient.addColorStop(1, 'transparent');
-        
+
         ctx.beginPath();
         ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
         ctx.fillStyle = gradient;
         ctx.fill();
-        
+
         // Draw asteroids
         const asteroidCount = 12;
         for (let i = 0; i < asteroidCount; i++) {
@@ -312,7 +310,7 @@ export class Obstacle {
             const size = 5 + (i % 4) * 3;
             const ax = Math.cos(angle) * dist;
             const ay = Math.sin(angle) * dist;
-            
+
             ctx.beginPath();
             // Irregular shape
             ctx.moveTo(ax + size, ay);
@@ -328,9 +326,9 @@ export class Obstacle {
             ctx.lineWidth = 1;
             ctx.stroke();
         }
-        
+
         ctx.restore();
-        
+
         // Danger border
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2);
@@ -347,202 +345,45 @@ export class ObstacleManager {
         this.game = game;
         this.obstacles = [];
     }
-    
+
     reset() {
         this.obstacles = [];
     }
-    
-    // Spawn initial obstacles for conquest mode
-    spawnForConquest() {
-        const width = this.game.canvas.width;
-        const height = this.game.canvas.height;
-        const margin = 150;
-        
-        // Spawn 2-3 obstacles initially
-        const obstacleCount = 2 + Math.floor(Math.random() * 2);
-        const types = Object.keys(OBSTACLE_TYPES);
-        
-        for (let i = 0; i < obstacleCount; i++) {
-            const type = types[Math.floor(Math.random() * types.length)];
-            
-            let x, y, valid;
-            let attempts = 0;
-            do {
-                x = margin + Math.random() * (width - margin * 2);
-                y = margin + Math.random() * (height - margin * 2);
-                
-                // Check distance from corners (team spawn areas)
-                const corners = [
-                    { x: width * 0.15, y: height * 0.15 },
-                    { x: width * 0.85, y: height * 0.15 },
-                    { x: width * 0.15, y: height * 0.85 },
-                    { x: width * 0.85, y: height * 0.85 }
-                ];
-                valid = true;
-                for (const corner of corners) {
-                    const dist = Math.sqrt((x - corner.x)**2 + (y - corner.y)**2);
-                    if (dist < 150) {
-                        valid = false;
-                        break;
-                    }
-                }
-                
-                // Check distance from other obstacles
-                if (valid) {
-                    for (const obs of this.obstacles) {
-                        const dist = Math.sqrt((x - obs.pos.x)**2 + (y - obs.pos.y)**2);
-                        if (dist < obs.radius + OBSTACLE_TYPES[type].radius + 50) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                }
-                
-                attempts++;
-            } while (!valid && attempts < 20);
-            
-            if (valid) {
-                const totalBoids = this.game.boids ? this.game.boids.length : 0;
-                this.obstacles.push(new Obstacle(x, y, type, totalBoids));
-            }
-        }
+
+    loadWorld(world) {
+        this.obstacles = world.terrain.map(spec => {
+            const obstacle = new Obstacle(spec.x, spec.y, spec.type, 0);
+            obstacle.radius = spec.radius;
+            obstacle.pullRadius = obstacle.radius * obstacle.data.pullRadiusMultiplier;
+            obstacle.destroyRadius = obstacle.radius * (obstacle.data.destroyRadiusMultiplier || 0);
+            obstacle.lifetime = null;
+            obstacle.fixed = true;
+            obstacle.id = spec.id;
+            return obstacle;
+        });
     }
-    
-    // Refresh obstacles periodically in conquest mode
-    refreshForConquest() {
-        // Remove 1-2 random obstacles
-        if (this.obstacles.length > 0) {
-            const removeCount = Math.min(1 + Math.floor(Math.random() * 2), this.obstacles.length);
-            this.removeRandomObstacles(removeCount);
-        }
-        
-        // Add 1-2 new obstacles if under cap
-        const maxObstacles = 4;
-        if (this.obstacles.length < maxObstacles) {
-            const addCount = Math.min(1 + Math.floor(Math.random() * 2), maxObstacles - this.obstacles.length);
-            const width = this.game.canvas.width;
-            const height = this.game.canvas.height;
-            const margin = 150;
-            const types = Object.keys(OBSTACLE_TYPES);
-            
-            for (let i = 0; i < addCount; i++) {
-                const type = types[Math.floor(Math.random() * types.length)];
-                
-                let x, y, valid;
-                let attempts = 0;
-                do {
-                    x = margin + Math.random() * (width - margin * 2);
-                    y = margin + Math.random() * (height - margin * 2);
-                    valid = true;
-                    
-                    // Check distance from other obstacles
-                    for (const obs of this.obstacles) {
-                        const dist = Math.sqrt((x - obs.pos.x)**2 + (y - obs.pos.y)**2);
-                        if (dist < obs.radius + OBSTACLE_TYPES[type].radius + 50) {
-                            valid = false;
-                            break;
-                        }
-                    }
-                    
-                    attempts++;
-                } while (!valid && attempts < 15);
-                
-                if (valid) {
-                    const totalBoids = this.game.boids ? this.game.boids.length : 0;
-                    this.obstacles.push(new Obstacle(x, y, type, totalBoids));
-                }
-            }
-        }
-    }
-    
-    // Remove some obstacles at the start of a new wave
-    removeRandomObstacles(count) {
-        const toRemove = Math.min(count, this.obstacles.length);
-        for (let i = 0; i < toRemove; i++) {
-            const idx = Math.floor(Math.random() * this.obstacles.length);
-            this.obstacles.splice(idx, 1);
-        }
-    }
-    
-    // Spawn obstacles for survival mode
-    spawnForSurvival(wave) {
-        const width = this.game.canvas.width;
-        const height = this.game.canvas.height;
-        const margin = 150;
-        
-        // Remove some existing obstacles each wave (keeps the field fresh)
-        if (this.obstacles.length > 0) {
-            const removeCount = Math.max(1, Math.floor(this.obstacles.length * 0.4));
-            this.removeRandomObstacles(removeCount);
-        }
-        
-        // More obstacles as waves progress, but cap total
-        const maxObstacles = 6;
-        const currentCount = this.obstacles.length;
-        const targetNew = Math.min(1 + Math.floor(wave / 3), 3);
-        const obstacleCount = Math.min(targetNew, maxObstacles - currentCount);
-        
-        for (let i = 0; i < obstacleCount; i++) {
-            // Pick random type, weighted towards slow zones early
-            const types = Object.keys(OBSTACLE_TYPES);
-            let type;
-            if (wave < 3) {
-                type = Math.random() < 0.7 ? 'slowZone' : 'asteroid';
-            } else if (wave < 6) {
-                type = types[Math.floor(Math.random() * types.length)];
-            } else {
-                // More black holes later
-                type = Math.random() < 0.4 ? 'blackHole' : types[Math.floor(Math.random() * types.length)];
-            }
-            
-            // Find position away from center and other obstacles
-            let x, y, valid;
-            let attempts = 0;
-            do {
-                x = margin + Math.random() * (width - margin * 2);
-                y = margin + Math.random() * (height - margin * 2);
-                
-                // Check distance from center
-                const centerDist = Math.sqrt((x - width/2)**2 + (y - height/2)**2);
-                valid = centerDist > 200;
-                
-                // Check distance from other obstacles
-                for (const obs of this.obstacles) {
-                    const dist = Math.sqrt((x - obs.pos.x)**2 + (y - obs.pos.y)**2);
-                    if (dist < obs.radius + OBSTACLE_TYPES[type].radius + 50) {
-                        valid = false;
-                        break;
-                    }
-                }
-                
-                attempts++;
-            } while (!valid && attempts < 20);
-            
-            if (valid) {
-                const totalBoids = this.game.boids ? this.game.boids.length : 0;
-                this.obstacles.push(new Obstacle(x, y, type, totalBoids));
-            }
-        }
-    }
-    
+
+    spawnForConquest() { if (this.game.world) this.loadWorld(this.game.world); }
+    spawnForSurvival() { /* Terrain stays fixed during a survival run as well. */ }
+
     update(deltaTime, boids) {
         const totalBoids = boids.length;
-        
+
         // Update obstacle animations
         for (const obstacle of this.obstacles) {
             obstacle.update(deltaTime, totalBoids);
         }
-        
+
         // Remove expired obstacles
         this.obstacles = this.obstacles.filter(obs => !obs.expired);
-        
+
         // Reset slow multipliers
         for (const boid of boids) {
             if (boid.slowMultiplier < 1) {
                 boid.slowMultiplier = Math.min(1, boid.slowMultiplier + deltaTime * 2);
             }
         }
-        
+
         // Apply obstacle effects to boids
         const boidsToRemove = [];
         for (const boid of boids) {
@@ -553,13 +394,18 @@ export class ObstacleManager {
                 }
             }
         }
-        
+
         return boidsToRemove;
     }
-    
+
     draw(ctx) {
         for (const obstacle of this.obstacles) {
             obstacle.draw(ctx);
+            ctx.save();
+            ctx.font = '10px Segoe UI, sans-serif'; ctx.textAlign = 'center';
+            ctx.fillStyle = obstacle.type === 'blackHole' ? '#cda8ef' : '#a8c5d0';
+            ctx.fillText(obstacle.type === 'blackHole' ? 'BLACK HOLE · KEEP CLEAR' : obstacle.type === 'asteroid' ? 'ASTEROIDS · SCATTER' : 'NEBULA · SLOW', obstacle.pos.x, obstacle.pos.y - (obstacle.pullRadius || obstacle.radius) - 10);
+            ctx.restore();
         }
     }
 }

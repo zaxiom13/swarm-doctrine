@@ -1,4 +1,5 @@
 // Entry Point - Initialize the game
+import './preview.js';
 import { Game } from './game.js';
 import { TutorialMode } from './tutorial.js';
 

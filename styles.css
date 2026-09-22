@@ -3002,3 +3002,441 @@ html, body {
         display: flex;
     }
 }
+
+/* ========================================
+   HUD & FLEET BAR SYSTEM (NO TEXT CLIPPING)
+   ======================================== */
+
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 50;
+    pointer-events: none;
+    box-sizing: border-box;
+}
+
+.hud-left, .hud-right {
+    pointer-events: auto;
+}
+
+.hud-panel {
+    background: rgba(6, 12, 24, 0.88);
+    border: 1px solid rgba(0, 247, 255, 0.28);
+    border-radius: 6px;
+    padding: 10px 14px;
+    min-width: 250px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
+}
+
+.hud-panel.collapsed .panel-body {
+    display: none;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 8px;
+    user-select: none;
+}
+
+.panel-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+}
+
+.collapse-icon {
+    font-size: 0.7rem;
+    color: var(--accent);
+}
+
+.fleet-bar-dynamic {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 0;
+}
+
+.bar-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    width: 118px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bar-container {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    transition: width 0.2s ease;
+}
+
+.count {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    min-width: 28px;
+    text-align: right;
+}
+
+.hud-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    pointer-events: none;
+}
+
+#game-timer {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    color: #ffffff;
+    text-shadow: 0 0 12px rgba(0, 247, 255, 0.5);
+}
+
+#game-status {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    color: #a89f8c;
+    white-space: nowrap;
+    margin-top: 2px;
+}
+
+.rally-warning-badge {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #ff5555;
+    background: rgba(255, 68, 68, 0.15);
+    border: 1px solid #ff5555;
+    border-radius: 4px;
+    padding: 3px 10px;
+    margin-bottom: 4px;
+    letter-spacing: 0.08em;
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.35);
+    animation: warningFlash 0.75s infinite alternate;
+    white-space: nowrap;
+}
+
+@keyframes warningFlash {
+    0% { opacity: 0.65; transform: scale(0.98); }
+    100% { opacity: 1.0; transform: scale(1.0); }
+}
+
+.command-badge {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    color: var(--accent);
+    letter-spacing: 0.25em;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 10px var(--accent-glow);
+}
+
+.tactical-hud-btn {
+    background: rgba(8, 14, 28, 0.85);
+    border: 1px solid rgba(0, 247, 255, 0.3);
+    color: #e0f8ff;
+    padding: 6px 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+    margin-left: 6px;
+    white-space: nowrap;
+}
+
+.tactical-hud-btn:hover {
+    background: rgba(0, 247, 255, 0.2);
+    border-color: #00f7ff;
+    box-shadow: 0 0 12px rgba(0, 247, 255, 0.4);
+}
+
+.audio-toggles {
+    display: flex;
+    align-items: center;
+}
+
+/* Tactical Ability Bar (Bottom Center) */
+.ability-bar {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 100;
+    pointer-events: auto;
+}
+
+.ability-slot {
+    position: relative;
+    width: 98px;
+    height: 84px;
+    background: rgba(6, 12, 24, 0.88);
+    border: 1.5px solid rgba(0, 247, 255, 0.35);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    user-select: none;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(0, 247, 255, 0.05);
+    transition: all 0.2s ease;
+    padding: 2px 4px;
+}
+
+.ability-slot:hover {
+    border-color: #00f7ff;
+    box-shadow: 0 0 18px rgba(0, 247, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.ability-slot.active {
+    border-color: #ffaa00;
+    background: rgba(255, 170, 0, 0.15);
+    box-shadow: 0 0 20px rgba(255, 170, 0, 0.45);
+}
+
+.ability-slot.on-cooldown {
+    border-color: rgba(255, 255, 255, 0.2);
+    cursor: not-allowed;
+    opacity: 0.9;
+}
+
+.slot-cooldown {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background: rgba(255, 59, 59, 0.35);
+    pointer-events: none;
+    transition: height 0.05s linear;
+}
+
+.slot-key {
+    position: absolute;
+    top: 4px;
+    left: 6px;
+    font-size: 0.62rem;
+    font-family: 'Orbitron', sans-serif;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.slot-icon {
+    font-size: 1.45rem;
+    margin-top: 8px;
+}
+
+.slot-label {
+    font-size: 0.68rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+    white-space: nowrap;
+}
+
+.slot-status {
+    font-size: 0.62rem;
+    font-family: 'Orbitron', sans-serif;
+    color: #00f7ff;
+    margin-top: 1px;
+    white-space: nowrap;
+}
+
+.ability-slot.active .slot-status {
+    color: #ffaa00;
+}
+
+.ability-slot.on-cooldown .slot-status {
+    color: #ff5555;
+}
+
+/* Controls Hint */
+.controls-hint {
+    position: absolute;
+    bottom: 118px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    color: rgba(212, 168, 75, 0.65);
+    letter-spacing: 0.12em;
+    pointer-events: none;
+    z-index: 90;
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+    white-space: nowrap;
+}
+
+/* Combo Badge */
+.combo-badge {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: #ffcc00;
+    background: rgba(255, 170, 0, 0.15);
+    border: 1px solid #ffcc00;
+    border-radius: 4px;
+    padding: 3px 10px;
+    margin-bottom: 4px;
+    display: inline-block;
+    box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
+    animation: comboPulse 0.4s ease-out;
+}
+
+@keyframes comboPulse {
+    0% { transform: scale(1.3); }
+    100% { transform: scale(1.0); }
+}
+
+#game-score-display {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    color: #00f7ff;
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+}
+
+/* Team Grid Enhancement */
+.team-perk {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #00ffaa;
+    margin: 4px 0;
+    text-shadow: 0 0 8px rgba(0, 255, 170, 0.4);
+}
+
+/* Roguelike Doctrine Draft Modal */
+.doctrine-modal {
+    max-width: 900px;
+    width: 92%;
+    background: rgba(6, 10, 22, 0.95);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 60px rgba(212, 168, 75, 0.3), inset 0 0 30px rgba(0, 247, 255, 0.05);
+    border-radius: 8px;
+    padding: 2.5rem;
+}
+
+.doctrine-header .alert-tag {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+}
+
+.doctrine-header h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    margin: 0.4rem 0;
+    color: #ffffff;
+    text-shadow: 0 0 20px rgba(0, 247, 255, 0.6);
+}
+
+.doctrine-header p {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    margin-bottom: 2rem;
+}
+
+.doctrine-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+.doctrine-card {
+    background: rgba(12, 18, 36, 0.9);
+    border: 1.5px solid rgba(0, 247, 255, 0.25);
+    border-radius: 6px;
+    padding: 1.8rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.doctrine-card:hover {
+    border-color: #00f7ff;
+    box-shadow: 0 0 30px rgba(0, 247, 255, 0.4), inset 0 0 15px rgba(0, 247, 255, 0.15);
+    transform: translateY(-6px);
+}
+
+.doctrine-category {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    background: rgba(212, 168, 75, 0.1);
+    padding: 2px 8px;
+    border-radius: 3px;
+}
+
+.doctrine-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 0 12px rgba(0, 247, 255, 0.5));
+}
+
+.doctrine-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.doctrine-desc {
+    font-size: 0.92rem;
+    color: #b0c4de;
+    line-height: 1.4;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+}
+
+.select-doctrine-btn {
+    width: 100%;
+    padding: 8px;
+    font-size: 0.95rem;
+}
+

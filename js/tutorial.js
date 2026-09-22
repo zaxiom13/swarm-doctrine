@@ -1,546 +1,214 @@
-// Tutorial Mode - Staged learning experience inspired by Dune's "desert power"
-import { CONFIG, TEAMS, DIFFICULTY_MODS } from './config.js';
-import { Boid } from './boid.js';
-import { Vector } from './vector.js';
-import { Renderer } from './renderer.js';
-import { QuadTree, Rectangle, Circle } from './quadtree.js';
+import { buildWorld } from './worlds.js';
+import { LESSONS, freshLessonProgress, lessonComplete, lessonReadyToConvert } from './lessons.js';
 
-// Tutorial stages - Dune-inspired progression
-const TUTORIAL_STAGES = [
-    {
-        id: 1,
-        title: "THE SWARM AWAKENS",
-        description: "On Arrakis, the Fremen learned that numbers alone do not win battles. But overwhelming force... that is another matter entirely.",
-        objective: "Convert all 5 enemy units using your swarm of 30",
-        hint: "Your boids will automatically convert enemies when they surround them. Watch the conversion happen!",
-        completeMessage: "Excellent. You understand the basic doctrine: surround and convert.",
-        setup: (tutorial) => {
-            // Player gets 30 boids, enemy gets 5 static ones
-            tutorial.spawnPlayerBoids(30, 0.3, 0.5);
-            tutorial.spawnEnemyBoids(5, 0.7, 0.5, true); // static = true
-        },
-        checkComplete: (tutorial) => {
-            return tutorial.getEnemyCount() === 0;
-        }
-    },
-    {
-        id: 2,
-        title: "THE SCATTER PULSE",
-        description: "The sandworm does not chase - it herds. Learn to use the scatter pulse to direct the flow of battle.",
-        objective: "Use LEFT CLICK to scatter boids and convert all enemies",
-        hint: "Click near enemy groups to scatter them apart, making them easier to surround!",
-        completeMessage: "You wield the scatter pulse like a true commander.",
-        setup: (tutorial) => {
-            // Player gets 25, enemy gets 10 in a tight cluster
-            tutorial.spawnPlayerBoids(25, 0.25, 0.5);
-            tutorial.spawnEnemyCluster(10, 0.75, 0.5, 50); // clustered enemies
-        },
-        checkComplete: (tutorial) => {
-            return tutorial.getEnemyCount() === 0;
-        }
-    },
-    {
-        id: 3,
-        title: "DIVIDE AND CONQUER",
-        description: "A single enemy formation is strong. But split them, isolate them, and they fall like sand through fingers.",
-        objective: "Split the enemy formation and convert all units",
-        hint: "Use scatter to break the enemy group into smaller pieces, then let your swarm pick them off!",
-        completeMessage: "Divide et impera. The ancient wisdom serves you well.",
-        setup: (tutorial) => {
-            // Player gets 20, enemy gets 15 in a line formation
-            tutorial.spawnPlayerBoids(20, 0.2, 0.5);
-            tutorial.spawnEnemyLine(15, 0.7, 0.3, 0.7); // vertical line
-        },
-        checkComplete: (tutorial) => {
-            return tutorial.getEnemyCount() === 0;
-        }
-    },
-    {
-        id: 4,
-        title: "MULTI-FRONT WARFARE",
-        description: "The spice must flow from all directions. So too must your forces learn to fight on multiple fronts.",
-        objective: "Defeat enemies from two different armies",
-        hint: "Focus on one group at a time. Overwhelming local superiority wins battles!",
-        completeMessage: "You have learned to manage chaos. Two fronts, one victory.",
-        setup: (tutorial) => {
-            // Player gets 25, two enemy teams of 8 each
-            tutorial.spawnPlayerBoids(25, 0.5, 0.5);
-            tutorial.spawnEnemyBoids(8, 0.15, 0.3, false, 'salamander');
-            tutorial.spawnEnemyBoids(8, 0.85, 0.7, false, 'phoenix');
-        },
-        checkComplete: (tutorial) => {
-            return tutorial.getEnemyCount() === 0;
-        }
-    },
-    {
-        id: 5,
-        title: "THE FINAL TEST",
-        description: "Now you face a true challenge. The enemy is numerous, but you have the doctrine. Show them the meaning of swarm warfare.",
-        objective: "Achieve total victory against a larger enemy force",
-        hint: "Stay calm. Use scatter strategically. Pick off isolated units. Victory will come.",
-        completeMessage: "You have completed your training. The enemy's gate is down.",
-        setup: (tutorial) => {
-            // Player gets 20, enemies get 25 total but spread out
-            tutorial.spawnPlayerBoids(20, 0.5, 0.5);
-            tutorial.spawnEnemyBoids(7, 0.15, 0.15, false, 'salamander');
-            tutorial.spawnEnemyBoids(6, 0.85, 0.15, false, 'phoenix');
-            tutorial.spawnEnemyBoids(6, 0.15, 0.85, false, 'rat');
-            tutorial.spawnEnemyBoids(6, 0.85, 0.85, false, 'salamander');
-        },
-        checkComplete: (tutorial) => {
-            return tutorial.getEnemyCount() === 0;
-        }
-    }
-];
+const PROGRESS_KEY = 'swarm-lessons-v2';
 
 export class TutorialMode {
     constructor(game) {
         this.game = game;
-        this.canvas = document.getElementById('tutorial-canvas');
-        this.renderer = new Renderer(this.canvas);
-        
-        this.boids = [];
-        this.quadTree = null;
-        this.currentStage = 0;
-        this.isPlaying = false;
-        this.gameTime = 0;
-        this.playerTeam = 'dragon';
-        
-        // Scatter mechanic
-        this.scatterCooldown = 0;
-        this.scatterCooldownMax = 1.2;
-        this.scatterActive = false;
-        this.scatterDuration = 0.25;
-        
-        // Mouse state
-        this.mousePos = new Vector();
-        this.mouseDown = false;
-        
-        // Particles
-        this.particles = [];
-        this.screenShake = 0;
-        
-        // Difficulty (easier for tutorial)
-        this.difficultyMod = DIFFICULTY_MODS.easy;
-        
-        this.setupEventListeners();
-    }
-    
-    setupEventListeners() {
-        // Canvas mouse events
-        this.canvas.addEventListener('mousemove', (e) => {
-            this.mousePos = new Vector(e.clientX, e.clientY);
+        this.index = 0;
+        this.completed = new Set();
+        try {
+            const current = localStorage.getItem(PROGRESS_KEY);
+            const saved = current ? JSON.parse(current) : JSON.parse(localStorage.getItem('swarm-lessons-v1') || '[]').filter(id => ['gather','surround','freeze'].includes(id));
+            if (Array.isArray(saved)) this.completed = new Set(saved.filter(id => LESSONS.some(l => l.id === id)));
+        } catch (_) { /* Lessons also work without local storage. */ }
+        document.getElementById('btn-lessons-back').addEventListener('click', () => game.quitToMenu());
+        document.getElementById('btn-lesson-begin').addEventListener('click', () => {
+            document.getElementById('lesson-intro').classList.add('hidden');
+            game.gameState = 'playing';
+            game.audio.init();
         });
-        
-        this.canvas.addEventListener('mousedown', (e) => {
-            if (e.button === 0 && this.isPlaying) {
-                this.mouseDown = true;
-                // Activate scatter while mouse is held
-                if (this.scatterCooldown <= 0) {
-                    this.scatterActive = true;
-                    this.game.audio.playScatter();
-                }
-            }
-        });
-        
-        this.canvas.addEventListener('mouseup', (e) => {
-            if (e.button === 0) {
-                this.mouseDown = false;
-                // Deactivate scatter and start cooldown when mouse released
-                if (this.scatterActive) {
-                    this.scatterActive = false;
-                    this.scatterCooldown = this.scatterCooldownMax;
-                }
-            }
-        });
-        
-        this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-        
-        // UI buttons
-        document.getElementById('btn-start-interactive-tutorial').addEventListener('click', () => {
-            this.game.audio.playClick();
-            this.start();
-        });
-        
-        document.getElementById('btn-tutorial-start-stage').addEventListener('click', () => {
-            this.game.audio.playClick();
-            this.startCurrentStage();
-        });
-        
-        document.getElementById('btn-tutorial-next').addEventListener('click', () => {
-            this.game.audio.playClick();
-            this.nextStage();
-        });
-        
-        document.getElementById('btn-tutorial-quit').addEventListener('click', () => {
-            this.game.audio.playClick();
-            this.quit();
-        });
-        
-        document.getElementById('btn-tutorial-to-conquest').addEventListener('click', () => {
-            this.game.audio.playClick();
-            this.goToConquest();
-        });
-        
-        document.getElementById('btn-tutorial-to-menu').addEventListener('click', () => {
-            this.game.audio.playClick();
-            this.quit();
+        document.getElementById('btn-lesson-library').addEventListener('click', () => this.showLessons());
+        document.getElementById('btn-pause-lessons').addEventListener('click', () => this.showLessons());
+        document.getElementById('btn-replay-lesson').addEventListener('click', () => this.start(this.index));
+        document.getElementById('btn-continue-lessons').addEventListener('click', () => {
+            const firstIncomplete = LESSONS.findIndex(l => !this.completed.has(l.id));
+            this.start(firstIncomplete < 0 ? 0 : firstIncomplete);
         });
     }
-    
-    start() {
-        this.currentStage = 0;
-        this.showScreen('interactive-tutorial-screen');
-        this.renderer.resize();
-        this.showStageIntro();
-    }
-    
-    showScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-        document.getElementById(screenId).classList.remove('hidden');
-    }
-    
-    showStageIntro() {
-        const stage = TUTORIAL_STAGES[this.currentStage];
-        
-        document.getElementById('tutorial-stage-num').textContent = stage.id;
-        document.getElementById('tutorial-stage-title').textContent = stage.title;
-        document.getElementById('tutorial-stage-desc').textContent = stage.description;
-        document.getElementById('tutorial-objective-text').textContent = stage.objective;
-        
-        document.getElementById('tutorial-stage-overlay').classList.remove('hidden');
-        document.getElementById('tutorial-hud').classList.add('hidden');
-        document.getElementById('tutorial-complete-overlay').classList.add('hidden');
-        document.getElementById('tutorial-final-overlay').classList.add('hidden');
-        
-        // Update progress
-        const progress = ((this.currentStage) / TUTORIAL_STAGES.length) * 100;
-        document.getElementById('tutorial-progress-fill').style.width = `${progress}%`;
-        document.getElementById('tutorial-progress-text').textContent = `Stage ${this.currentStage + 1}/${TUTORIAL_STAGES.length}`;
-    }
-    
-    startCurrentStage() {
-        const stage = TUTORIAL_STAGES[this.currentStage];
-        
-        // Reset state
-        this.boids = [];
-        this.particles = [];
-        this.gameTime = 0;
-        this.scatterCooldown = 0;
-        this.scatterActive = false;
-        
-        // Setup stage
-        stage.setup(this);
-        
-        // Show HUD, hide intro
-        document.getElementById('tutorial-stage-overlay').classList.add('hidden');
-        document.getElementById('tutorial-hud').classList.remove('hidden');
-        document.getElementById('tutorial-hint-text').textContent = stage.hint;
-        
-        this.isPlaying = true;
-        this.lastTime = performance.now();
-        this.gameLoop();
-    }
-    
-    // Spawn helpers
-    spawnPlayerBoids(count, xRatio, yRatio, spread = 80) {
-        const width = this.canvas.width;
-        const height = this.canvas.height;
-        const centerX = width * xRatio;
-        const centerY = height * yRatio;
-        
-        for (let i = 0; i < count; i++) {
-            const x = centerX + (Math.random() - 0.5) * spread;
-            const y = centerY + (Math.random() - 0.5) * spread;
-            this.boids.push(new Boid(x, y, this.playerTeam));
-        }
-    }
-    
-    spawnEnemyBoids(count, xRatio, yRatio, isStatic = false, team = 'salamander') {
-        const width = this.canvas.width;
-        const height = this.canvas.height;
-        const centerX = width * xRatio;
-        const centerY = height * yRatio;
-        
-        for (let i = 0; i < count; i++) {
-            const x = centerX + (Math.random() - 0.5) * 60;
-            const y = centerY + (Math.random() - 0.5) * 60;
-            const boid = new Boid(x, y, team);
-            if (isStatic) {
-                boid.vel = new Vector(0, 0);
-                boid.isStatic = true;
-            }
-            this.boids.push(boid);
-        }
-    }
-    
-    spawnEnemyCluster(count, xRatio, yRatio, radius) {
-        const width = this.canvas.width;
-        const height = this.canvas.height;
-        const centerX = width * xRatio;
-        const centerY = height * yRatio;
-        
-        for (let i = 0; i < count; i++) {
-            const angle = (Math.PI * 2 * i) / count;
-            const r = radius * 0.3 + Math.random() * radius * 0.7;
-            const x = centerX + Math.cos(angle) * r;
-            const y = centerY + Math.sin(angle) * r;
-            this.boids.push(new Boid(x, y, 'salamander'));
-        }
-    }
-    
-    spawnEnemyLine(count, xRatio, yStartRatio, yEndRatio) {
-        const width = this.canvas.width;
-        const height = this.canvas.height;
-        const x = width * xRatio;
-        
-        for (let i = 0; i < count; i++) {
-            const t = count > 1 ? i / (count - 1) : 0.5;
-            const y = height * (yStartRatio + t * (yEndRatio - yStartRatio));
-            const boid = new Boid(x + (Math.random() - 0.5) * 20, y, 'salamander');
-            this.boids.push(boid);
-        }
-    }
-    
-    getPlayerCount() {
-        return this.boids.filter(b => b.team === this.playerTeam).length;
-    }
-    
-    getEnemyCount() {
-        return this.boids.filter(b => b.team !== this.playerTeam).length;
-    }
-    
-    update(deltaTime) {
-        if (!this.isPlaying) return;
-        
-        this.gameTime += deltaTime;
-        
-        // Update scatter cooldown
-        if (this.scatterCooldown > 0) {
-            this.scatterCooldown -= deltaTime;
-        }
-        
-        // Update screen shake
-        if (this.screenShake > 0) {
-            this.screenShake -= deltaTime * 10;
-        }
-        
-        // Update particles
-        this.particles = this.particles.filter(p => {
-            p.life -= deltaTime;
-            p.x += p.vx * deltaTime;
-            p.y += p.vy * deltaTime;
-            p.vx *= 0.98;
-            p.vy *= 0.98;
-            return p.life > 0;
+
+    get lessonCount() { return LESSONS.length; }
+
+    get lesson() { return LESSONS[this.index]; }
+
+    showLessons() {
+        this.game.restoreRunTuning();
+        this.game.resetHeldInput();
+        this.game.gameState = 'menu';
+        this.game.ui.hideOverlays();
+        this.game.ui.showScreen('lessons-screen');
+        const grid = document.getElementById('lesson-grid');
+        grid.replaceChildren();
+        LESSONS.forEach((lesson, index) => {
+            const button = document.createElement('button');
+            button.className = 'lesson-card';
+            const complete = this.completed.has(lesson.id);
+            button.innerHTML = `<span class="lesson-number">${String(index + 1).padStart(2, '0')} / ${complete ? 'COMPLETED ✓' : lesson.duration}</span><span class="lesson-symbol">${lesson.symbol}</span><strong>${lesson.title}</strong><p>${lesson.description}</p><span class="lesson-link">${complete ? 'Play again' : 'Try lesson'} ↗</span>`;
+            button.addEventListener('click', () => this.start(index));
+            grid.appendChild(button);
         });
-        
-        const width = this.canvas.width;
-        const height = this.canvas.height;
-        
-        // Build QuadTree
-        const boundary = new Rectangle(width / 2, height / 2, width / 2, height / 2);
-        this.quadTree = new QuadTree(boundary, 4);
-        for (const boid of this.boids) {
-            this.quadTree.insert(boid);
-        }
-        
-        const queryRadius = Math.max(CONFIG.perceptionRadius, CONFIG.separationRadius, CONFIG.conversionRadius);
-        const mouseX = this.mousePos.x;
-        const mouseY = this.mousePos.y;
-        const influenceRadiusSq = (CONFIG.influenceRadius * 1.5) ** 2;
-        
-        // Update boids
-        for (const boid of this.boids) {
-            const isPlayerTeam = boid.team === this.playerTeam;
-            
-            // Query neighbors
-            const range = new Circle(boid.pos.x, boid.pos.y, queryRadius);
-            const neighbors = this.quadTree.query(range);
-            
-            // Skip flocking for static boids
-            if (!boid.isStatic) {
-                boid.flock(neighbors, this.difficultyMod, !isPlayerTeam);
+        document.getElementById('lesson-progress').textContent = `${this.completed.size} of ${LESSONS.length} complete · Choose any lesson`;
+        document.getElementById('btn-continue-lessons').textContent = this.completed.size === LESSONS.length ? 'Start again' : this.completed.size ? 'Continue learning →' : 'Start with movement →';
+    }
+
+    start(index = 0) {
+        this.index = Math.max(0, Math.min(LESSONS.length - 1, index));
+        this.game.tutorial = this;
+        this.game.practice = true;
+        this.game.gameMode = 'conquest';
+        this.game.playerTeam = 'dragon';
+        this.game.startGame();
+    }
+
+    setupArena() {
+        const g = this.game, lesson = this.lesson;
+        this.progress = freshLessonProgress();
+        this.game.zenShifts = 0;
+        this.game.rescues = 0;
+        this.game.losses = 0;
+        this.lastChecklist = '';
+        g.boids = [];
+        const width = g.canvas.width, height = g.canvas.height;
+        const cluster = (team, count, x, y) => {
+            for (let i = 0; i < count; i++) {
+                const angle = i * 2.399963;
+                const radius = Math.sqrt(i / count) * Math.min(48, width * 0.09);
+                g.addBoid(width * x + Math.cos(angle) * radius, height * y + Math.sin(angle) * radius, team);
             }
-            
-            // Scatter effect
-            if (this.scatterActive) {
-                const dx = boid.pos.x - mouseX;
-                const dy = boid.pos.y - mouseY;
-                if (dx * dx + dy * dy < influenceRadiusSq) {
-                    const force = boid.fleeMouse(this.mousePos);
-                    boid.applyForce(force);
-                    // Unstick static boids when scattered
-                    if (boid.isStatic) {
-                        boid.isStatic = false;
-                    }
-                }
+        };
+        cluster(g.playerTeam, lesson.playerCount, 0.25, 0.44);
+        lesson.enemies.forEach(enemy => cluster(enemy.team, enemy.count, enemy.x, enemy.y));
+        g.teamCounts = Object.fromEntries([g.playerTeam, ...lesson.enemies.map(e => e.team)].map(team => [team, g.boids.filter(b => b.team === team).length]));
+        g.peakPlayerCount = lesson.playerCount;
+        g.ui.createFleetBars(Object.keys(g.teamCounts), g.playerTeam);
+        g.ui.updateHUD(g.teamCounts, g.playerTeam, 0, 0, 0);
+        this.setupTerrain();
+        this.setAbilities();
+        document.getElementById('lesson-intro-number').textContent = `LESSON ${this.index + 1} OF ${LESSONS.length} · ${lesson.duration}`;
+        document.getElementById('lesson-intro-title').textContent = lesson.title;
+        document.getElementById('lesson-intro-description').textContent = lesson.description;
+        document.getElementById('lesson-intro-instruction').textContent = lesson.instruction;
+        document.getElementById('lesson-intro').classList.remove('hidden');
+        document.getElementById('btn-pause-lessons').classList.remove('hidden');
+        g.gameState = 'lesson-intro';
+        this.updateCoach();
+    }
+
+    setAbilities() {
+        for (const name of ['emp']) {
+            const slot = document.getElementById('slot-' + name);
+            const enabled = this.lesson.abilities.includes(name);
+            slot.disabled = !enabled;
+            slot.classList.toggle('lesson-locked', !enabled);
+            slot.setAttribute('aria-label', enabled ? `${name === 'emp' ? 'Freeze' : name} ability` : 'Introduced in a later lesson');
+        }
+    }
+
+    allowsAbility(name) { return this.lesson.abilities.includes(name); }
+    allowsConversion() { return lessonReadyToConvert(this.lesson, this.progress); }
+
+    recordAbility(name, hits = 0) {
+        if (name === 'emp' && hits > 0) {
+            this.progress.freezeHits = Math.max(this.progress.freezeHits, hits);
+            this.progress.freezeCasts++;
+            this.game.ui.coachHeld = true;
+        }
+    }
+
+    recordConversion(wasFrozen) {
+        this.progress.recruited++;
+        if (wasFrozen) this.progress.frozenRecruits++;
+    }
+
+    setupTerrain(tier = this.lesson.generated) {
+        const g = this.game, l = this.lesson;
+        const world = buildWorld(45123 + this.index * 1009 + (this.progress?.sectors || 0), tier || 1, g.canvas.width, g.canvas.height);
+        if (!tier) world.terrain = l.terrain.map((t,i) => ({...t, id:'lesson-'+i, x:t.x*g.canvas.width, y:t.y*g.canvas.height, radius:t.radius*Math.min(g.canvas.width,g.canvas.height)}));
+        if (!l.rescue && !tier) world.rescue = null;
+        g.world = world;
+        g.obstacles.loadWorld(world);
+        g.zenShiftTimer = l.evolving ? 15 : 40;
+    }
+
+    update() {
+        const g = this.game, s = this.progress;
+        if (!s) return;
+        if (g.beaconActive) { s.held = true; s.released = false; }
+        else if (s.held) s.released = true;
+        const currentTarget = this.lesson.route?.[s.waypoints] || this.lesson.target;
+        if (currentTarget) {
+            const target = currentTarget;
+            const radius = Math.min(90, g.canvas.width * 0.17);
+            const count = g.boids.filter(b => b.team === g.playerTeam && Math.hypot(b.pos.x - target.x * g.canvas.width, b.pos.y - target.y * g.canvas.height) < radius).length;
+            s.arrived = Math.max(s.arrived, count);
+            if (this.lesson.route && count >= 8) s.waypoints++;
+        }
+        s.enemiesLeft = g.boids.filter(b => b.team !== g.playerTeam).length;
+        s.nebulaSeen ||= g.boids.some(b => b.team === g.playerTeam && b.slowMultiplier < .9);
+        s.rescues = g.rescues || 0;
+        s.shifts = g.zenShifts || 0;
+        if (this.lesson.waveExercise && s.recruited >= 8 && s.waves === 1) {
+            s.waves = 2;
+            for(let i=0;i<12;i++) g.addBoid(g.canvas.width*.75+(i%4)*9,g.canvas.height*.62+Math.floor(i/4)*9,'phoenix');
+            s.enemiesLeft += 12;
+            g.renderer.addFloatingText('SECOND WAVE',g.canvas.width*.65,g.canvas.height*.5,'#b8edcb',18);
+        }
+        if (this.lesson.sectorExercise && s.enemiesLeft === 0) {
+            s.sectors++;
+            if (s.sectors === 1) {
+                this.setupTerrain(3);
+                // Keep reinforcement away from terrain and make the transition explicit.
+                for(let i=0;i<12;i++) g.addBoid(g.canvas.width*.82+(i%4)*9,g.canvas.height*.18+Math.floor(i/4)*9,'phoenix');
+                s.enemiesLeft = 12;
+                g.empCooldown = 0;
+                g.renderer.addFloatingText('SECTOR TWO · NEW TERRAIN',g.canvas.width/2,g.canvas.height*.4,'#b8edcb',18);
             }
-            
-            // Check conversion
-            const conversionResult = this.checkConversion(boid, neighbors);
-            if (conversionResult) {
-                boid.convert(conversionResult);
-                this.game.audio.playConversion(conversionResult === this.playerTeam);
-                this.spawnConversionParticles(boid.pos.x, boid.pos.y, TEAMS[conversionResult].colorRgb);
-            }
-            
-            // Update position
-            if (!boid.isStatic) {
-                const speedMult = isPlayerTeam ? 1 : this.difficultyMod.enemySpeed;
-                boid.update(width, height, this.difficultyMod, speedMult);
-            }
         }
-        
-        // Update HUD
-        document.getElementById('tutorial-your-count').textContent = this.getPlayerCount();
-        document.getElementById('tutorial-enemy-count').textContent = this.getEnemyCount();
-        
-        // Check stage completion
-        const stage = TUTORIAL_STAGES[this.currentStage];
-        if (stage.checkComplete(this)) {
-            this.completeStage();
-        }
-        
-        // Check defeat
-        if (this.getPlayerCount() === 0) {
-            this.failStage();
+        this.updateCoach();
+        if (lessonComplete(this.lesson, s)) {
+            this.completed.add(this.lesson.id);
+            try { localStorage.setItem(PROGRESS_KEY, JSON.stringify([...this.completed])); } catch (_) { /* Optional persistence. */ }
+            g.victory();
+        } else if (s.enemiesLeft === 0 && this.lesson.enemies.length) {
+            // An unfinished timing goal always gets another chance, without restarting.
+            const source = this.lesson.enemies[0];
+            const count = 8;
+            for (let i = 0; i < count; i++) g.addBoid(g.canvas.width * 0.68 + (i % 4) * 9, g.canvas.height * 0.44 + Math.floor(i / 4) * 9, source.team);
+            g.renderer.addFloatingText('Another group — try your timing again', g.canvas.width / 2, g.canvas.height * 0.35, '#b8edcb', 14);
         }
     }
-    
-    checkConversion(boid, neighbors) {
-        if (boid.conversionCooldown > 0) {
-            boid.conversionCooldown--;
-            return null;
+
+    updateCoach() {
+        const lesson = this.lesson;
+        document.getElementById('coach-step').textContent = `LESSON ${this.index + 1} / ${LESSONS.length}`;
+        document.getElementById('coach-title').textContent = lesson.title;
+        document.getElementById('coach-detail').textContent = this.game.input.freezeAiming ? 'Tap anywhere in the arena to freeze rivals there. Tap Freeze again to cancel.' : this.game.gameTime > 25 ? lesson.hint : lesson.instruction;
+        const checklist = lesson.goals.map(goal => `${goal.check(this.progress) ? '✓' : '○'} ${goal.label}`);
+        const signature = checklist.join('|');
+        if (signature !== this.lastChecklist) {
+            this.lastChecklist = signature;
+            const list = document.getElementById('lesson-checklist');
+            list.replaceChildren(...checklist.map(text => { const li = document.createElement('li'); li.textContent = text; return li; }));
         }
-        
-        const teamCounts = {};
-        for (const other of neighbors) {
-            if (other !== boid) {
-                teamCounts[other.team] = (teamCounts[other.team] || 0) + 1;
-            }
-        }
-        
-        const sameTeamCount = teamCounts[boid.team] || 0;
-        const threshold = CONFIG.conversionThreshold;
-        
-        let dominantTeam = null;
-        let dominantCount = 0;
-        
-        for (const [team, count] of Object.entries(teamCounts)) {
-            if (team !== boid.team && count > dominantCount) {
-                dominantCount = count;
-                dominantTeam = team;
-            }
-        }
-        
-        // Easier conversion in tutorial
-        if (dominantTeam && dominantCount >= threshold && dominantCount > sameTeamCount * 0.8) {
-            boid.conversionPressure += 1.5; // Faster conversion in tutorial
-            
-            if (boid.conversionPressure >= CONFIG.peerPressureTime * 0.7) {
-                return dominantTeam;
-            }
-        } else {
-            boid.conversionPressure = Math.max(0, boid.conversionPressure - 2);
-        }
-        
-        return null;
+        document.getElementById('lesson-checklist').classList.remove('hidden');
     }
-    
-    spawnConversionParticles(x, y, colorRgb) {
-        for (let i = 0; i < 8; i++) {
-            const angle = (Math.PI * 2 * i) / 8;
-            const speed = 50 + Math.random() * 100;
-            this.particles.push({
-                x, y,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                life: 0.5 + Math.random() * 0.3,
-                maxLife: 0.8,
-                colorRgb,
-                size: 3 + Math.random() * 3
-            });
-        }
-        this.screenShake = 0.3;
+
+    drawTarget(ctx) {
+        const target = this.lesson.route?.[this.progress.waypoints] || this.lesson.target;
+        if (!target || this.game.gameState !== 'playing') return;
+        const g = this.game;
+        const x = target.x * g.canvas.width, y = target.y * g.canvas.height;
+        ctx.save();
+        ctx.strokeStyle = '#b8edcb'; ctx.fillStyle = '#b8edcb0c'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 6]);
+        ctx.beginPath(); ctx.arc(x, y, Math.min(90, g.canvas.width * 0.17), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.setLineDash([]); ctx.fillStyle = '#b8edcb'; ctx.font = '11px Segoe UI, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('GATHER HERE', x, y - Math.min(90, g.canvas.width * 0.17) - 15);
+        ctx.restore();
     }
-    
-    completeStage() {
-        this.isPlaying = false;
-        const stage = TUTORIAL_STAGES[this.currentStage];
-        
-        document.getElementById('tutorial-complete-message').textContent = stage.completeMessage;
-        document.getElementById('tutorial-complete-overlay').classList.remove('hidden');
-        
-        this.game.audio.playVictory();
-    }
-    
-    failStage() {
-        this.isPlaying = false;
-        // Just restart the stage
-        document.getElementById('tutorial-hint-text').textContent = "Your fleet was eliminated. Try again!";
-        setTimeout(() => {
-            this.startCurrentStage();
-        }, 1500);
-    }
-    
-    nextStage() {
-        this.currentStage++;
-        
-        if (this.currentStage >= TUTORIAL_STAGES.length) {
-            // Tutorial complete!
-            document.getElementById('tutorial-complete-overlay').classList.add('hidden');
-            document.getElementById('tutorial-final-overlay').classList.remove('hidden');
-        } else {
-            document.getElementById('tutorial-complete-overlay').classList.add('hidden');
-            this.showStageIntro();
-        }
-    }
-    
-    quit() {
-        this.isPlaying = false;
-        this.showScreen('main-menu');
-    }
-    
-    goToConquest() {
-        this.isPlaying = false;
-        this.game.showTeamSelect('conquest');
-    }
-    
-    gameLoop() {
-        if (!this.isPlaying) {
-            // Still render even when paused
-            this.render();
-            return;
-        }
-        
-        const currentTime = performance.now();
-        const deltaTime = (currentTime - this.lastTime) / 1000;
-        this.lastTime = currentTime;
-        
-        const cappedDelta = Math.min(deltaTime, 0.1);
-        
-        this.update(cappedDelta);
-        this.render();
-        
-        requestAnimationFrame(() => this.gameLoop());
-    }
-    
-    render() {
-        this.renderer.render(
-            this.boids,
-            this.mousePos,
-            this.mouseDown,
-            false, // rightMouseDown
-            'playing',
-            null, // powerups
-            this.particles,
-            this.screenShake,
-            this.scatterCooldown,
-            this.scatterCooldownMax,
-            this.scatterActive,
-            this.playerTeam,
-            null // obstacles
-        );
+
+    next() {
+        if (this.index < LESSONS.length - 1) this.start(this.index + 1);
+        else { this.game.practice = false; this.game.ui.showScreen('mode-screen'); this.game.gameState = 'menu'; }
     }
 }
