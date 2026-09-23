@@ -15,6 +15,8 @@ export class AudioSystem {
         this.padTimer = null;
         this.chord = 0;
         document.addEventListener?.('visibilitychange', () => document.hidden ? this.suspend() : this.resume());
+        // Browsers only allow audio after a gesture; the first tap anywhere starts the music.
+        document.addEventListener?.('pointerdown', () => this.init(), { once: true });
     }
 
     get enabled() { return settings.sound; }
@@ -50,7 +52,7 @@ export class AudioSystem {
         if (this.ctx.state === 'suspended') this.ctx.resume();
     }
 
-    /** Music plays only during a live match; menus and pauses are silent. */
+    /** One continuous track across menus and matches; silent while paused. */
     setMusic(on) {
         if (on) this.startMusic();
         else if (this.padTimer) this.stopMusic();
