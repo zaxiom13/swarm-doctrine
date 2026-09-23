@@ -174,10 +174,12 @@ export class Renderer {
 
     /** Lines from a recruiting ship to its target show pressure building. */
     drawTethers(boids, game) {
-        const ctx = this.ctx, ticks = game.sim.rules.conversionTicks;
+        const ctx = this.ctx, ticks = game.sim.rules.conversionTicks, reach = (game.sim.rules.conversionRadius * 1.5) ** 2;
         for (const boid of boids) {
             const source = boid.conversionSource;
             if (boid.conversionPressure <= 8 || !source || game.sim.commanders[source.team]?.disarmed) continue;
+            // The source may have wrapped to the far edge or left; never draw a line across the arena.
+            if ((source.pos.x - boid.pos.x) ** 2 + (source.pos.y - boid.pos.y) ** 2 > reach) continue;
             const ratio = Math.min(1, boid.conversionPressure / ticks);
             ctx.beginPath();
             ctx.moveTo(source.pos.x, source.pos.y);
