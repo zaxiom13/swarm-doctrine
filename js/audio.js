@@ -2,7 +2,10 @@
 import { settings } from './settings.js';
 
 const SCALE = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99, 880.0];
-const CHORDS = [[65.41, 130.81, 196.0], [55.0, 110.0, 164.81], [73.42, 146.83, 220.0], [49.0, 98.0, 146.83]];
+// I–V–vi–IV in C, voiced around middle C so nothing rumbles.
+const CHORDS = [[261.63, 329.63, 392.0], [246.94, 293.66, 392.0], [220.0, 261.63, 329.63], [220.0, 261.63, 349.23]];
+const ARPEGGIO = [0, 1, 2, 1, 2, 3, 2, 1];
+const BAR_SECONDS = 4;
 
 export class AudioSystem {
     constructor() {
@@ -68,27 +71,29 @@ export class AudioSystem {
         const now = this.ctx.currentTime;
         this.musicGain.gain.cancelScheduledValues(now);
         this.musicGain.gain.setValueAtTime(0.18, now);
-        const pad = () => {
-            if (!this.enabled || !this.musicEnabled) return;
-            const now = this.ctx.currentTime;
-            CHORDS[this.chord++ % CHORDS.length].forEach((frequency, i) => {
-                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), filter = this.ctx.createBiquadFilter();
-                osc.type = i === 0 ? 'sawtooth' : 'sine';
-                osc.frequency.setValueAtTime(frequency, now);
-                filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(180 + i * 80, now);
-                filter.frequency.exponentialRampToValueAtTime(320, now + 3);
-                filter.frequency.exponentialRampToValueAtTime(160, now + 6);
-                gain.gain.setValueAtTime(0.001, now);
-                gain.gain.linearRampToValueAtTime(0.04 / (i + 1), now + 1.5);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 6);
-                osc.connect(filter).connect(gain).connect(this.musicGain);
-                osc.start(now);
-                osc.stop(now + 6.2);
-            });
+        const note = (frequency, start, length, type, volume) => {
+            const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(frequency, start);
+            gain.gain.setValueAtTime(0.0001, start);
+            gain.gain.linearRampToValueAtTime(volume, start + Math.min(0.02, length / 4));
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + length);
+            osc.connect(gain).connect(this.musicGain);
+            osc.start(start);
+            osc.stop(start + length + 0.05);
         };
-        pad();
-        this.padTimer = setInterval(pad, 5800);
+        const bar = () => {
+            if (!this.enabled || !this.musicEnabled) return;
+            const now = this.ctx.currentTime + 0.05, chord = CHORDS[this.chord++ % CHORDS.length];
+            // Soft sustained pad.
+            chord.forEach(frequency => note(frequency, now, BAR_SECONDS * 0.95, 'sine', 0.045));
+            // Bouncy plucked arpeggio an octave up, with a high sparkle on the last beat.
+            const step = BAR_SECONDS / ARPEGGIO.length, tones = [...chord, chord[0] * 2];
+            ARPEGGIO.forEach((index, i) => note(tones[index] * 2, now + i * step, step * 0.9, 'triangle', 0.05));
+            note(tones[3] * 2, now + BAR_SECONDS - step, step * 1.5, 'sine', 0.025);
+        };
+        bar();
+        this.padTimer = setInterval(bar, BAR_SECONDS * 1000);
     }
 
     tone(frequency, duration, type = 'sine', volume = 0.1, bendTo = null, delay = 0) {
