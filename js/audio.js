@@ -31,7 +31,6 @@ export class AudioSystem {
             this.musicGain = this.ctx.createGain();
             this.musicGain.gain.value = 0.18;
             this.musicGain.connect(master);
-            this.startMusic();
         } catch (error) {
             console.warn('Web Audio is unavailable:', error);
         }
@@ -46,11 +45,29 @@ export class AudioSystem {
     resume() {
         if (!this.ctx || document.hidden) return;
         if (this.ctx.state === 'suspended') this.ctx.resume();
-        this.startMusic();
+    }
+
+    /** Music plays only during a live match; menus and pauses are silent. */
+    setMusic(on) {
+        if (on) this.startMusic();
+        else if (this.padTimer) this.stopMusic();
+    }
+
+    stopMusic() {
+        clearInterval(this.padTimer);
+        this.padTimer = null;
+        if (!this.musicGain) return;
+        const now = this.ctx.currentTime;
+        this.musicGain.gain.cancelScheduledValues(now);
+        this.musicGain.gain.setValueAtTime(this.musicGain.gain.value, now);
+        this.musicGain.gain.linearRampToValueAtTime(0, now + 0.4);
     }
 
     startMusic() {
-        if (!this.ctx || this.padTimer) return;
+        if (!this.ctx || this.padTimer || this.ctx.state !== 'running' || document.hidden) return;
+        const now = this.ctx.currentTime;
+        this.musicGain.gain.cancelScheduledValues(now);
+        this.musicGain.gain.setValueAtTime(0.18, now);
         const pad = () => {
             if (!this.enabled || !this.musicEnabled) return;
             const now = this.ctx.currentTime;

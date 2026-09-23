@@ -255,6 +255,7 @@ export class Game {
     frame(now) {
         const dt = Math.min((now - this.lastTime) / 1000, 0.1);
         this.lastTime = now;
+        this.audio.setMusic(this.gameState === 'playing');
         // Steering is tuned per 60 Hz tick; a fixed step keeps play identical on any display.
         if (this.gameState === 'playing') {
             this.accumulator = Math.min(this.accumulator + dt, 3 * TICK);
