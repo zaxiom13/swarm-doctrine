@@ -1,15 +1,14 @@
 // Mode behaviour mixed into Game: world preparation, fleet setup, waves,
 // upgrade milestones, Zen terrain shifts, Levels checkpoints and win/lose.
 import { buildWorld, levelRules, randomFrom, validCheckpoint, DIFFICULTY_CAP } from './worlds.js';
-import { TEAMS, TEAM_IDS, DIFFICULTY, baseModifiers } from './catalog.js';
+import { TEAMS, TEAM_IDS, DIFFICULTY, MODES, baseModifiers } from './catalog.js';
 import { settings } from './settings.js';
-import { spawnFleet, setupDuelArena, duelWorld } from './arena.js';
+import { spawnFleet, setupDuelArena } from './arena.js';
 
 const CHECKPOINT_KEY = 'swarm-expedition-v1';
 const ZEN_SHIFT_SECONDS = 40;
 const SURVIVAL_WAVE_SECONDS = 25;
 const MODE_TIER = { duel: 1, zen: 3, conquest: 5, survival: 5 };
-const MODE_NAMES = { conquest: 'Conquest', levels: 'Levels', zen: 'Zen', survival: 'Survival', duel: 'Duel' };
 
 export const ModeMethods = {
     /** Chooses the map for this match. Retry and resume keep the seed; fresh starts roll one. */
@@ -23,7 +22,7 @@ export const ModeMethods = {
         const tier = this.gameMode === 'levels' ? this.level : MODE_TIER[this.gameMode] ?? 5;
         this.sector = levelRules(tier);
         const seed = (this.mapSeed + (this.gameMode === 'levels' ? this.level * 2654435761 : 0)) >>> 0;
-        this.world = this.gameMode === 'duel' ? duelWorld(seed, this.canvas.width, this.canvas.height) : buildWorld(seed, tier, this.canvas.width, this.canvas.height);
+        this.world = buildWorld(seed, tier, this.canvas.width, this.canvas.height);
         if (this.gameMode === 'levels') this.saveCheckpoint();
     },
 
@@ -162,18 +161,17 @@ export const ModeMethods = {
         try { localStorage.setItem(CHECKPOINT_KEY, JSON.stringify({ level: this.level, seed: this.mapSeed, team: this.playerTeam })); } catch { /* Optional. */ }
     },
 
-    hasCheckpoint() {
-        try { return validCheckpoint(JSON.parse(localStorage.getItem(CHECKPOINT_KEY))); } catch { return false; }
+    /** The saved Levels checkpoint, or null when there is none or it is invalid. */
+    loadCheckpoint() {
+        try { const saved = JSON.parse(localStorage.getItem(CHECKPOINT_KEY)); return validCheckpoint(saved) ? saved : null; } catch { return null; }
     },
 
     resumeExpedition() {
-        try {
-            const saved = JSON.parse(localStorage.getItem(CHECKPOINT_KEY));
-            if (!validCheckpoint(saved)) return false;
-            Object.assign(this, { practice: false, gameMode: 'levels', level: saved.level, mapSeed: saved.seed, playerTeam: saved.team });
-            this.startGame();
-            return true;
-        } catch { return false; }
+        const saved = this.loadCheckpoint();
+        if (!saved) return false;
+        Object.assign(this, { practice: false, gameMode: 'levels', level: saved.level, mapSeed: saved.seed, playerTeam: saved.team });
+        this.startGame();
+        return true;
     },
 
     advanceLevel() {
@@ -185,17 +183,18 @@ export const ModeMethods = {
     showSectorBriefing() {
         if (this.gameMode !== 'levels') return;
         this.gameState = 'sector-intro';
-        this.ui.showSectorBriefing({
-            number: `Sector ${String(this.level).padStart(2, '0')} · ${this.sector.tier >= DIFFICULTY_CAP ? 'difficulty capped' : `difficulty ${this.sector.tier} / ${DIFFICULTY_CAP}`}`,
+        this.ui.showIntro({
+            eyebrow: `Sector ${String(this.level).padStart(2, '0')} · ${this.sector.tier >= DIFFICULTY_CAP ? 'difficulty capped' : `difficulty ${this.sector.tier} / ${DIFFICULTY_CAP}`}`,
             title: this.world.name,
             description: `${this.sector.rivals} rival swarm${this.sector.rivals > 1 ? 's' : ''} · ${this.world.terrain.length} terrain fields. The map stays fixed. Unite the arena to open the next sector.`,
+            instruction: 'Hold to move. Release beside a smaller group.', secondary: 'Save & quit',
         });
     },
 
     worldLabel() {
         if (this.practice) return this.tutorial.lesson.title;
         if (this.gameMode === 'duel') return `You vs ${this.rivalName()}`;
-        return `${this.gameMode === 'levels' ? `Sector ${this.level}` : MODE_NAMES[this.gameMode]} · ${this.world?.name ?? ''}`;
+        return `${this.gameMode === 'levels' ? `Sector ${this.level}` : MODES.find(mode => mode.id === this.gameMode).name} · ${this.world?.name ?? ''}`;
     },
 
     worldDetail() {

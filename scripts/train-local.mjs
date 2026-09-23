@@ -15,7 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { pathToFileURL } from 'node:url';
-import { createDuelArena, stepDuelArena, duelWinner } from '../js/arena.js';
+import { createDuelArena, advanceSecond, act, duelWinner } from '../js/arena.js';
 import { createRules, rulesHash } from '../js/rules.js';
 import { randomFrom } from '../js/worlds.js';
 import { POLICY_VERSION, INPUTS, PARAMETERS, LEGACY_PARAMETERS, ACTION_IDS, policy, chooseAction, validateModel, migrateLegacyVector } from '../js/ai/local-policy.js';
@@ -23,6 +23,7 @@ import { averagedDirection, perturb } from './es-update.mjs';
 import { controller, leagueOpponent, randomRules, archiveModels } from './lib/league.mjs';
 
 const args = process.argv.slice(2);
+const sha = text => crypto.createHash('sha256').update(text).digest('hex');
 const option = (name, fallback) => { const i = args.indexOf(name); return i < 0 ? fallback : args[i + 1]; };
 const root = option('--directory', null) ? pathToFileURL(path.resolve(option('--directory')) + path.sep) : new URL('../training/', import.meta.url);
 const checkpointDir = new URL('checkpoints/', root);
@@ -47,7 +48,7 @@ let state;
 for (const file of requested ? [path.resolve(requested)] : files.map(f => new URL(f, checkpointDir))) {
     try {
         const envelope = JSON.parse(fs.readFileSync(file, 'utf8'));
-        if (crypto.createHash('sha256').update(JSON.stringify(envelope.state)).digest('hex') !== envelope.sha256) throw new Error('checksum');
+        if (sha(JSON.stringify(envelope.state)) !== envelope.sha256) throw new Error('checksum');
         state = envelope.state;
         state.model = validateModel(state.model);
         state.bestModel = validateModel(state.bestModel);
@@ -68,7 +69,7 @@ state.bestModel ||= structuredClone(state.model);
 if (args.includes('--verify-checkpoint')) {
     if (!files.length && !requested) throw new Error('No saved checkpoint to verify');
     if (state.m.length !== PARAMETERS || state.v.length !== PARAMETERS || ![...state.m, ...state.v].every(Number.isFinite)) throw new Error('Invalid optimizer state');
-    console.log(JSON.stringify({ verified: true, episodes: state.episodes, adamStep: state.adamStep, weightsHash: crypto.createHash('sha256').update(JSON.stringify(state.model.weights)).digest('hex') }));
+    console.log(JSON.stringify({ verified: true, episodes: state.episodes, adamStep: state.adamStep, weightsHash: sha(JSON.stringify(state.model.weights)) }));
     process.exit(0);
 }
 
@@ -106,7 +107,7 @@ function atomic(file, text) {
     fs.renameSync(temp, file);
 }
 function save() {
-    const serialized = JSON.stringify(state), sha256 = crypto.createHash('sha256').update(serialized).digest('hex');
+    const sha256 = sha(JSON.stringify(state));
     const name = `${String(state.episodes).padStart(8, '0')}-${Date.now()}-${crypto.randomUUID().slice(0, 8)}.json`;
     atomic(new URL(name, checkpointDir), JSON.stringify({ sha256, state }));
     atomic(new URL('latest.json', root), JSON.stringify({ checkpoint: `checkpoints/${name}`, sha256 }));
@@ -130,7 +131,7 @@ function episode(model, seed, { training = false, kind = opponent, rules: fixedR
     const random = randomFrom(seed ^ 0x123456), trajectory = [];
     let previous = 0, score = 0;
     for (let second = 0; second < EPISODE_SECONDS && !duelWinner(arena); second++) {
-        arena.sim.commander(rival).apply(play(arena.sim.snapshotFor(rival), second, arena, rival));
+        act(arena, rival, play, second);
         const p = policy(arena.sim.snapshotFor(learner), model);
         let index = p.probabilities.indexOf(Math.max(...p.probabilities));
         if (training) {
@@ -139,7 +140,7 @@ function episode(model, seed, { training = false, kind = opponent, rules: fixedR
             for (let i = 0; i < p.probabilities.length; i++) { sample -= p.probabilities[i]; if (sample <= 0) { index = i; break; } }
         }
         arena.sim.commander(learner).apply(p.candidates.get(ACTION_IDS[index]).action);
-        for (let tick = 0; tick < 60 && !duelWinner(arena); tick++) stepDuelArena(arena);
+        advanceSecond(arena);
         const margin = (arena.sim.count(learner) - arena.sim.count(rival)) / arena.sim.rules.duelFleetSize;
         const winner = duelWinner(arena);
         const reward = margin - previous + (winner === learner ? 2 : winner === rival ? -2 : 0);

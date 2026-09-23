@@ -54,7 +54,7 @@ function load() {
 
 export const settings = load();
 
-export function saveSettings() {
+function saveSettings() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch { /* Storage can be unavailable in private modes. */ }
 }
 

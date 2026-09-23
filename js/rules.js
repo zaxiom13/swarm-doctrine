@@ -44,9 +44,6 @@ export const DEFAULT_RULES = Object.freeze({
     duelShipCap: 220,
 });
 
-/** The rule values players may change in Settings. */
-export const ADJUSTABLE_RULES = ['conversionThreshold', 'separationWeight', 'alignmentWeight', 'cohesionWeight', 'maxSpeed', 'perceptionRadius'];
-
 /** A fresh, mutable rules object for one match. Upgrades mutate only this copy. */
 export function createRules(overrides = {}) {
     const rules = { ...DEFAULT_RULES };
@@ -57,7 +54,7 @@ export function createRules(overrides = {}) {
 }
 
 /** Rule values that change strategy. Anything else (colours, sizes) is excluded. */
-export const STRATEGIC_RULES = ['maxSpeed', 'conversionRadius', 'conversionThreshold', 'conversionTicks', 'rallyRadius', 'rallyCoolOff',
+const STRATEGIC_RULES = ['maxSpeed', 'conversionRadius', 'conversionThreshold', 'conversionTicks', 'rallyRadius', 'rallyCoolOff',
     'freezeRadius', 'freezeDuration', 'freezeCooldown', 'freezeLockout', 'freezeFraction', 'duelFleetSize', 'duelNeutralWave', 'duelNeutralInterval', 'duelNeutralCap'];
 
 /** Stable fingerprint of the strategic rules, stored with trained models. */

@@ -5,20 +5,14 @@ import { buildWorld, randomFrom } from './worlds.js';
 import { createRules } from './rules.js';
 import { baseModifiers } from './catalog.js';
 
-export const DUEL_TEAMS = ['dragon', 'salamander'];
-export const SPAWN_POINTS = [{ x: 0.18, y: 0.18 }, { x: 0.82, y: 0.18 }, { x: 0.18, y: 0.82 }, { x: 0.82, y: 0.82 }];
+const DUEL_TEAMS = ['dragon', 'salamander'];
+const SPAWN_POINTS = [{ x: 0.18, y: 0.18 }, { x: 0.82, y: 0.18 }, { x: 0.18, y: 0.82 }, { x: 0.82, y: 0.82 }];
 
 /** Spawns a fleet around one of the four corner spawn points. */
 export function spawnFleet(sim, team, count, index) {
     const point = SPAWN_POINTS[index % SPAWN_POINTS.length];
-    for (let i = 0; i < count; i++) {
-        sim.addBoid((point.x + (sim.random() - 0.5) * 0.1) * sim.width, (point.y + (sim.random() - 0.5) * 0.1) * sim.height, team);
-    }
+    sim.spawnBlob(team, count, point.x * sim.width, point.y * sim.height, 0.1 * sim.width, 0.1 * sim.height);
 }
-
-/** Duel maps use the gentlest terrain tier and the same seed-derived random stream everywhere. */
-export const duelWorld = (seed, width, height) => buildWorld(seed, 1, width, height);
-export const worldRandom = world => randomFrom(world.seed ^ 0xabcdef);
 
 /** Fills an empty simulation with the duel map, both fleets and the opening gray ships. */
 export function setupDuelArena(sim, world, { teams = DUEL_TEAMS, mirror = false } = {}) {
@@ -32,7 +26,7 @@ export function setupDuelArena(sim, world, { teams = DUEL_TEAMS, mirror = false 
 
 export function createDuelArena({ seed = 1, width = 1280, height = 720, rules = createRules(), mirror = false, tier = 1 } = {}) {
     const world = buildWorld(seed, tier, width, height);
-    return setupDuelArena(new Simulation({ width, height, rules, random: worldRandom(world) }), world, { mirror });
+    return setupDuelArena(new Simulation({ width, height, rules, random: randomFrom(world.seed ^ 0xabcdef) }), world, { mirror });
 }
 
 /** Gray-ship reinforcement waves on their own timer. */
@@ -49,6 +43,18 @@ export function stepDuelArena(arena, dt = TICK) {
     arena.sim.step(dt);
 }
 
+/** One simulated second, stopping early if a fleet is wiped out. */
+export function advanceSecond(arena) {
+    for (let tick = 0; tick < 60 && !duelWinner(arena); tick++) stepDuelArena(arena);
+}
+
+/** Lets a controller (snapshot, second, arena, team) → action command its team. */
+export function act(arena, team, controller, second) {
+    const action = controller(arena.sim.snapshotFor(team), second, arena, team);
+    if (action) arena.sim.commander(team).apply(action);
+    return action;
+}
+
 /** The surviving team once the other fleet is gone, otherwise null. */
 export function duelWinner(arena) {
     const [a, b] = arena.teams.map(team => arena.sim.count(team));
@@ -61,17 +67,12 @@ export function duelWinner(arena) {
  * Plays a headless duel between two controllers, each deciding once per
  * simulated second from its own snapshot. Returns the result and fleet margin.
  */
-export function playDuel({ seed, controllers, seconds = 60, rules, tier, mirror = seed % 2 === 1, onSecond } = {}) {
+export function playDuel({ seed, controllers, seconds = 60, rules, tier, mirror = seed % 2 === 1 } = {}) {
     const arena = createDuelArena({ seed, rules, mirror, tier });
     const [a, b] = arena.teams;
-    for (let second = 0; second < seconds; second++) {
-        for (const team of arena.teams) {
-            const action = controllers[team](arena.sim.snapshotFor(team), second, arena, team);
-            if (action) arena.sim.commander(team).apply(action);
-        }
-        onSecond?.(arena, second);
-        for (let tick = 0; tick < 60; tick++) stepDuelArena(arena);
-        if (duelWinner(arena)) break;
+    for (let second = 0; second < seconds && !duelWinner(arena); second++) {
+        for (const team of arena.teams) act(arena, team, controllers[team], second);
+        advanceSecond(arena);
     }
     const winner = duelWinner(arena);
     return { winner, seconds: Math.round(arena.sim.time), margin: (arena.sim.count(a) - arena.sim.count(b)) / arena.sim.rules.duelFleetSize, arena };

@@ -1,7 +1,7 @@
 // The shared action vocabulary for every non-human controller: eight named
 // target points, Rally for 1/3/5 seconds or Freeze at each, Release, or Wait.
-export const TARGET_NAMES = ['rival focus', 'gray focus', 'flank', 'center', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];
-export const HOLD_SECONDS = [1, 3, 5];
+const TARGET_NAMES = ['rival focus', 'gray focus', 'flank', 'center', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];
+const HOLD_SECONDS = [1, 3, 5];
 export const ACTION_IDS = ['wait', 'release',
     ...TARGET_NAMES.flatMap((_, i) => HOLD_SECONDS.map(s => `rally_${i}_${s}`)),
     ...TARGET_NAMES.map((_, i) => `freeze_${i}`)];
@@ -61,7 +61,7 @@ export function candidateTargets(snapshot) {
     return raw.map(p => ({ x: round(clampTo(p.x, width)), y: round(clampTo(p.y, height)) }));
 }
 
-export function actionKey(action) {
+function actionKey(action) {
     if (action.type === 'wait' || action.type === 'release') return action.type;
     if (action.type === 'freeze') return `freeze_${action.targetIndex}`;
     return `rally_${action.targetIndex}_${action.holdSeconds}`;

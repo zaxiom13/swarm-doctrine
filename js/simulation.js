@@ -56,9 +56,9 @@ export class Simulation {
         return boid;
     }
 
-    /** A loose square blob of ships around a point. */
-    spawnBlob(team, count, cx, cy, spread) {
-        for (let i = 0; i < count; i++) this.addBoid(cx + (this.random() - 0.5) * spread, cy + (this.random() - 0.5) * spread, team);
+    /** A loose rectangular blob of ships around a point. */
+    spawnBlob(team, count, cx, cy, spreadX, spreadY = spreadX) {
+        for (let i = 0; i < count; i++) this.addBoid(cx + (this.random() - 0.5) * spreadX, cy + (this.random() - 0.5) * spreadY, team);
     }
 
     /** A tight spiral cluster, used for lesson targets and reinforcements. */

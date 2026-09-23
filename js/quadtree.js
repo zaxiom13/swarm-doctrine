@@ -1,63 +1,31 @@
-// QuadTree for spatial partitioning optimization
+// Spatial index for neighbour queries. Queries are always circles.
 export class Rectangle {
     constructor(x, y, w, h) {
-        this.x = x; // center x
-        this.y = y; // center y
-        this.w = w; // half width
-        this.h = h; // half height
+        // Centre and half-sizes.
+        this.x = x; this.y = y; this.w = w; this.h = h;
     }
 
     contains(point) {
-        return (
-            point.pos.x >= this.x - this.w &&
-            point.pos.x < this.x + this.w &&
-            point.pos.y >= this.y - this.h &&
-            point.pos.y < this.y + this.h
-        );
-    }
-
-    intersects(range) {
-        return !(
-            range.x - range.w > this.x + this.w ||
-            range.x + range.w < this.x - this.w ||
-            range.y - range.h > this.y + this.h ||
-            range.y + range.h < this.y - this.h
-        );
+        const x = point.pos.x, y = point.pos.y;
+        return x >= this.x - this.w && x < this.x + this.w && y >= this.y - this.h && y < this.y + this.h;
     }
 }
 
 export class Circle {
     constructor(x, y, r) {
-        this.x = x;
-        this.y = y;
-        this.r = r;
-        this.rSquared = r * r;
+        this.x = x; this.y = y; this.r = r; this.rSquared = r * r;
     }
 
     contains(point) {
-        const dx = point.pos.x - this.x;
-        const dy = point.pos.y - this.y;
-        return (dx * dx + dy * dy) <= this.rSquared;
+        const dx = point.pos.x - this.x, dy = point.pos.y - this.y;
+        return dx * dx + dy * dy <= this.rSquared;
     }
 
-    intersects(range) {
-        const xDist = Math.abs(range.x - this.x);
-        const yDist = Math.abs(range.y - this.y);
-
-        const r = this.r;
-        const w = range.w;
-        const h = range.h;
-
-        const edgeX = xDist - w;
-        const edgeY = yDist - h;
-        const edges = edgeX * edgeX + edgeY * edgeY;
-
-        // No intersection
-        if (xDist > (r + w) || yDist > (r + h)) return false;
-        // Intersection within the circle
-        if (xDist <= w || yDist <= h) return true;
-        // Intersection on the edge of the circle
-        return edges <= this.rSquared;
+    intersects(rect) {
+        const dx = Math.abs(rect.x - this.x), dy = Math.abs(rect.y - this.y);
+        if (dx > this.r + rect.w || dy > this.r + rect.h) return false;
+        if (dx <= rect.w || dy <= rect.h) return true;
+        return (dx - rect.w) ** 2 + (dy - rect.h) ** 2 <= this.rSquared;
     }
 }
 
@@ -65,91 +33,33 @@ export class QuadTree {
     constructor(boundary, capacity = 4) {
         this.boundary = boundary;
         this.capacity = capacity;
-        this.points = [];
-        this.divided = false;
-        this.northeast = null;
-        this.northwest = null;
-        this.southeast = null;
-        this.southwest = null;
-    }
-
-    subdivide() {
-        const x = this.boundary.x;
-        const y = this.boundary.y;
-        const w = this.boundary.w / 2;
-        const h = this.boundary.h / 2;
-
-        const ne = new Rectangle(x + w, y - h, w, h);
-        this.northeast = new QuadTree(ne, this.capacity);
-
-        const nw = new Rectangle(x - w, y - h, w, h);
-        this.northwest = new QuadTree(nw, this.capacity);
-
-        const se = new Rectangle(x + w, y + h, w, h);
-        this.southeast = new QuadTree(se, this.capacity);
-
-        const sw = new Rectangle(x - w, y + h, w, h);
-        this.southwest = new QuadTree(sw, this.capacity);
-
-        this.divided = true;
+        this.clear();
     }
 
     insert(point) {
-        if (!this.boundary.contains(point)) {
-            return false;
+        if (!this.boundary.contains(point)) return false;
+        if (this.points.length < this.capacity) { this.points.push(point); return true; }
+        if (!this.children) {
+            const { x, y } = this.boundary, w = this.boundary.w / 2, h = this.boundary.h / 2;
+            // Order: north-west, north-east, south-west, south-east.
+            this.children = [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sy]) => new QuadTree(new Rectangle(x + sx * w, y + sy * h, w, h), this.capacity));
         }
-
-        if (this.points.length < this.capacity) {
-            this.points.push(point);
-            return true;
-        }
-
-        if (!this.divided) {
-            this.subdivide();
-        }
-
-        // A point can only belong to one child. Selecting the quadrant first
-        // avoids up to three failed recursive insert calls for every boid.
-        const east = point.pos.x >= this.boundary.x;
-        const south = point.pos.y >= this.boundary.y;
-        const child = south
-            ? (east ? this.southeast : this.southwest)
-            : (east ? this.northeast : this.northwest);
-        return child.insert(point);
+        // A point belongs to exactly one child, so pick it directly.
+        const east = point.pos.x >= this.boundary.x, south = point.pos.y >= this.boundary.y;
+        return this.children[(south ? 2 : 0) + (east ? 1 : 0)].insert(point);
     }
 
+    // Indexed loops: this runs for every ship every tick, and for…of is measurably slower here.
     query(range, found = []) {
-        // Dispatch through the query shape. Rectangle.intersects expects a
-        // rectangle's w/h fields, while Circle.intersects expects the tree
-        // node rectangle; calling the former with a Circle makes NaN
-        // comparisons and causes every node to be visited.
-        if (!range.intersects(this.boundary)) {
-            return found;
-        }
-
-        for (let i = 0; i < this.points.length; i++) {
-            const p = this.points[i];
-            if (range.contains(p)) {
-                found.push(p);
-            }
-        }
-
-        if (this.divided) {
-            this.northwest.query(range, found);
-            this.northeast.query(range, found);
-            this.southwest.query(range, found);
-            this.southeast.query(range, found);
-        }
-
+        if (!range.intersects(this.boundary)) return found;
+        const points = this.points, children = this.children;
+        for (let i = 0; i < points.length; i++) if (range.contains(points[i])) found.push(points[i]);
+        if (children) for (let i = 0; i < 4; i++) children[i].query(range, found);
         return found;
     }
 
     clear() {
         this.points = [];
-        this.divided = false;
-        this.northeast = null;
-        this.northwest = null;
-        this.southeast = null;
-        this.southwest = null;
+        this.children = null;
     }
 }

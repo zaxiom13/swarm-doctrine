@@ -78,9 +78,9 @@ export class TutorialMode {
 
     showIntro() {
         this.game.gameState = 'lesson-intro';
-        this.game.ui.showLessonIntro({
-            number: `Lesson ${this.index + 1} of ${LESSONS.length} · ${this.lesson.duration}`,
-            title: this.lesson.title, description: this.text('description'), instruction: this.text('instruction'),
+        this.game.ui.showIntro({
+            eyebrow: `Lesson ${this.index + 1} of ${LESSONS.length} · ${this.lesson.duration}`,
+            title: this.lesson.title, description: this.text('description'), instruction: this.text('instruction'), secondary: 'All lessons',
         });
     }
 

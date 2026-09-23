@@ -68,7 +68,7 @@ async function readResponseBody(response) {
     return text;
 }
 
-export function safeStaticPath(rootDir, pathname) {
+function safeStaticPath(rootDir, pathname) {
     let decoded;
     try { decoded = decodeURIComponent(pathname); } catch { return null; }
     if (decoded.includes('\0')) return null;

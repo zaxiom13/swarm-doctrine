@@ -4,14 +4,12 @@ import { createRival, loadLocalModel, RIVAL_NAMES } from './ai/rivals.js';
 import { getOpponentStatus } from './ai/jev.js';
 import { stepNeutralWaves } from './arena.js';
 
-export const RIVAL_KINDS = Object.keys(RIVAL_NAMES);
-
 export const DuelMethods = {
     rivalName() { return RIVAL_NAMES[this.duelKind] ?? 'Rival'; },
 
     /** Opens a duel against `kind`, checking the rival's requirements first. */
     async startDuelMode(kind) {
-        if (!RIVAL_KINDS.includes(kind)) throw new Error(`Unknown rival: ${kind}`);
+        if (!(kind in RIVAL_NAMES)) throw new Error(`Unknown rival: ${kind}`);
         const token = this.duelToken = (this.duelToken || 0) + 1;
         this.gameState = 'connecting';
         this.ui.setBusy(true);

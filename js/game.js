@@ -113,7 +113,7 @@ export class Game {
 
     resetHeldInput() {
         this.input.reset();
-        if (this.sim?.commanders[this.playerTeam]) this.player.release();
+        if (this.sim.commanders[this.playerTeam]) this.player.release();
     }
 
     pause() {
@@ -129,7 +129,7 @@ export class Game {
         if (this.gameState !== 'paused') return;
         this.gameState = 'playing';
         this.audio.resume();
-        this.ui.hidePause();
+        this.ui.hide('pause-overlay');
         document.activeElement?.blur?.();
         this.resumeRival();
     }
@@ -171,7 +171,7 @@ export class Game {
             this.audio.playUpgrade();
             this.renderer.addFloatingText(`Upgrade: ${upgrade.name}`, this.canvas.width / 2, 100, '#00ff88', 18);
             this.gameState = 'playing';
-            this.ui.hideUpgrades();
+            this.ui.hide('upgrade-overlay');
         });
     }
 

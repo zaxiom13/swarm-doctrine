@@ -78,7 +78,7 @@ export function migrateLegacyVector(values) {
     return out;
 }
 
-export function migrateLegacyModel(model) {
+function migrateLegacyModel(model) {
     return { ...model, version: POLICY_VERSION, migratedFrom: LEGACY_VERSION, weights: migrateLegacyVector(model.weights) };
 }
 

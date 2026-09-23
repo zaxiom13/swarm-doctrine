@@ -32,32 +32,21 @@ export class Renderer {
         this.buildGrid();
     }
 
+    /** The background grid is drawn once per resize into its own canvas. */
     buildGrid() {
-        this.gridCanvas = null;
-        try {
-            const grid = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(this.canvas.width, this.canvas.height) : document.createElement('canvas');
-            grid.width = this.canvas.width;
-            grid.height = this.canvas.height;
-            const ctx = grid.getContext('2d');
-            if (!ctx) return;
-            this.strokeGrid(ctx);
-            this.gridCanvas = grid;
-        } catch { /* Older embedded browsers lack a detached canvas; draw directly instead. */ }
-    }
-
-    strokeGrid(ctx) {
+        const { width, height } = this.canvas, grid = this.gridCanvas = document.createElement('canvas');
+        grid.width = width;
+        grid.height = height;
+        const ctx = grid.getContext('2d');
         ctx.strokeStyle = 'rgba(0, 247, 255, 0.035)';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        for (let x = 0; x < this.canvas.width; x += 80) { ctx.moveTo(x, 0); ctx.lineTo(x, this.canvas.height); }
-        for (let y = 0; y < this.canvas.height; y += 80) { ctx.moveTo(0, y); ctx.lineTo(this.canvas.width, y); }
+        for (let x = 0; x < width; x += 80) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+        for (let y = 0; y < height; y += 80) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
         ctx.stroke();
     }
 
-    drawGrid() {
-        if (this.gridCanvas) this.ctx.drawImage(this.gridCanvas, 0, 0);
-        else this.strokeGrid(this.ctx);
-    }
+    drawGrid() { this.ctx.drawImage(this.gridCanvas, 0, 0); }
 
     // Effects -------------------------------------------------------------
 
@@ -107,26 +96,19 @@ export class Renderer {
         const ctx = this.ctx, sim = game.sim, player = sim.commanders[game.playerTeam];
         for (const commander of Object.values(sim.commanders)) {
             const color = commander.team === game.playerTeam ? '#a5e9ff' : '#ffbf87';
-            if (commander.freezeField) {
-                const field = commander.freezeField;
-                ctx.save();
+            const field = commander.freezeField;
+            if (field) {
                 ctx.strokeStyle = color + '55';
-                ctx.fillStyle = color;
-                ctx.beginPath(); ctx.arc(field.x, field.y, field.radius, 0, Math.PI * 2); ctx.stroke();
-                ctx.font = '11px system-ui, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(`Frozen · ${Math.ceil(field.remaining)}s`, clamp(field.x, 80, this.canvas.width - 80), Math.max(150, field.y - field.radius + 20));
-                ctx.restore();
+                circle(ctx, field.x, field.y, field.radius); ctx.stroke();
+                this.label(`Frozen · ${Math.ceil(field.remaining)}s`, clamp(field.x, 80, this.canvas.width - 80), Math.max(150, field.y - field.radius + 20), color);
             }
             if (commander !== player && commander.rallying) {
                 ctx.save();
-                ctx.strokeStyle = ctx.fillStyle = '#ffad7d';
+                ctx.strokeStyle = '#ffad7d';
                 ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.arc(commander.target.x, commander.target.y, 22, 0, Math.PI * 2); ctx.stroke();
-                ctx.font = '11px system-ui, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(game.rivalName(), commander.target.x, Math.max(16, commander.target.y - 30));
+                circle(ctx, commander.target.x, commander.target.y, 22); ctx.stroke();
                 ctx.restore();
+                this.label(game.rivalName(), commander.target.x, Math.max(16, commander.target.y - 30), '#ffad7d');
             }
         }
         if (!player || game.gameState !== 'playing') return;
@@ -135,7 +117,7 @@ export class Renderer {
             ctx.save();
             ctx.strokeStyle = game.input.freezeAiming ? '#b6edff99' : '#b6edff20';
             ctx.setLineDash([4, 8]);
-            ctx.beginPath(); ctx.arc(pointer.x, pointer.y, player.freezeRadius, 0, Math.PI * 2); ctx.stroke();
+            circle(ctx, pointer.x, pointer.y, player.freezeRadius); ctx.stroke();
             ctx.restore();
         }
         this.drawRallyReticle(pointer, player, game.palette(game.playerTeam));
@@ -147,21 +129,17 @@ export class Renderer {
         const ring = active ? RALLY_COLOR : cooling ? COOL_OFF_COLOR : look.rgb;
         const solid = active ? '#ffaa00' : cooling ? '#ff4444' : look.color;
         ctx.save();
-        ctx.beginPath();
-        ctx.arc(x, y, radius + Math.sin(this.time * 4) * 5, 0, Math.PI * 2);
+        circle(ctx, x, y, radius + Math.sin(this.time * 4) * 5);
         ctx.strokeStyle = active ? `rgba(${ring}, 0.5)` : cooling ? `rgba(${ring}, 0.35)` : 'rgba(255, 255, 255, 0.08)';
         ctx.lineWidth = active ? 2.5 : 1.5;
         ctx.setLineDash(active ? [6, 4] : cooling ? [3, 3] : [2, 8]);
         ctx.stroke();
         ctx.setLineDash([]);
         if (active) {
-            const glow = ctx.createRadialGradient(x, y, 0, x, y, radius);
-            glow.addColorStop(0, `rgba(${ring}, 0.22)`);
-            glow.addColorStop(0.5, `rgba(${ring}, 0.08)`);
-            glow.addColorStop(1, 'transparent');
-            ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fillStyle = glow; ctx.fill();
+            const glow = radial(ctx, x, y, 0, radius, [[0, `rgba(${ring}, 0.22)`], [0.5, `rgba(${ring}, 0.08)`], [1, 'transparent']]);
+            circle(ctx, x, y, radius); ctx.fillStyle = glow; ctx.fill();
             const inward = (this.time * 2) % 1;
-            ctx.beginPath(); ctx.arc(x, y, radius * (1 - inward), 0, Math.PI * 2);
+            circle(ctx, x, y, radius * (1 - inward));
             ctx.strokeStyle = `rgba(${ring}, ${inward * 0.4})`; ctx.stroke();
         }
         ctx.translate(x, y);
@@ -169,13 +147,18 @@ export class Renderer {
         ctx.strokeStyle = solid;
         for (let i = 0; i < 4; i++) { ctx.rotate(Math.PI / 2); ctx.beginPath(); ctx.moveTo(16, -4); ctx.lineTo(16, 4); ctx.stroke(); }
         ctx.restore();
-        ctx.beginPath(); ctx.arc(x, y, active ? 6 : 3, 0, Math.PI * 2); ctx.fillStyle = solid; ctx.fill();
-        if (active || cooling) {
-            ctx.font = `bold ${Math.round(14 * this.shipScale)}px system-ui, sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.fillStyle = active ? '#ffaa00' : '#ff5555';
-            ctx.fillText(active ? 'Gathering' : `Spreading · ${commander.coolOff.toFixed(1)}s`, x, y + 26);
-        }
+        circle(ctx, x, y, active ? 6 : 3); ctx.fillStyle = solid; ctx.fill();
+        if (active || cooling) this.label(active ? 'Gathering' : `Spreading · ${commander.coolOff.toFixed(1)}s`, x, y + 26, active ? '#ffaa00' : '#ff5555', `bold ${Math.round(14 * this.shipScale)}px`);
+    }
+
+    label(text, x, y, color, font = '11px') {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.font = `${font} system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = color;
+        ctx.fillText(text, x, y);
+        ctx.restore();
     }
 
     /** Lines from a recruiting ship to its target show pressure building. */
@@ -201,7 +184,7 @@ export class Renderer {
             wave.radius += (wave.maxRadius - wave.radius) * dt * 12 + (dt ? 10 : 0);
             wave.alpha -= dt * 2.2;
             if (wave.alpha <= 0 || wave.radius >= wave.maxRadius) { this.shockwaves.splice(i, 1); continue; }
-            ctx.beginPath(); ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+            circle(ctx, wave.x, wave.y, wave.radius);
             ctx.strokeStyle = wave.color;
             ctx.lineWidth = 4 * wave.alpha;
             ctx.shadowColor = wave.color;
@@ -219,7 +202,7 @@ export class Renderer {
             if (p.life <= 0) { this.particles.splice(i, 1); continue; }
             p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.96; p.vy *= 0.96;
             const alpha = p.life / p.maxLife;
-            ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1, p.size * alpha), 0, Math.PI * 2);
+            circle(ctx, p.x, p.y, Math.max(1, p.size * alpha));
             ctx.fillStyle = `rgba(${p.rgb}, ${alpha})`;
             ctx.fill();
         }
@@ -247,11 +230,7 @@ export class Renderer {
 
     drawVignette() {
         const { width, height } = this.canvas;
-        if (!this.vignette) {
-            this.vignette = this.ctx.createRadialGradient(width / 2, height / 2, height * 0.35, width / 2, height / 2, height * 0.95);
-            this.vignette.addColorStop(0, 'transparent');
-            this.vignette.addColorStop(1, 'rgba(2, 4, 10, 0.65)');
-        }
+        this.vignette ||= radial(this.ctx, width / 2, height / 2, height * 0.35, height * 0.95, [[0, 'transparent'], [1, 'rgba(2, 4, 10, 0.65)']]);
         this.ctx.fillStyle = this.vignette;
         this.ctx.fillRect(0, 0, width, height);
     }
@@ -259,26 +238,17 @@ export class Renderer {
     // Terrain -------------------------------------------------------------
 
     drawTerrain(field, dt) {
-        const ctx = this.ctx, pulse = Math.sin(this.time * 2 + field.x * 0.01) * 0.15 + 1, spin = this.time * (field.type === 'blackHole' ? 2 : 0.5);
-        const label = TERRAIN_TYPES[field.type].label;
+        const pulse = Math.sin(this.time * 2 + field.x * 0.01) * 0.15 + 1, spin = this.time * (field.type === 'blackHole' ? 2 : 0.5);
         if (field.type === 'blackHole') this.drawBlackHole(field, pulse, spin, dt);
         else if (field.type === 'slowZone') this.drawNebula(field, pulse, spin);
         else this.drawAsteroids(field, spin);
-        ctx.save();
-        ctx.font = `${Math.round(12 * Math.min(this.shipScale, 1.25))}px system-ui, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.fillStyle = field.type === 'blackHole' ? '#cda8ef' : '#a8c5d0';
-        ctx.fillText(label.toUpperCase(), field.x, field.y - field.reach - 10);
-        ctx.restore();
+        this.label(TERRAIN_TYPES[field.type].label.toUpperCase(), field.x, field.y - field.reach - 10, field.type === 'blackHole' ? '#cda8ef' : '#a8c5d0', `${Math.round(12 * Math.min(this.shipScale, 1.25))}px`);
     }
 
     drawBlackHole(field, pulse, spin, dt) {
         const ctx = this.ctx, { x, y, radius, reach, core } = field;
-        const pull = ctx.createRadialGradient(x, y, core, x, y, reach);
-        pull.addColorStop(0, 'rgba(136, 0, 255, 0.3)');
-        pull.addColorStop(0.5, 'rgba(136, 0, 255, 0.1)');
-        pull.addColorStop(1, 'transparent');
-        ctx.beginPath(); ctx.arc(x, y, reach, 0, Math.PI * 2); ctx.fillStyle = pull; ctx.fill();
+        const pull = radial(ctx, x, y, core, reach, [[0, 'rgba(136, 0, 255, 0.3)'], [0.5, 'rgba(136, 0, 255, 0.1)'], [1, 'transparent']]);
+        circle(ctx, x, y, reach); ctx.fillStyle = pull; ctx.fill();
         let particles = this.fieldParticles.get(field);
         if (!particles) this.fieldParticles.set(field, particles = []);
         if (dt && Math.random() < 0.3) particles.push({ angle: Math.random() * Math.PI * 2, dist: reach * (0.3 + Math.random() * 0.7), speed: 2 + Math.random() * 2, life: 1 + Math.random(), size: 2 + Math.random() * 3 });
@@ -286,14 +256,11 @@ export class Renderer {
             const p = particles[i];
             p.life -= dt; p.angle += p.speed * dt;
             if (p.life <= 0) { particles.splice(i, 1); continue; }
-            ctx.beginPath(); ctx.arc(x + Math.cos(p.angle) * p.dist, y + Math.sin(p.angle) * p.dist, p.size, 0, Math.PI * 2);
+            circle(ctx, x + Math.cos(p.angle) * p.dist, y + Math.sin(p.angle) * p.dist, p.size);
             ctx.fillStyle = `rgba(136, 0, 255, ${p.life * 0.5})`; ctx.fill();
         }
-        const horizon = ctx.createRadialGradient(x, y, 0, x, y, radius * pulse);
-        horizon.addColorStop(0, 'rgba(0, 0, 0, 1)');
-        horizon.addColorStop(0.7, 'rgba(34, 0, 51, 0.8)');
-        horizon.addColorStop(1, 'rgba(136, 0, 255, 0.3)');
-        ctx.beginPath(); ctx.arc(x, y, radius * pulse, 0, Math.PI * 2); ctx.fillStyle = '#220033'; ctx.fill(); ctx.fillStyle = horizon; ctx.fill();
+        const horizon = radial(ctx, x, y, 0, radius * pulse, [[0, 'rgba(0, 0, 0, 1)'], [0.7, 'rgba(34, 0, 51, 0.8)'], [1, 'rgba(136, 0, 255, 0.3)']]);
+        circle(ctx, x, y, radius * pulse); ctx.fillStyle = '#220033'; ctx.fill(); ctx.fillStyle = horizon; ctx.fill();
         ctx.save(); ctx.translate(x, y); ctx.rotate(spin);
         ctx.beginPath(); ctx.ellipse(0, 0, radius * 1.5 * pulse, radius * 0.3 * pulse, 0, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(136, 0, 255, 0.5)'; ctx.lineWidth = 3; ctx.stroke();
@@ -302,31 +269,24 @@ export class Renderer {
 
     drawNebula(field, pulse, spin) {
         const ctx = this.ctx, { x, y, radius } = field;
-        const cloud = ctx.createRadialGradient(x, y, 0, x, y, radius * pulse);
-        cloud.addColorStop(0, 'rgba(0, 102, 204, 0.3)');
-        cloud.addColorStop(0.5, 'rgba(0, 51, 102, 0.2)');
-        cloud.addColorStop(1, 'transparent');
-        ctx.beginPath(); ctx.arc(x, y, radius * pulse, 0, Math.PI * 2); ctx.fillStyle = cloud; ctx.fill();
+        const cloud = radial(ctx, x, y, 0, radius * pulse, [[0, 'rgba(0, 102, 204, 0.3)'], [0.5, 'rgba(0, 51, 102, 0.2)'], [1, 'transparent']]);
+        circle(ctx, x, y, radius * pulse); ctx.fillStyle = cloud; ctx.fill();
         ctx.save(); ctx.translate(x, y); ctx.rotate(spin * 0.3);
         for (let i = 0; i < 3; i++) {
             const angle = i / 3 * Math.PI * 2 + this.time, cx = Math.cos(angle) * radius * 0.4, cy = Math.sin(angle) * radius * 0.4;
-            const swirl = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.4);
-            swirl.addColorStop(0, 'rgba(0, 150, 255, 0.2)');
-            swirl.addColorStop(1, 'transparent');
-            ctx.beginPath(); ctx.arc(cx, cy, radius * 0.4, 0, Math.PI * 2); ctx.fillStyle = swirl; ctx.fill();
+            const swirl = radial(ctx, cx, cy, 0, radius * 0.4, [[0, 'rgba(0, 150, 255, 0.2)'], [1, 'transparent']]);
+            circle(ctx, cx, cy, radius * 0.4); ctx.fillStyle = swirl; ctx.fill();
         }
         ctx.restore();
-        ctx.beginPath(); ctx.arc(x, y, radius * pulse, 0, Math.PI * 2);
+        circle(ctx, x, y, radius * pulse);
         ctx.strokeStyle = 'rgba(0, 102, 204, 0.3)'; ctx.lineWidth = 2; ctx.setLineDash([10, 10]); ctx.stroke(); ctx.setLineDash([]);
     }
 
     drawAsteroids(field, spin) {
         const ctx = this.ctx, { x, y, radius } = field;
         ctx.save(); ctx.translate(x, y); ctx.rotate(spin * 0.2);
-        const dust = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
-        dust.addColorStop(0, 'rgba(100, 100, 100, 0.15)');
-        dust.addColorStop(1, 'transparent');
-        ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fillStyle = dust; ctx.fill();
+        const dust = radial(ctx, 0, 0, 0, radius, [[0, 'rgba(100, 100, 100, 0.15)'], [1, 'transparent']]);
+        circle(ctx, 0, 0, radius); ctx.fillStyle = dust; ctx.fill();
         for (let i = 0; i < 12; i++) {
             const angle = i / 12 * Math.PI * 2, dist = radius * (0.2 + (i % 3) * 0.25), size = 5 + (i % 4) * 3;
             const ax = Math.cos(angle) * dist, ay = Math.sin(angle) * dist;
@@ -337,7 +297,7 @@ export class Renderer {
             ctx.strokeStyle = 'rgba(150, 150, 150, 0.5)'; ctx.lineWidth = 1; ctx.stroke();
         }
         ctx.restore();
-        ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2);
+        circle(ctx, x, y, radius);
         ctx.strokeStyle = 'rgba(150, 150, 150, 0.3)'; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
     }
 
@@ -363,7 +323,7 @@ export class Renderer {
             ctx.save(); ctx.translate(x, y); ctx.rotate(angle);
             ctx.strokeStyle = ctx.fillStyle = look.color; ctx.lineWidth = 1.5;
             ctx.beginPath(); ctx.moveTo(size * 0.8, 0); ctx.lineTo(0, size * 0.5); ctx.lineTo(-size * 0.8, 0); ctx.lineTo(0, -size * 0.5); ctx.closePath(); ctx.stroke();
-            ctx.beginPath(); ctx.arc(0, 0, 1.5, 0, Math.PI * 2); ctx.fill();
+            circle(ctx, 0, 0, 1.5); ctx.fill();
             ctx.restore();
             return;
         }
@@ -395,13 +355,13 @@ export class Renderer {
         }
         if (boid.conversionPressure > 5) {
             const ratio = Math.min(1, boid.conversionPressure / conversionTicks);
-            ctx.beginPath(); ctx.arc(x, y, size * (1.8 + ratio * 0.8), 0, Math.PI * 2);
+            circle(ctx, x, y, size * (1.8 + ratio * 0.8));
             ctx.strokeStyle = `rgba(255, 255, 255, ${ratio * 0.8})`; ctx.lineWidth = 1.5; ctx.stroke();
-            ctx.beginPath(); ctx.arc(x, y, size * 1.5, 0, Math.PI * 2);
+            circle(ctx, x, y, size * 1.5);
             ctx.fillStyle = `rgba(255, 255, 255, ${ratio * 0.25})`; ctx.fill();
         }
         if (boid.frozen) {
-            ctx.beginPath(); ctx.arc(x, y, size * 2, 0, Math.PI * 2);
+            circle(ctx, x, y, size * 2);
             ctx.strokeStyle = look.color; ctx.lineWidth = 1.5; ctx.stroke();
             ctx.strokeStyle = `rgba(${look.rgb}, 0.7)`;
             ctx.beginPath();
@@ -410,7 +370,7 @@ export class Renderer {
             ctx.stroke();
         }
         if (boid.justConverted) {
-            ctx.beginPath(); ctx.arc(x, y, size * 3.5, 0, Math.PI * 2);
+            circle(ctx, x, y, size * 3.5);
             ctx.fillStyle = `rgba(${look.rgb}, 0.7)`; ctx.fill();
         }
         ctx.save(); ctx.translate(x, y); ctx.rotate(angle);
@@ -433,7 +393,7 @@ export class Renderer {
         ctx.closePath();
         ctx.fillStyle = boid.frozen ? '#606470' : look.color;
         ctx.fill();
-        ctx.beginPath(); ctx.arc(size * 0.15, 0, size * 0.25, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 255, 0.85)'; ctx.fill();
+        circle(ctx, size * 0.15, 0, size * 0.25); ctx.fillStyle = 'rgba(255, 255, 255, 0.85)'; ctx.fill();
         if (options.panels) {
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'; ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(size * 0.7, 0); ctx.lineTo(-size * 0.6, size * 0.5); ctx.moveTo(size * 0.7, 0); ctx.lineTo(-size * 0.6, -size * 0.5); ctx.stroke();
@@ -443,3 +403,9 @@ export class Renderer {
 }
 
 function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+function radial(ctx, x, y, r0, r1, stops) {
+    const gradient = ctx.createRadialGradient(x, y, r0, x, y, r1);
+    for (const [at, color] of stops) gradient.addColorStop(at, color);
+    return gradient;
+}
+function circle(ctx, x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); }

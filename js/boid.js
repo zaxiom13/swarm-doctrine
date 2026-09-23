@@ -3,9 +3,9 @@ import { Vector } from './vector.js';
 
 export class Boid {
     constructor(x, y, team, rules, random = Math.random) {
-        const angle = random() * Math.PI * 2;
+        const angle = random() * Math.PI * 2, speed = rules.maxSpeed * 0.6;
         this.pos = new Vector(x, y);
-        this.vel = new Vector(Math.cos(angle), Math.sin(angle)).multMut(rules.maxSpeed * 0.6);
+        this.vel = new Vector(Math.cos(angle) * speed, Math.sin(angle) * speed);
         this.acc = new Vector();
         this.team = team;
         this.conversionPressure = 0;

@@ -11,8 +11,8 @@ import { ActionError, decisionCandidates, validateAction } from './actions.js';
 import { DEFAULT_RULES, rulesSentence } from '../rules.js';
 
 export const DEFAULT_MODEL_ID = 'typesafe/jev-1.13';
-export const UNIT = 10;
-export const DEFAULT_HEARTBEAT_SECONDS = 2;
+const UNIT = 10;
+const DEFAULT_HEARTBEAT_SECONDS = 2;
 
 const MAX_UNITS_PER_SIDE = 220;
 const MAX_NEUTRALS = 40;
@@ -77,7 +77,7 @@ export function compactSnapshot(snapshot) {
 }
 
 /** The rules as this fleet experiences them, including its own upgrades. */
-export function effectiveRules(state) {
+function effectiveRules(state) {
     const a = state.abilities || {};
     return { ...DEFAULT_RULES, ...state.rules,
         freezeRadius: a.freezeRadius ?? DEFAULT_RULES.freezeRadius, freezeDuration: a.freezeDuration ?? DEFAULT_RULES.freezeDuration,
@@ -162,6 +162,11 @@ export function actionFromDecisionResponse(payload, snapshot, question = 'action
     return Object.defineProperty(action, 'probabilities', { value: answer?.probabilities || null, enumerable: false });
 }
 
+/** What shouldAsk compares against: the moment of the last question. */
+export function askState(snapshot, second) {
+    return { second, freeze: snapshot.freeze.cooldown, rally: snapshot.rally.active, allies: snapshot.allies.length, rivals: snapshot.rivals.length };
+}
+
 /** Asks only when something changed: Freeze ready, Rally ended, fleets shifted, or the heartbeat elapsed. */
 export function shouldAsk(snapshot, last, second, heartbeat = DEFAULT_HEARTBEAT_SECONDS) {
     if (!last) return true;
@@ -228,7 +233,7 @@ export class JevController {
     tick(snapshot, second) {
         if (!this.running || this.inFlight || typeof this.fetchImpl !== 'function') return false;
         if (!shouldAsk(snapshot, this.last, second, this.heartbeat)) return false;
-        this.last = { second, freeze: snapshot.freeze.cooldown, rally: snapshot.rally.active, allies: snapshot.allies.length, rivals: snapshot.rivals.length };
+        this.last = askState(snapshot, second);
         this.request(snapshot);
         return true;
     }

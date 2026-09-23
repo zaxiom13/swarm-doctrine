@@ -9,7 +9,7 @@ import { chooseHardBotAction, safeRallyPoint } from './hard-bot.js';
 
 const SHORTLIST = ['wait', 'release', 'rally_0_3', 'rally_1_3', 'rally_2_3', 'rally_3_3', 'freeze_0', 'freeze_1'];
 
-export function shortlist(snapshot) {
+function shortlist(snapshot) {
     const { candidates } = decisionCandidates(snapshot);
     const own = snapshot.allies.length ? snapshot.allies.reduce((p, u) => ({ x: p.x + u.x / snapshot.allies.length, y: p.y + u.y / snapshot.allies.length }), { x: 0, y: 0 }) : null;
     const moves = [];

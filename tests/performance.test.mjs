@@ -102,12 +102,15 @@ test('dense compact rendering keeps gray ships visible, caches the grid and skip
     assert.ok(metrics.neutralStrokes > 0);
 });
 
-test('simulation speed against the last commit', async () => {
+// The last build before the shared-simulation rewrite.
+const BASELINE_COMMIT = '08438a4';
+
+test('simulation speed against the pre-rewrite build', async () => {
     let baseline = null, sandbox = null;
     try {
         const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
         sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'swarm-perf-'));
-        for (const file of ['boid.js', 'vector.js', 'config.js', 'quadtree.js']) fs.writeFileSync(path.join(sandbox, file), execFileSync('git', ['show', `HEAD:js/${file}`], { cwd: repo, encoding: 'utf8' }));
+        for (const file of ['boid.js', 'vector.js', 'config.js', 'quadtree.js']) fs.writeFileSync(path.join(sandbox, file), execFileSync('git', ['show', `${BASELINE_COMMIT}:js/${file}`], { cwd: repo, encoding: 'utf8' }));
         const { Boid: OldBoid } = await import(pathToFileURL(path.join(sandbox, 'boid.js')).href);
         const oldTree = await import(pathToFileURL(path.join(sandbox, 'quadtree.js')).href);
         const { CONFIG } = await import(pathToFileURL(path.join(sandbox, 'config.js')).href);
@@ -120,7 +123,7 @@ test('simulation speed against the last commit', async () => {
         const now = benchmark(current, count);
         if (baseline) {
             const before = benchmark(baseline, count);
-            console.log(`PERF ${count} ships × 90 ticks: ${now.toFixed(1)} ms (last commit ${before.toFixed(1)} ms, ${(before / now).toFixed(2)}×)`);
+            console.log(`PERF ${count} ships × 90 ticks: ${now.toFixed(1)} ms (pre-rewrite ${before.toFixed(1)} ms, ${(before / now).toFixed(2)}×)`);
             assert.ok(now < before * 1.5, 'no large simulation slowdown');
         } else console.log(`PERF ${count} ships × 90 ticks: ${now.toFixed(1)} ms`);
     }

@@ -8,14 +8,14 @@
 // Labels keep Jev's full probability spread over all legal actions, which
 // teaches far more per paid call than its single top choice.
 import fs from 'node:fs';
-import { loadEnvFile } from 'node:process';
-import { createDuelArena, stepDuelArena, duelWinner } from '../js/arena.js';
+import { createDuelArena, advanceSecond, act, duelWinner } from '../js/arena.js';
 import { rulesHash, createRules } from '../js/rules.js';
 import { randomFrom } from '../js/worlds.js';
 import { buildDecisionRequest } from '../js/ai/jev.js';
 import { ACTION_IDS, INPUTS, PARAMETERS, POLICY_VERSION, features, policy } from '../js/ai/local-policy.js';
 import { decisionCandidates } from '../js/ai/actions.js';
 import { controller, loadModel } from './lib/league.mjs';
+import { decisionsClient } from './lib/openrouter.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => { const i = args.indexOf(name); return i < 0 ? fallback : args[i + 1]; };
@@ -29,22 +29,20 @@ function* states(count) {
         const arena = createDuelArena({ seed, mirror: seed % 2 === 1 });
         const [a, b] = arena.teams, playA = controller(players[seed % players.length]), playB = controller(players[(seed + 2) % players.length]);
         for (let second = 0; second < 90 && !duelWinner(arena) && count > 0; second++) {
-            arena.sim.commander(a).apply(playA(arena.sim.snapshotFor(a), second, arena, a));
+            act(arena, a, playA, second);
             const snapshot = arena.sim.snapshotFor(b);
-            arena.sim.commander(b).apply(playB(snapshot, second, arena, b));
+            act(arena, b, playB, second);
             if (second % 3 === 1) { count--; yield snapshot; }
-            for (let tick = 0; tick < 60 && !duelWinner(arena); tick++) stepDuelArena(arena);
+            advanceSecond(arena);
         }
     }
 }
 
 async function collect(count, teacher) {
-    let spent = 0, labelled = 0;
+    let labelled = 0;
     const local = teacher === 'local' ? loadModel(new URL('../models/offline-policy.json', import.meta.url)) : null;
-    if (teacher === 'jev') {
-        if (!args.includes('--live')) throw new Error('Labelling with Jev is metered; pass --live');
-        loadEnvFile(new URL('../.env', import.meta.url));
-    }
+    if (teacher === 'jev' && !args.includes('--live')) throw new Error('Labelling with Jev is metered; pass --live');
+    const client = local ? null : decisionsClient({ budgetUsd: BUDGET_USD, title: 'distillation' });
     fs.mkdirSync(new URL('../build/', import.meta.url), { recursive: true });
     const stream = fs.createWriteStream(dataset, { flags: 'a' });
     for (const snapshot of states(count)) {
@@ -53,22 +51,15 @@ async function collect(count, teacher) {
             const p = policy(snapshot, local);
             probabilities = Object.fromEntries(ACTION_IDS.map((id, i) => [id, p.probabilities[i]]).filter(([, v]) => v > 0));
         } else {
-            if (spent >= BUDGET_USD) { console.log(`Budget of $${BUDGET_USD} reached.`); break; }
-            const response = await fetch('https://openrouter.ai/api/alpha/decisions', {
-                method: 'POST', signal: AbortSignal.timeout(15000), body: JSON.stringify(buildDecisionRequest(snapshot)),
-                headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`, 'Content-Type': 'application/json', 'X-OpenRouter-Title': 'Swarm Doctrine distillation' },
-            });
-            const payload = await response.json();
-            if (!response.ok) throw new Error(`HTTP ${response.status}; stopping without retry`);
-            spent += Number(payload.usage?.cost) || 0;
-            probabilities = payload.answers?.action?.probabilities;
+            if (client.exhausted) { console.log(`Budget of $${BUDGET_USD} reached.`); break; }
+            probabilities = (await client.decide(buildDecisionRequest(snapshot))).payload.answers?.action?.probabilities;
             if (!probabilities) continue;
         }
         stream.write(JSON.stringify({ snapshot, probabilities, teacher }) + '\n');
         labelled++;
     }
     await new Promise(resolve => stream.end(resolve));
-    console.log(JSON.stringify({ labelled, teacher, spentUsd: +spent.toFixed(5), dataset: dataset.pathname }));
+    console.log(JSON.stringify({ labelled, teacher, spentUsd: +(client?.spent ?? 0).toFixed(5), dataset: dataset.pathname }));
 }
 
 /** Cross-entropy to the teacher's probabilities over legal actions, with Adam. */
