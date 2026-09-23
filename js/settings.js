@@ -18,7 +18,7 @@ export const SETTINGS_SCHEMA = [
     rule('separationWeight', 'Separation', 0, 5, 0.1),
     rule('alignmentWeight', 'Alignment', 0, 3, 0.1),
     rule('cohesionWeight', 'Cohesion', 0, 3, 0.1),
-    rule('maxSpeed', 'Max speed', 1, 8, 0.5),
+    rule('maxSpeed', 'Max speed', 1, 8, 0.1),
     rule('perceptionRadius', 'Perception', 20, 100, 5),
 ];
 

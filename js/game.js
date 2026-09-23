@@ -130,6 +130,7 @@ export class Game {
         this.gameState = 'playing';
         this.audio.resume();
         this.ui.hidePause();
+        document.activeElement?.blur?.();
         this.resumeRival();
     }
 
