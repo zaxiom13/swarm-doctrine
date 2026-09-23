@@ -20,14 +20,14 @@ document.getElementById('main-menu').addEventListener('pointermove', e => { poin
 document.getElementById('main-menu').addEventListener('pointerleave', () => { pointer = null; });
 function draw() {
     ctx.clearRect(0, 0, width, height);
-    const cx = width * (width < 720 ? 0.72 : 0.73), cy = height * 0.48;
-    const radius = Math.min(width * 0.32, height * 0.46);
+    const cx = width * 0.5, cy = height * 0.48;
+    const radius = Math.max(width, height) * 0.46;
     const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.2);
-    glow.addColorStop(0, '#49ccaa14'); glow.addColorStop(1, '#49ccaa00');
+    glow.addColorStop(0, '#6a4bff22'); glow.addColorStop(1, '#6a4bff00');
     ctx.fillStyle = glow; ctx.fillRect(0, 0, width, height);
     [0.45, 0.75, 1.06].forEach(r => {
         ctx.beginPath(); ctx.ellipse(cx, cy, radius * r, radius * r * 0.86, -0.38, 0, Math.PI * 2);
-        ctx.strokeStyle = '#a0d9cc13'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.strokeStyle = '#ffffff10'; ctx.lineWidth = 1; ctx.stroke();
     });
     for (const ship of ships) {
         const angle = ship.angle + time * ship.speed;
@@ -38,7 +38,7 @@ function draw() {
             if (d < 130 && d > 0) { x += dx / d * (130 - d) * 0.5; y += dy / d * (130 - d) * 0.5; }
         }
         ctx.save(); ctx.translate(x, y); ctx.rotate(angle + Math.PI * 0.57);
-        ctx.fillStyle = ship.radius > 0.87 ? '#d7b987' : ship.radius < 0.45 ? '#c5f9e9' : '#70cbbb';
+        ctx.fillStyle = ship.radius > 0.87 ? '#ffd23f' : ship.radius < 0.45 ? '#ff6bd6' : '#37e2d5';
         ctx.globalAlpha = 0.4 + ship.size / 7;
         ctx.beginPath(); ctx.moveTo(ship.size * 2, 0); ctx.lineTo(-ship.size, ship.size * 0.65); ctx.lineTo(-ship.size * 0.5, 0); ctx.lineTo(-ship.size, -ship.size * 0.65); ctx.closePath(); ctx.fill(); ctx.restore();
     }

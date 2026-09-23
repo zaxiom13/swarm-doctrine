@@ -29,22 +29,22 @@ export const DIFFICULTY = {
 };
 
 export const MODES = [
-    { id: 'levels', group: 'Solo', name: 'Levels', summary: 'A new map each sector, harder each time.' },
-    { id: 'zen', group: 'Solo', name: 'Zen', summary: 'Terrain shifts. No game over.' },
-    { id: 'survival', group: 'Solo', name: 'Survival', summary: 'Hold out against waves. Pick upgrades.' },
-    { id: 'duel', group: 'Duel', name: 'Duel', summary: 'One on one. Pick your rival.' },
+    { id: 'levels', group: 'Solo', name: 'Levels', icon: '🗺️', color: '#ffb13b', summary: 'A new map each sector, harder each time.' },
+    { id: 'zen', group: 'Solo', name: 'Zen', icon: '🌿', color: '#4cf0a8', summary: 'Terrain shifts. No game over.' },
+    { id: 'survival', group: 'Solo', name: 'Survival', icon: '🛡️', color: '#ff5d7a', summary: 'Hold out against waves. Pick upgrades.' },
+    { id: 'duel', group: 'Duel', name: 'Duel', icon: '⚔️', color: '#6aa8ff', summary: 'One on one. Pick your rival.' },
 ];
 
 export const DUEL_RIVALS = [
-    { id: 'duel-hard', name: 'Hard bot', summary: 'A fast scripted rival that reads the rules.' },
-    { id: 'duel-tactician', name: 'Tactician', summary: 'Looks ahead by simulating each move.' },
-    { id: 'duel-local', name: 'Local rival', summary: 'A trained policy. Runs offline.' },
-    { id: 'duel-jev', name: 'Jev', summary: 'Online decision model. Needs a key.' },
+    { id: 'duel-hard', name: 'Hard bot', icon: '🤖', color: '#ff8a3d', summary: 'A fast scripted rival that reads the rules.' },
+    { id: 'duel-tactician', name: 'Tactician', icon: '🧠', color: '#c77dff', summary: 'Looks ahead by simulating each move.' },
+    { id: 'duel-local', name: 'Local rival', icon: '🎯', color: '#4cf0a8', summary: 'A trained policy. Runs offline.' },
+    { id: 'duel-jev', name: 'Jev', icon: '⚡', color: '#ffd23f', summary: 'Online decision model. Needs a key.' },
 ];
 
 export const LEVEL_ENEMIES = [
-    { id: 'ai', name: 'AI rivals', summary: 'Rival fleets rally, recruit and freeze like you.' },
-    { id: 'passive', name: 'Passive rivals', summary: 'Rival fleets drift and only fight back up close.' },
+    { id: 'ai', name: 'AI rivals', icon: '🔥', color: '#ff5d7a', summary: 'Rival fleets rally, recruit and freeze like you.' },
+    { id: 'passive', name: 'Passive rivals', icon: '😴', color: '#6aa8ff', summary: 'Rival fleets drift and only fight back up close.' },
 ];
 
 /**

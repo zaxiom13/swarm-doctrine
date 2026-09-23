@@ -20,6 +20,8 @@ function el(tag, props = {}, children = []) {
     return node;
 }
 
+const icon = glyph => el('span', { className: 'card-icon', textContent: glyph, 'aria-hidden': 'true' });
+
 /** A menu card: optional leading element or eyebrow, a title and one line of text. */
 const card = ({ lead, eyebrow, title, text, className = '', ...props }, onClick) => {
     const node = el('button', { type: 'button', className: `card ${className}`.trim(), ...props },
@@ -140,7 +142,7 @@ export class UIManager {
         const root = $('mode-groups');
         for (const group of new Set(MODES.map(mode => mode.group))) {
             root.appendChild(el('h3', { className: 'section-title', textContent: group }));
-            root.appendChild(el('div', { className: 'card-grid' }, MODES.filter(mode => mode.group === group).map(mode => card({ title: mode.name, text: mode.summary }, () => {
+            root.appendChild(el('div', { className: 'card-grid' }, MODES.filter(mode => mode.group === group).map(mode => card({ lead: icon(mode.icon), title: mode.name, text: mode.summary, className: 'tinted', style: `--tint:${mode.color}` }, () => {
                 this.game.audio.init();
                 this.game.audio.playClick();
                 if (mode.id === 'duel') this.showScreen('rival-screen');
@@ -150,14 +152,14 @@ export class UIManager {
     }
 
     buildRivals() {
-        $('rival-grid').replaceChildren(...DUEL_RIVALS.map(rival => card({ title: rival.name, text: rival.summary }, () => {
+        $('rival-grid').replaceChildren(...DUEL_RIVALS.map(rival => card({ lead: icon(rival.icon), title: rival.name, text: rival.summary, className: 'tinted', style: `--tint:${rival.color}` }, () => {
             this.game.audio.playClick();
             this.game.startDuelMode(rival.id);
         })));
     }
 
     buildEnemyChoice() {
-        $('enemy-grid').replaceChildren(...LEVEL_ENEMIES.map(option => card({ title: option.name, text: option.summary, className: 'choice', dataset: { enemies: option.id } }, () => {
+        $('enemy-grid').replaceChildren(...LEVEL_ENEMIES.map(option => card({ lead: icon(option.icon), title: option.name, text: option.summary, className: 'choice tinted', style: `--tint:${option.color}`, dataset: { enemies: option.id } }, () => {
             this.game.audio.playClick();
             this.game.levelEnemies = option.id;
             this.refreshEnemyChoice();
@@ -178,7 +180,7 @@ export class UIManager {
     buildTeams() {
         $('team-grid').replaceChildren(...Object.values(TEAMS).map(team => card({
             lead: el('span', { className: 'team-symbol', textContent: team.symbol, 'aria-hidden': 'true' }),
-            title: team.name, text: teamPerks(team).join(' · '), className: 'team-card', style: `--team:${team.color}`,
+            title: team.name, text: teamPerks(team).join(' · '), className: 'team-card tinted', style: `--team:${team.color};--tint:${team.color}`,
         }, () => { this.game.audio.playClick(); this.game.selectTeam(team.id); })));
     }
 
@@ -404,7 +406,7 @@ export class UIManager {
 
     showUpgrades(choices, onPick) {
         $('upgrade-cards').replaceChildren(...choices.map(upgrade =>
-            card({ eyebrow: `${upgrade.icon} ${upgrade.category}`, title: upgrade.name, text: upgrade.description, className: 'upgrade-card' }, () => onPick(upgrade))));
+            card({ lead: icon(upgrade.icon), eyebrow: upgrade.category, title: upgrade.name, text: upgrade.description, className: 'upgrade-card' }, () => onPick(upgrade))));
         this.show('upgrade-overlay');
     }
 

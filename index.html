@@ -12,26 +12,28 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap">
     <link rel="stylesheet" href="app.css">
 </head>
 <body>
     <main id="main-menu" class="screen screen-home">
         <canvas id="swarm-preview" aria-hidden="true"></canvas>
-        <header class="home-nav"><span class="wordmark">Swarm Doctrine</span></header>
         <section class="home-hero">
-            <h1 class="home-title">Move<br><em>together.</em></h1>
-            <p class="home-tagline">Hold to move. Release to recruit.</p>
+            <div class="home-logo" aria-hidden="true">◇</div>
+            <h1 class="home-title">Swarm<br><em>Doctrine</em></h1>
+            <p class="home-tagline">Move together. Recruit everyone.</p>
             <div class="home-actions">
-                <button type="button" id="btn-play" class="btn btn-primary btn-wide" data-nav="mode-screen">Play <span aria-hidden="true">↗</span></button>
-                <button type="button" id="btn-lessons" class="btn btn-wide">Lessons</button>
+                <button type="button" id="btn-play" class="btn btn-primary btn-big" data-nav="mode-screen"><span aria-hidden="true">▶</span> Play</button>
+                <button type="button" id="btn-lessons" class="btn btn-secondary btn-big"><span aria-hidden="true">🎓</span> Lessons</button>
             </div>
             <nav class="home-links" aria-label="More">
-                <button type="button" class="pill" data-nav="help-screen">How to play</button>
-                <button type="button" class="pill" data-nav="settings-screen">Settings</button>
+                <button type="button" class="pill" data-nav="help-screen"><span aria-hidden="true">❓</span> How to play</button>
+                <button type="button" class="pill" data-nav="settings-screen"><span aria-hidden="true">⚙️</span> Settings</button>
             </nav>
             <p id="home-record" class="home-record"></p>
         </section>
-        <footer class="home-footer"><span>Rally · Freeze</span><span>Touch or mouse</span></footer>
     </main>
 
     <section id="mode-screen" class="screen screen-page hidden" aria-labelledby="mode-title">
@@ -102,15 +104,15 @@
     <section id="game-screen" class="screen screen-game hidden">
         <canvas id="game-canvas" aria-label="Arena. Hold to Rally, release to recruit."></canvas>
         <div class="hud-top">
-            <button type="button" id="btn-pause" class="chip">Pause</button>
+            <button type="button" id="btn-pause" class="chip chip-icon" aria-label="Pause"></button>
             <div class="hud-status">
                 <span id="hud-timer">00:00</span>
                 <span id="hud-score" class="hud-sub">0</span>
                 <span id="hud-matchup" class="hud-sub hidden">You <b id="hud-you">0</b> · <span id="hud-rival-name">Rival</span> <b id="hud-rival">0</b></span>
             </div>
             <div class="hud-chips">
-                <button type="button" id="btn-guide" class="chip" aria-expanded="false" aria-controls="coach">Guide</button>
-                <button type="button" id="btn-details" class="chip" aria-expanded="false" aria-controls="details-sheet">Details</button>
+                <button type="button" id="btn-guide" class="chip" aria-expanded="false" aria-controls="coach"><span aria-hidden="true">💡</span><span class="chip-label">Guide</span></button>
+                <button type="button" id="btn-details" class="chip" aria-expanded="false" aria-controls="details-sheet"><span aria-hidden="true">📊</span><span class="chip-label">Details</span></button>
             </div>
         </div>
         <div id="hud-combo" class="hud-combo hidden"></div>
