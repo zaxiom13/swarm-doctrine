@@ -59,6 +59,6 @@ test('rules text and fingerprints follow the numbers', () => {
 });
 
 test('team perk text is generated from the multipliers the simulation uses', () => {
-    assert.deepEqual(teamPerks(TEAMS.phoenix), ['Speed +5%', 'Defense −10%', 'Recruit +35%']);
-    assert.deepEqual(teamPerks(TEAMS.salamander), ['Speed −5%', 'Defense +35%']);
+    assert.deepEqual(teamPerks(TEAMS.phoenix), ['Speed +5%', 'Recruit +35%']);
+    assert.deepEqual(teamPerks(TEAMS.salamander), ['Speed −5%', 'Defense +20%']);
 });

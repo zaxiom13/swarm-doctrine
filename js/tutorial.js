@@ -8,6 +8,8 @@ const PROGRESS_KEY = 'swarm-lessons-v2';
 const COMPLETION_BEAT = 1.75;
 /** Early exercises use a gentler recruit rule so beginners succeed on their first tries. */
 const ASSIST = { threshold: 2, rivalResist: 0.55, speedup: 0.5 };
+/** Lessons use fixed player stats so team rebalancing never changes how hard a lesson is. */
+const LESSON_PLAYER = { speed: 1.15, resist: 1, pressure: 1.2 };
 
 export class TutorialMode {
     constructor(game) {
@@ -52,6 +54,7 @@ export class TutorialMode {
         game.zenShifts = 0;
         sim.setTeams([player, ...new Set(lesson.enemies.map(e => e.team))]);
         for (const team of [...TEAM_IDS, 'neutral']) sim.setModifiers(team, game.factionModifiers(team, DIFFICULTY.easy));
+        sim.setModifiers(player, { ...game.factionModifiers(player, DIFFICULTY.easy), ...LESSON_PLAYER });
         const radius = Math.min(48, sim.width * 0.09);
         sim.spawnCluster(player, lesson.playerCount, sim.width * 0.25, sim.height * 0.44, radius);
         if (lesson.neutrals) sim.spawnCluster('neutral', lesson.neutrals, sim.width * 0.55, sim.height * 0.44, radius);

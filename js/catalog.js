@@ -1,10 +1,10 @@
 // Static game content: teams, liveries, difficulty, modes and upgrades.
 
 export const TEAMS = {
-    dragon: { id: 'dragon', name: 'Dragon', symbol: '◇', color: '#00f7ff', rgb: '0, 247, 255', speed: 1.15, resist: 1.0, pressure: 1.2 },
-    salamander: { id: 'salamander', name: 'Salamander', symbol: '⬡', color: '#ff3b3b', rgb: '255, 59, 59', speed: 0.95, resist: 1.35, pressure: 1.0 },
-    phoenix: { id: 'phoenix', name: 'Phoenix', symbol: '✳', color: '#ff9900', rgb: '255, 153, 0', speed: 1.05, resist: 0.9, pressure: 1.35 },
-    rat: { id: 'rat', name: 'Rat', symbol: '⌁', color: '#b844ff', rgb: '184, 68, 255', speed: 1.1, resist: 1.1, pressure: 1.1 },
+    dragon: { id: 'dragon', name: 'Dragon', symbol: '◇', color: '#00f7ff', rgb: '0, 247, 255', speed: 1.12, resist: 1.0, pressure: 1.1 },
+    salamander: { id: 'salamander', name: 'Salamander', symbol: '⬡', color: '#ff3b3b', rgb: '255, 59, 59', speed: 0.95, resist: 1.2, pressure: 1.0 },
+    phoenix: { id: 'phoenix', name: 'Phoenix', symbol: '✳', color: '#ff9900', rgb: '255, 153, 0', speed: 1.05, resist: 1.0, pressure: 1.35 },
+    rat: { id: 'rat', name: 'Rat', symbol: '⌁', color: '#b844ff', rgb: '184, 68, 255', speed: 1.05, resist: 1.05, pressure: 1.05 },
 };
 export const TEAM_IDS = Object.keys(TEAMS);
 
