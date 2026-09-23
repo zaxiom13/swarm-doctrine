@@ -106,13 +106,6 @@ export class Renderer {
     drawCommanders(game) {
         const ctx = this.ctx, sim = game.sim, player = sim.commanders[game.playerTeam];
         for (const commander of Object.values(sim.commanders)) {
-            const color = commander.team === game.playerTeam ? '#a5e9ff' : '#ffbf87';
-            const field = commander.freezeField;
-            if (field) {
-                ctx.strokeStyle = color + '55';
-                circle(ctx, field.x, field.y, field.radius); ctx.stroke();
-                this.label(`Frozen · ${Math.ceil(field.remaining)}s`, clamp(field.x, 80, this.width - 80), Math.max(150, field.y - field.radius + 20), color);
-            }
             if (commander !== player && commander.rallying) {
                 ctx.save();
                 ctx.strokeStyle = '#ffad7d';
