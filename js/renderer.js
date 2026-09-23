@@ -95,6 +95,7 @@ export class Renderer {
             if (live) this.drawParticles(dt);
             this.drawShockwaves(live ? dt : 0);
             this.drawCommanders(game);
+            this.drawPlayerAura(sim.boids, game.playerTeam, game.palette(game.playerTeam));
             this.drawShips(sim.boids, team => game.palette(team), sim.rules.conversionTicks);
             if (live) this.drawFloatingTexts(dt);
         }
@@ -312,6 +313,59 @@ export class Renderer {
     }
 
     // Ships ---------------------------------------------------------------
+
+    /** A soft pulsing halo under every player ship and a "YOU" tag over the fleet, without changing its colour. */
+    drawPlayerAura(boids, team, look) {
+        if (!team) return;
+        if (this.auraColor !== look.color) {
+            const sprite = this.auraSprite = document.createElement('canvas');
+            sprite.width = sprite.height = 64;
+            const sctx = sprite.getContext('2d');
+            const glow = sctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            glow.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+            glow.addColorStop(0.35, `rgba(${look.rgb}, 0.55)`);
+            glow.addColorStop(1, `rgba(${look.rgb}, 0)`);
+            sctx.fillStyle = glow;
+            sctx.fillRect(0, 0, 64, 64);
+            this.auraColor = look.color;
+        }
+        const ctx = this.ctx, size = 11 * this.shipScale * (1 + Math.sin(this.time * 4) * 0.15);
+        let sx = 0, sy = 0, n = 0;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.7;
+        for (const boid of boids) {
+            if (boid.team !== team) continue;
+            ctx.drawImage(this.auraSprite, boid.pos.x - size, boid.pos.y - size, size * 2, size * 2);
+            sx += boid.pos.x; sy += boid.pos.y; n++;
+        }
+        ctx.restore();
+        if (!n) return;
+        // Anchor the tag to the ship nearest the fleet's centre so split fleets still point at real ships.
+        const cx = sx / n, cy = sy / n;
+        let anchor = null, best = Infinity;
+        for (const boid of boids) {
+            if (boid.team !== team) continue;
+            const d = (boid.pos.x - cx) ** 2 + (boid.pos.y - cy) ** 2;
+            if (d < best) { best = d; anchor = boid; }
+        }
+        const x = anchor.pos.x, y = anchor.pos.y - 34 * this.textScale - Math.sin(this.time * 3) * 3;
+        ctx.save();
+        ctx.font = `800 ${Math.round(15 * this.textScale)}px Fredoka, system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const w = (ctx.measureText('YOU')?.width ?? 24) + 18 * this.textScale, h = 24 * this.textScale;
+        ctx.fillStyle = look.color;
+        ctx.beginPath();
+        ctx.roundRect?.(x - w / 2, y - h / 2, w, h, h / 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x - 5 * this.textScale, y + h / 2); ctx.lineTo(x + 5 * this.textScale, y + h / 2); ctx.lineTo(x, y + h / 2 + 6 * this.textScale);
+        ctx.fill();
+        ctx.fillStyle = '#120a33';
+        ctx.fillText('YOU', x, y + 1);
+        ctx.restore();
+    }
 
     /** Dense fleets drop trails, panels and gradients to stay smooth on phones. */
     drawShips(boids, palette, conversionTicks = 36) {
