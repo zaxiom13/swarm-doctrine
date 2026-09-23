@@ -1,6 +1,6 @@
 // DOM for menus, HUD and dialogs. Screens are generated from the catalog,
 // lessons and settings schema so there is one source for every label.
-import { TEAMS, MODES, DUEL_RIVALS, LEVEL_ENEMIES, teamPerks } from './catalog.js';
+import { TEAMS, MODES, AVAILABLE_RIVALS, IS_LOCAL, LEVEL_ENEMIES, teamPerks } from './catalog.js';
 import { DEFAULT_RULES, describeRules } from './rules.js';
 import { settings, setSetting, resetSettings, SETTINGS_SCHEMA, SETTINGS_GROUPS } from './settings.js';
 
@@ -52,6 +52,7 @@ export class UIManager {
         this.buildEnemyChoice();
         this.buildHelp();
         this.buildSettings();
+        $('jev-note').classList.toggle('hidden', !IS_LOCAL);
         this.showRecords();
         document.addEventListener('click', event => {
             const nav = event.target.closest?.('[data-nav]');
@@ -152,7 +153,7 @@ export class UIManager {
     }
 
     buildRivals() {
-        $('rival-grid').replaceChildren(...DUEL_RIVALS.map(rival => card({ lead: icon(rival.icon), title: rival.name, text: rival.summary, className: 'tinted', style: `--tint:${rival.color}` }, () => {
+        $('rival-grid').replaceChildren(...AVAILABLE_RIVALS.map(rival => card({ lead: icon(rival.icon), title: rival.name, text: rival.summary, className: 'tinted', style: `--tint:${rival.color}` }, () => {
             this.game.audio.playClick();
             this.game.startDuelMode(rival.id);
         })));

@@ -39,8 +39,12 @@ export const DUEL_RIVALS = [
     { id: 'duel-hard', name: 'Hard bot', icon: '🤖', color: '#ff8a3d', summary: 'A fast scripted rival that reads the rules.' },
     { id: 'duel-tactician', name: 'Tactician', icon: '🧠', color: '#c77dff', summary: 'Looks ahead by simulating each move.' },
     { id: 'duel-local', name: 'Local rival', icon: '🎯', color: '#4cf0a8', summary: 'A trained policy. Runs offline.' },
-    { id: 'duel-jev', name: 'Jev', icon: '⚡', color: '#ffd23f', summary: 'Online decision model. Needs a key.' },
+    { id: 'duel-jev', name: 'Jev', icon: '⚡', color: '#ffd23f', summary: 'Online decision model. Needs a key.', localOnly: true },
 ];
+
+/** Jev needs the local proxy (node server.mjs), so hosted builds hide it. */
+export const IS_LOCAL = ['localhost', '127.0.0.1', '[::1]'].includes(globalThis.location?.hostname);
+export const AVAILABLE_RIVALS = DUEL_RIVALS.filter(rival => IS_LOCAL || !rival.localOnly);
 
 export const LEVEL_ENEMIES = [
     { id: 'ai', name: 'AI rivals', icon: '🔥', color: '#ff5d7a', summary: 'Rival fleets rally, recruit and freeze like you.' },
