@@ -4,6 +4,7 @@ import { buildWorld, levelRules, randomFrom, validCheckpoint, DIFFICULTY_CAP } f
 import { TEAMS, TEAM_IDS, DIFFICULTY, MODES, baseModifiers } from './catalog.js';
 import { settings } from './settings.js';
 import { spawnFleet, setupDuelArena } from './arena.js';
+import { createRival } from './ai/rivals.js';
 
 const CHECKPOINT_KEY = 'swarm-expedition-v1';
 const ZEN_SHIFT_SECONDS = 40;
@@ -22,7 +23,7 @@ export const ModeMethods = {
         const tier = this.gameMode === 'levels' ? this.level : MODE_TIER[this.gameMode] ?? 5;
         this.sector = levelRules(tier);
         const seed = (this.mapSeed + (this.gameMode === 'levels' ? this.level * 2654435761 : 0)) >>> 0;
-        this.world = buildWorld(seed, tier, this.canvas.width, this.canvas.height);
+        this.world = buildWorld(seed, tier, this.renderer.width, this.renderer.height);
         if (this.gameMode === 'levels') this.saveCheckpoint();
     },
 
@@ -49,6 +50,7 @@ export const ModeMethods = {
 
     setupMode() {
         const sim = this.sim;
+        this.levelRivals = [];
         if (this.gameMode === 'duel') {
             this.opponentTeam = this.teamOrder()[1];
             this.arena = setupDuelArena(sim, this.world, { teams: [this.playerTeam, this.opponentTeam] });
@@ -70,11 +72,25 @@ export const ModeMethods = {
             const count = this.gameMode === 'levels' ? (team === this.playerTeam ? this.sector.playerCount : this.sector.enemyCount) : perTeam;
             spawnFleet(sim, team, count, index);
         });
+        if (this.gameMode === 'levels' && this.levelEnemies !== 'passive') {
+            const seed = this.world?.seed ?? 0;
+            this.levelRivals = teams.slice(1).map((team, index) => ({ team, bot: createRival('duel-hard', { style: (seed + index) % 3 }) }));
+            this.levelClock = 1;
+            this.levelSecond = 0;
+        }
         this.nextMilestone = Math.max(0.5, sim.count(this.playerTeam) / sim.boids.length + 0.1);
     },
 
     updateModeBefore(dt) {
         if (this.gameMode === 'duel' && !this.practice) this.updateDuel(dt);
+        if (this.gameMode === 'levels' && !this.practice && this.levelRivals?.length) {
+            this.levelClock += dt;
+            while (this.levelClock >= 1) {
+                this.levelClock -= 1;
+                const second = this.levelSecond++;
+                for (const { team, bot } of this.levelRivals) if (this.sim.counts[team] > 0) bot.tick(this.sim, team, second);
+            }
+        }
         if (this.gameMode === 'zen' || (this.practice && this.tutorial.lesson.evolving)) {
             this.zenShiftTimer -= dt;
             if (this.zenShiftTimer <= 0) this.shiftTerrain();
@@ -100,7 +116,7 @@ export const ModeMethods = {
     /** Rebuilds the map in place, moving any ship that would sit on a black-hole core. */
     shiftTerrain() {
         this.zenShifts++;
-        this.world = buildWorld((this.world.seed + 1013904223) >>> 0, 3 + this.zenShifts % 5, this.canvas.width, this.canvas.height);
+        this.world = buildWorld((this.world.seed + 1013904223) >>> 0, 3 + this.zenShifts % 5, this.renderer.width, this.renderer.height);
         this.sim.setTerrain(this.world.terrain);
         for (const hole of this.sim.terrain.filter(field => field.type === 'blackHole')) {
             for (const boid of this.sim.boids) {
@@ -112,7 +128,7 @@ export const ModeMethods = {
             }
         }
         this.zenShiftTimer = this.practice ? 15 : ZEN_SHIFT_SECONDS;
-        this.renderer.addFloatingText('The garden changes', this.canvas.width / 2, this.canvas.height * 0.32, '#b8edcb', 17);
+        this.renderer.addFloatingText('The garden changes', this.renderer.width / 2, this.renderer.height * 0.32, '#b8edcb', 17);
     },
 
     replenishZen() {
@@ -194,7 +210,7 @@ export const ModeMethods = {
     worldLabel() {
         if (this.practice) return this.tutorial.lesson.title;
         if (this.gameMode === 'duel') return `You vs ${this.rivalName()}`;
-        return `${this.gameMode === 'levels' ? `Sector ${this.level}` : MODES.find(mode => mode.id === this.gameMode).name} · ${this.world?.name ?? ''}`;
+        return `${this.gameMode === 'levels' ? `Sector ${this.level}` : MODES.find(mode => mode.id === this.gameMode)?.name ?? 'Arena'} · ${this.world?.name ?? ''}`;
     },
 
     worldDetail() {

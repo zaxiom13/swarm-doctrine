@@ -5,6 +5,7 @@ import { TERRAIN_TYPES } from './terrain.js';
 const MATCH_STATES = new Set(['playing', 'paused', 'sector-intro', 'lesson-intro', 'upgrade', 'victory', 'defeat']);
 const RALLY_COLOR = '255, 170, 0';
 const COOL_OFF_COLOR = '255, 68, 68';
+export const WORLD_SHORT_SIDE = 720;
 
 export class Renderer {
     constructor(canvas) {
@@ -23,14 +24,22 @@ export class Renderer {
     }
 
     resize() {
-        // Game logic uses canvas pixels as world units; a 1:1 backing store keeps fill rate low on phones.
+        // A 1:1 backing store keeps fill rate low on phones. The world always has a
+        // WORLD_SHORT_SIDE short side, so rules and balance match on every screen.
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
-        const shortSide = Math.min(this.canvas.width, this.canvas.height);
-        this.shipScale = shortSide < 430 ? 1.7 : shortSide < 700 ? 1.4 : shortSide < 1100 ? 1.15 : 1;
+        const shortSide = Math.min(this.canvas.width, this.canvas.height) || WORLD_SHORT_SIDE;
+        this.viewScale = shortSide / WORLD_SHORT_SIDE;
+        this.width = this.canvas.width / this.viewScale;
+        this.height = this.canvas.height / this.viewScale;
+        this.shipScale = Math.max(1, 0.75 / this.viewScale);
+        this.textScale = 1 / this.viewScale;
         this.vignette = null;
         this.buildGrid();
     }
+
+    /** Screen pixels relative to the canvas to world units. */
+    toWorld(x, y) { return { x: x / this.viewScale, y: y / this.viewScale }; }
 
     /** The background grid is drawn once per resize into its own canvas. */
     buildGrid() {
@@ -78,6 +87,7 @@ export class Renderer {
         this.shake = Math.max(0, this.shake - dt * 2.8);
         ctx.clearRect(-20, -20, this.canvas.width + 40, this.canvas.height + 40);
         this.drawGrid();
+        ctx.scale(this.viewScale, this.viewScale);
         if (inMatch) {
             const sim = game.sim;
             for (const field of sim.terrain) this.drawTerrain(field, live ? dt : 0);
@@ -88,8 +98,8 @@ export class Renderer {
             this.drawShips(sim.boids, team => game.palette(team), sim.rules.conversionTicks);
             if (live) this.drawFloatingTexts(dt);
         }
-        this.drawVignette();
         ctx.restore();
+        this.drawVignette();
     }
 
     drawCommanders(game) {
@@ -100,7 +110,7 @@ export class Renderer {
             if (field) {
                 ctx.strokeStyle = color + '55';
                 circle(ctx, field.x, field.y, field.radius); ctx.stroke();
-                this.label(`Frozen · ${Math.ceil(field.remaining)}s`, clamp(field.x, 80, this.canvas.width - 80), Math.max(150, field.y - field.radius + 20), color);
+                this.label(`Frozen · ${Math.ceil(field.remaining)}s`, clamp(field.x, 80, this.width - 80), Math.max(150, field.y - field.radius + 20), color);
             }
             if (commander !== player && commander.rallying) {
                 ctx.save();
@@ -148,10 +158,10 @@ export class Renderer {
         for (let i = 0; i < 4; i++) { ctx.rotate(Math.PI / 2); ctx.beginPath(); ctx.moveTo(16, -4); ctx.lineTo(16, 4); ctx.stroke(); }
         ctx.restore();
         circle(ctx, x, y, active ? 6 : 3); ctx.fillStyle = solid; ctx.fill();
-        if (active || cooling) this.label(active ? 'Gathering' : `Spreading · ${commander.coolOff.toFixed(1)}s`, x, y + 26, active ? '#ffaa00' : '#ff5555', `bold ${Math.round(14 * this.shipScale)}px`);
+        if (active || cooling) this.label(active ? 'Gathering' : `Spreading · ${commander.coolOff.toFixed(1)}s`, x, y + 26, active ? '#ffaa00' : '#ff5555', `bold ${Math.round(14 * this.textScale)}px`);
     }
 
-    label(text, x, y, color, font = '11px') {
+    label(text, x, y, color, font = `${Math.round(11 * this.textScale)}px`) {
         const ctx = this.ctx;
         ctx.save();
         ctx.font = `${font} system-ui, sans-serif`;
@@ -210,7 +220,7 @@ export class Renderer {
 
     /** Floating text is clamped so it is never cut off at the screen edge. */
     drawFloatingTexts(dt) {
-        const ctx = this.ctx, w = this.canvas.width, h = this.canvas.height;
+        const ctx = this.ctx, w = this.width, h = this.height;
         for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
             const text = this.floatingTexts[i];
             text.y -= 35 * dt;
@@ -218,12 +228,12 @@ export class Renderer {
             if (text.life <= 0) { this.floatingTexts.splice(i, 1); continue; }
             const margin = Math.min(70, w * 0.08);
             ctx.save();
-            ctx.font = `bold ${Math.round(text.size * this.shipScale)}px system-ui, sans-serif`;
+            ctx.font = `bold ${Math.round(text.size * this.textScale)}px system-ui, sans-serif`;
             ctx.fillStyle = ctx.shadowColor = text.color;
             ctx.globalAlpha = Math.max(0, text.life);
             ctx.textAlign = 'center';
             ctx.shadowBlur = 8;
-            ctx.fillText(text.text, clamp(text.x, margin, w - margin), clamp(text.y, 64, h - Math.min(150, h * 0.24)));
+            ctx.fillText(text.text, clamp(text.x, margin, w - margin), clamp(text.y, 64 * this.textScale, h - Math.min(150 * this.textScale, h * 0.24)));
             ctx.restore();
         }
     }
@@ -242,7 +252,7 @@ export class Renderer {
         if (field.type === 'blackHole') this.drawBlackHole(field, pulse, spin, dt);
         else if (field.type === 'slowZone') this.drawNebula(field, pulse, spin);
         else this.drawAsteroids(field, spin);
-        this.label(TERRAIN_TYPES[field.type].label.toUpperCase(), field.x, field.y - field.reach - 10, field.type === 'blackHole' ? '#cda8ef' : '#a8c5d0', `${Math.round(12 * Math.min(this.shipScale, 1.25))}px`);
+        this.label(TERRAIN_TYPES[field.type].label.toUpperCase(), field.x, field.y - field.reach - 10, field.type === 'blackHole' ? '#cda8ef' : '#a8c5d0', `${Math.round(12 * this.textScale)}px`);
     }
 
     drawBlackHole(field, pulse, spin, dt) {

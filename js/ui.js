@@ -1,6 +1,6 @@
 // DOM for menus, HUD and dialogs. Screens are generated from the catalog,
 // lessons and settings schema so there is one source for every label.
-import { TEAMS, MODES, teamPerks } from './catalog.js';
+import { TEAMS, MODES, DUEL_RIVALS, LEVEL_ENEMIES, teamPerks } from './catalog.js';
 import { DEFAULT_RULES, describeRules } from './rules.js';
 import { settings, setSetting, resetSettings, SETTINGS_SCHEMA, SETTINGS_GROUPS } from './settings.js';
 
@@ -46,6 +46,8 @@ export class UIManager {
         const game = this.game;
         this.buildModes();
         this.buildTeams();
+        this.buildRivals();
+        this.buildEnemyChoice();
         this.buildHelp();
         this.buildSettings();
         this.showRecords();
@@ -103,6 +105,7 @@ export class UIManager {
         this.setDetailsOpen(false);
         this.setCoachOpen(false);
         if (id === 'mode-screen') this.refreshContinue();
+        if (id === 'team-select-screen') this.refreshEnemyChoice();
         if (id === 'main-menu') { this.history = []; this.showRecords(); }
         if (id !== 'game-screen') $(id).querySelector('h2, h1')?.focus?.({ preventScroll: true });
     }
@@ -140,10 +143,30 @@ export class UIManager {
             root.appendChild(el('div', { className: 'card-grid' }, MODES.filter(mode => mode.group === group).map(mode => card({ title: mode.name, text: mode.summary }, () => {
                 this.game.audio.init();
                 this.game.audio.playClick();
-                if (mode.id.startsWith('duel-')) this.game.startDuelMode(mode.id);
+                if (mode.id === 'duel') this.showScreen('rival-screen');
                 else this.game.showTeamSelect(mode.id);
             }))));
         }
+    }
+
+    buildRivals() {
+        $('rival-grid').replaceChildren(...DUEL_RIVALS.map(rival => card({ title: rival.name, text: rival.summary }, () => {
+            this.game.audio.playClick();
+            this.game.startDuelMode(rival.id);
+        })));
+    }
+
+    buildEnemyChoice() {
+        $('enemy-grid').replaceChildren(...LEVEL_ENEMIES.map(option => card({ title: option.name, text: option.summary, className: 'choice', dataset: { enemies: option.id } }, () => {
+            this.game.audio.playClick();
+            this.game.levelEnemies = option.id;
+            this.refreshEnemyChoice();
+        })));
+    }
+
+    refreshEnemyChoice() {
+        $('enemy-choice').classList.toggle('hidden', this.game.gameMode !== 'levels');
+        for (const node of $('enemy-grid').children) node.setAttribute('aria-pressed', String(node.dataset.enemies === this.game.levelEnemies));
     }
 
     refreshContinue() {

@@ -96,7 +96,7 @@ test('dense compact rendering keeps gray ships visible, caches the grid and skip
     const ships = fleet(current, 160).map((boid, i) => { if (i % 2) boid.team = 'neutral'; return boid; });
     renderer.drawGrid();
     renderer.drawShips(ships, team => team === 'neutral' ? NEUTRAL_LOOK : TEAMS[team]);
-    assert.equal(renderer.shipScale, 1.7);
+    assert.ok(renderer.shipScale > 1.3 && renderer.width === 720, 'phones get a fixed-size world with larger ships');
     assert.equal(metrics.gridImages, 1);
     assert.equal(metrics.gradients, 0);
     assert.ok(metrics.neutralStrokes > 0);

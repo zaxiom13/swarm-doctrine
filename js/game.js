@@ -19,7 +19,8 @@ export class Game {
         this.ui = new UIManager(this);
         this.input = new InputHandler(canvas, this);
         this.gameState = 'menu';
-        this.gameMode = 'conquest';
+        this.gameMode = 'levels';
+        this.levelEnemies = 'ai';
         this.playerTeam = 'dragon';
         this.practice = false;
         this.tutorial = null;
@@ -27,7 +28,8 @@ export class Game {
         this.mapSeed = null;
         this.rival = null;
         this.renderer.resize();
-        this.sim = new Simulation({ width: canvas.width, height: canvas.height });
+        this.input.pointer.set(this.renderer.width / 2, this.renderer.height / 2);
+        this.sim = new Simulation({ width: this.renderer.width, height: this.renderer.height });
         this.resetMatchStats();
         this.ui.setup();
         window.addEventListener('resize', () => this.resizeWorld());
@@ -55,7 +57,7 @@ export class Game {
         Object.assign(this, { score: 0, combo: 0, comboTimer: 0, conversions: 0, losses: 0, peakPlayerCount: 0, upgrades: [], playerActed: false, hudTimer: 0 });
     }
 
-    showTeamSelect(mode = 'conquest') {
+    showTeamSelect(mode = 'levels') {
         this.practice = false;
         this.gameMode = mode;
         this.gameState = 'team-select';
@@ -77,7 +79,7 @@ export class Game {
         this.accumulator = 0;
         if (this.practice) this.gameMode = 'conquest';
         this.prepareWorld(fresh);
-        this.sim = new Simulation({ width: this.canvas.width, height: this.canvas.height, rules: createRules(ruleOverrides()), random: this.matchRandom() });
+        this.sim = new Simulation({ width: this.renderer.width, height: this.renderer.height, rules: createRules(ruleOverrides()), random: this.matchRandom() });
         if (this.practice) this.tutorial.setupArena();
         else this.setupMode();
         this.peakPlayerCount = this.sim.count(this.playerTeam);
@@ -169,17 +171,17 @@ export class Game {
             this.upgrades.push(upgrade.id);
             upgrade.apply(this.sim.modifiers(team), this.sim, team);
             this.audio.playUpgrade();
-            this.renderer.addFloatingText(`Upgrade: ${upgrade.name}`, this.canvas.width / 2, 100, '#00ff88', 18);
+            this.renderer.addFloatingText(`Upgrade: ${upgrade.name}`, this.renderer.width / 2, 100, '#00ff88', 18);
             this.gameState = 'playing';
             this.ui.hide('upgrade-overlay');
         });
     }
 
     resizeWorld() {
-        const oldWidth = this.canvas.width, oldHeight = this.canvas.height;
+        const oldWidth = this.renderer.width, oldHeight = this.renderer.height;
         this.renderer.resize();
-        if (!oldWidth || !oldHeight || (oldWidth === this.canvas.width && oldHeight === this.canvas.height)) return;
-        const { sx, sy } = this.sim.resize(this.canvas.width, this.canvas.height);
+        if (!oldWidth || !oldHeight || (oldWidth === this.renderer.width && oldHeight === this.renderer.height)) return;
+        const { sx, sy } = this.sim.resize(this.renderer.width, this.renderer.height);
         this.input.pointer.x *= sx;
         this.input.pointer.y *= sy;
         this.resetHeldInput();

@@ -71,7 +71,19 @@
     <section id="team-select-screen" class="screen screen-page hidden" aria-labelledby="team-title">
         <div class="page">
             <header class="page-head"><button type="button" class="btn-back" data-back>Back</button><span class="eyebrow">Fleet</span><h2 tabindex="-1" id="team-title">Pick a team</h2></header>
+            <div id="enemy-choice" class="hidden">
+                <h3 class="section-title">Rivals</h3>
+                <div id="enemy-grid" class="card-grid"></div>
+                <h3 class="section-title">Your team</h3>
+            </div>
             <div id="team-grid" class="card-grid card-grid-4"></div>
+        </div>
+    </section>
+
+    <section id="rival-screen" class="screen screen-page hidden" aria-labelledby="rival-title">
+        <div class="page">
+            <header class="page-head"><button type="button" class="btn-back" data-back>Back</button><span class="eyebrow">Duel</span><h2 tabindex="-1" id="rival-title">Pick a rival</h2></header>
+            <div id="rival-grid" class="card-grid"></div>
         </div>
     </section>
 

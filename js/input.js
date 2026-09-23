@@ -15,7 +15,8 @@ export class InputHandler {
         const playing = () => game.gameState === 'playing';
         const locate = event => {
             const rect = canvas.getBoundingClientRect();
-            this.pointer = new Vector((event.clientX - rect.left) * canvas.width / rect.width, (event.clientY - rect.top) * canvas.height / rect.height);
+            const scale = game.renderer?.viewScale || 1;
+            this.pointer = new Vector((event.clientX - rect.left) * canvas.width / rect.width / scale, (event.clientY - rect.top) * canvas.height / rect.height / scale);
         };
 
         canvas.addEventListener('pointerdown', event => {

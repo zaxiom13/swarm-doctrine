@@ -29,14 +29,22 @@ export const DIFFICULTY = {
 };
 
 export const MODES = [
-    { id: 'conquest', group: 'Solo', name: 'Conquest', summary: 'One fixed map. Beat three rival fleets.' },
     { id: 'levels', group: 'Solo', name: 'Levels', summary: 'A new map each sector, harder each time.' },
     { id: 'zen', group: 'Solo', name: 'Zen', summary: 'Terrain shifts. No game over.' },
     { id: 'survival', group: 'Solo', name: 'Survival', summary: 'Hold out against waves. Pick upgrades.' },
-    { id: 'duel-hard', group: 'Duel', name: 'Hard bot', summary: 'A fast scripted rival that reads the rules.' },
-    { id: 'duel-tactician', group: 'Duel', name: 'Tactician', summary: 'Looks ahead by simulating each move.' },
-    { id: 'duel-local', group: 'Duel', name: 'Local rival', summary: 'A trained policy. Runs offline.' },
-    { id: 'duel-jev', group: 'Duel', name: 'Jev', summary: 'Online decision model. Needs a key.' },
+    { id: 'duel', group: 'Duel', name: 'Duel', summary: 'One on one. Pick your rival.' },
+];
+
+export const DUEL_RIVALS = [
+    { id: 'duel-hard', name: 'Hard bot', summary: 'A fast scripted rival that reads the rules.' },
+    { id: 'duel-tactician', name: 'Tactician', summary: 'Looks ahead by simulating each move.' },
+    { id: 'duel-local', name: 'Local rival', summary: 'A trained policy. Runs offline.' },
+    { id: 'duel-jev', name: 'Jev', summary: 'Online decision model. Needs a key.' },
+];
+
+export const LEVEL_ENEMIES = [
+    { id: 'ai', name: 'AI rivals', summary: 'Rival fleets rally, recruit and freeze like you.' },
+    { id: 'passive', name: 'Passive rivals', summary: 'Rival fleets drift and only fight back up close.' },
 ];
 
 /**

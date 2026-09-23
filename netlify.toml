@@ -1,0 +1,8 @@
+# Deployed by .github/workflows/deploy.yml after tests pass.
+[build]
+  publish = "."
+
+[[headers]]
+  for = "/models/*"
+  [headers.values]
+    Cache-Control = "no-cache"

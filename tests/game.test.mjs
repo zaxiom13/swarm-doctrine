@@ -195,7 +195,7 @@ test('Zen shifts terrain and replenishes; resizing scales the existing world', (
     game.resizeWorld();
     assert.equal(game.canvas.width, 390);
     assert.equal(game.input.pointerId, null);
-    game.sim.terrain.forEach((f, i) => { assert.ok(Math.abs(f.x / 390 - before[i].x) < 1e-10); assert.ok(Math.abs(f.y / 844 - before[i].y) < 1e-10); });
+    game.sim.terrain.forEach((f, i) => { assert.ok(Math.abs(f.x / game.renderer.width - before[i].x) < 1e-10); assert.ok(Math.abs(f.y / game.renderer.height - before[i].y) < 1e-10); });
     globalThis.innerWidth = 1280; globalThis.innerHeight = 720;
     game.resizeWorld();
 });
@@ -206,7 +206,7 @@ test('control lessons are winnable through real simulation and progress persists
         begin(i);
         for (let attempt = 0; attempt < 12 && game.gameState === 'playing'; attempt++) {
             const lesson = LESSONS[i], target = lesson.target, enemy = game.boids.find(b => b.team !== game.playerTeam);
-            aim(target ? target.x * game.canvas.width : enemy?.pos.x ?? 870, target ? target.y * game.canvas.height : enemy?.pos.y ?? 317);
+            aim(target ? target.x * game.renderer.width : enemy?.pos.x ?? 870, target ? target.y * game.renderer.height : enemy?.pos.y ?? 317);
             game.setRally(true); advance(3);
             game.setRally(false); advance(0.5);
             if (lesson.abilities.includes('freeze')) game.castFreeze();
@@ -228,7 +228,7 @@ test('navigation lessons are completed by steering alone', () => {
         game.setRally(true);
         for (let tick = 0; tick < 60 * 75 && game.gameState === 'playing'; tick++) {
             const lesson = LESSONS[index(id)], target = lesson.route?.[tutorial.progress.waypoints] || lesson.target;
-            if (target) aim(target.x * game.canvas.width, target.y * game.canvas.height);
+            if (target) aim(target.x * game.renderer.width, target.y * game.renderer.height);
             game.update(1 / 60);
         }
         assert.equal(game.gameState, 'victory', `${id}: ${JSON.stringify(tutorial.progress)}`);
@@ -364,7 +364,7 @@ test('Jev entry starts a two-fleet duel and the HUD excludes gray ships from sha
 
 test('tap steering and duel basics lessons can be completed', () => {
     begin(index('tap-rally'));
-    aim(game.canvas.width * 0.68, game.canvas.height * 0.44);
+    aim(game.renderer.width * 0.68, game.renderer.height * 0.44);
     game.input.toggleRally(); advance(6);
     game.input.toggleRally(); advance(2);
     assert.equal(game.gameState, 'victory', 'tap steering lesson');

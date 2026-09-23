@@ -70,7 +70,7 @@ export const DuelMethods = {
         this.ui.setRivalStatus(status);
         if (['offline', 'error'].includes(status.state) && this.gameState === 'playing') {
             this.pause();
-            this.renderer.addFloatingText(`${this.rivalName()} disconnected — reconnect to continue`, this.canvas.width / 2, this.canvas.height / 2, '#ffd28a', 16);
+            this.renderer.addFloatingText(`${this.rivalName()} disconnected — reconnect to continue`, this.renderer.width / 2, this.renderer.height / 2, '#ffd28a', 16);
         }
     },
 };
