@@ -204,7 +204,7 @@ details summary { cursor: pointer; min-height: var(--tap); display: flex; align-
 .ability-bar { position: fixed; z-index: 35; left: 50%; transform: translateX(-50%); bottom: calc(16px + var(--safe-bottom)); display: flex; gap: 22px; pointer-events: none; }
 .ability { pointer-events: auto; position: relative; overflow: hidden; width: 104px; height: 104px; padding: 0; display: grid; justify-items: center; align-content: center; gap: 0; border: 0; border-radius: 50%; color: #fff; background: radial-gradient(circle at 50% 30%, #3b2c8f, #1d1450); box-shadow: 0 6px 0 #0f0930, 0 12px 30px #0008, inset 0 0 0 3px #ffffff22; transition: transform .08s, box-shadow .08s; }
 #slot-rally { background: radial-gradient(circle at 50% 30%, #ffb13b, #e0661a); box-shadow: 0 6px 0 #9a3f07, 0 12px 30px #ff8a3d44, inset 0 0 0 3px #ffffff33; }
-#slot-freeze { background: radial-gradient(circle at 50% 30%, #7ff7ee, #1aa9c9); box-shadow: 0 6px 0 #0c6a80, 0 12px 30px #37e2d544, inset 0 0 0 3px #ffffff33; }
+#slot-freeze { animation: pop-in .4s cubic-bezier(.2, .9, .3, 1.6); background: radial-gradient(circle at 50% 30%, #7ff7ee, #1aa9c9); box-shadow: 0 6px 0 #0c6a80, 0 12px 30px #37e2d544, inset 0 0 0 3px #ffffff33; }
 .ability:active, .ability.active { transform: translateY(4px) scale(0.97); }
 #slot-rally.active { box-shadow: 0 2px 0 #9a3f07, 0 0 0 6px #ffb13b55, 0 0 40px #ffb13b88, inset 0 0 0 3px #fff8; }
 #slot-freeze.aiming { box-shadow: 0 2px 0 #0c6a80, 0 0 0 6px #7ff7ee66, 0 0 40px #7ff7ee88, inset 0 0 0 3px #fff8; transform: translateY(4px); }

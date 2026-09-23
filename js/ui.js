@@ -324,6 +324,7 @@ export class UIManager {
         rally.querySelector('.ability-label').textContent = input.rallyLatched ? 'Release' : 'Rally';
         $('rally-status').textContent = player.rallying ? (input.rallyLatched ? 'Tap to move' : 'Release to recruit') : cooling ? `Recruit in ${player.coolOff.toFixed(1)}s` : '';
         $('rally-cooldown').style.height = cooling ? `${player.coolOff / rules.rallyCoolOff * 100}%` : '0%';
+        freeze.classList.toggle('hidden', this.game.gameTime < rules.freezeLockout);
         freeze.classList.toggle('cooling', wait > 0);
         freeze.classList.toggle('aiming', input.freezeAiming);
         $('freeze-cooldown').style.height = `${Math.min(1, wait / (wait > rules.freezeCooldown ? rules.freezeLockout : rules.freezeCooldown)) * 100}%`;
