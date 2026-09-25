@@ -8,7 +8,7 @@ export const POWERUP_TYPES = {
         color: '#00ff88',
         colorRgb: '0, 255, 136',
         icon: '⚡',
-        duration: 5,
+        duration: 20,
         description: 'Boost your fleet speed'
     },
     shield: {
@@ -16,7 +16,7 @@ export const POWERUP_TYPES = {
         color: '#4488ff',
         colorRgb: '68, 136, 255',
         icon: '🛡️',
-        duration: 4,
+        duration: 20,
         description: 'Protect from conversion'
     },
     magnet: {
@@ -24,7 +24,7 @@ export const POWERUP_TYPES = {
         color: '#ffaa00',
         colorRgb: '255, 170, 0',
         icon: '🧲',
-        duration: 3,
+        duration: 20,
         description: 'Pull your boids together'
     },
     convert: {
@@ -48,10 +48,15 @@ export const POWERUP_TYPES = {
         color: '#ffff00',
         colorRgb: '255, 255, 0',
         icon: '💥',
-        duration: 3,
+        duration: 20,
         description: 'Freeze enemy boids'
     }
 };
+
+// One pickup on the field, and never before the opening stretch of a match.
+const FIRST_SPAWN_DELAY = 30;
+const SPAWN_INTERVAL = 60;
+const PICKUP_CLEARANCE = 140;
 
 export class Powerup {
     constructor(x, y, type) {
@@ -158,25 +163,26 @@ export class PowerupManager {
     constructor(game) {
         this.game = game;
         this.powerups = [];
-        this.activeEffects = {}; // { type: endTime }
-        this.spawnTimer = 0;
-        this.spawnInterval = 8; // Seconds between spawns
-        this.maxPowerups = 3;
+        this.activeEffects = {}; // { type: endTime } — at most one
+        this.spawnTimer = FIRST_SPAWN_DELAY;
+        this.spawnInterval = SPAWN_INTERVAL;
+        this.maxPowerups = 1;
     }
     
     reset() {
         this.powerups = [];
         this.activeEffects = {};
         this.teamEffects = {};
-        this.spawnTimer = 5; // First spawn after 5 seconds
+        this.empSource = null;
+        this.spawnTimer = FIRST_SPAWN_DELAY;
     }
     
     update(deltaTime, boids, playerTeam) {
-        // Spawn new powerups
+        // At most one pickup, and never sooner than once a minute.
         this.spawnTimer -= deltaTime;
         if (this.spawnTimer <= 0 && this.powerups.length < this.maxPowerups) {
-            this.spawnPowerup();
-            this.spawnTimer = this.spawnInterval + Math.random() * 4;
+            this.spawnPowerup(boids);
+            this.spawnTimer = this.spawnInterval;
         }
         
         // Update powerups and check collection
@@ -205,26 +211,74 @@ export class PowerupManager {
         }
     }
     
-    spawnPowerup() {
+    spawnPowerup(boids = []) {
         const types = Object.keys(POWERUP_TYPES);
         const type = types[Math.floor(Math.random() * types.length)];
-        
-        // Spawn away from edges
-        const margin = 100;
-        const x = margin + Math.random() * (this.game.canvas.width - margin * 2);
-        const y = margin + Math.random() * (this.game.canvas.height - margin * 2);
+        const { x, y } = this.findSpawnPosition(boids);
         
         this.powerups.push(new Powerup(x, y, type));
+    }
+
+    // Drop the pickup in open space so a swarm has to travel to it.
+    findSpawnPosition(boids) {
+        const margin = 100;
+        const width = this.game.canvas.width;
+        const height = this.game.canvas.height;
+        let best = null;
+        let bestClearance = -1;
+
+        for (let attempt = 0; attempt < 24; attempt++) {
+            const x = margin + Math.random() * Math.max(1, width - margin * 2);
+            const y = margin + Math.random() * Math.max(1, height - margin * 2);
+            let nearest = Infinity;
+            for (const boid of boids) {
+                const dx = boid.pos.x - x;
+                const dy = boid.pos.y - y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < nearest) nearest = dist;
+            }
+            if (nearest > bestClearance) {
+                bestClearance = nearest;
+                best = { x, y };
+            }
+            if (nearest >= PICKUP_CLEARANCE) break;
+        }
+
+        return best || {
+            x: width / 2,
+            y: height / 2
+        };
+    }
+
+    // A new power replaces whatever is already running. Effects never overlap.
+    clearActivePowers() {
+        if (this.teamEffects) {
+            for (const effects of Object.values(this.teamEffects)) {
+                if (effects && effects.emp && this.game.boids) {
+                    for (const boid of this.game.boids) {
+                        if (boid.frozen) {
+                            boid.frozen = false;
+                            boid.frozenUntil = 0;
+                        }
+                    }
+                }
+            }
+        }
+        this.teamEffects = {};
+        this.activeEffects = {};
+        this.empSource = null;
     }
     
     activatePowerup(type, boids, collectingTeam) {
         const data = POWERUP_TYPES[type];
         const playerTeam = this.game.playerTeam;
         const isPlayerTeam = collectingTeam === playerTeam;
+
+        this.clearActivePowers();
         
         // Store effects per team
         if (!this.teamEffects) this.teamEffects = {};
-        if (!this.teamEffects[collectingTeam]) this.teamEffects[collectingTeam] = {};
+        this.teamEffects[collectingTeam] = {};
         
         switch (type) {
             case 'speed':
