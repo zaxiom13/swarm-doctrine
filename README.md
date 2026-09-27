@@ -22,6 +22,8 @@ npm test             # every test, no browser needed
 
 The exact numbers (ranges, durations, cooldowns) appear in **How to play**, generated from the rules, so they are always current.
 
+**Field guide** (on the home screen) walks through every mechanic with annotated pictures: fleets, the HUD, Rally, recruiting, Freeze and its timing, terrain, gray ships, duels and survival. The pictures in `guide/` are rendered from the real simulation and renderer by `npm run guide` (needs Playwright with Chromium), so rerun it after a balance or look change. The interactive lessons are hidden for now; their code is still in `js/tutorial.js` and `js/lessons.js`.
+
 | Mode | What happens |
 |---|---|
 | Conquest | One fixed map, three rival fleets, upgrades at 50% and 75% share. Restart keeps the map. |
@@ -29,7 +31,6 @@ The exact numbers (ranges, durations, cooldowns) appear in **How to play**, gene
 | Zen | Terrain shifts every 40 seconds. No game over. |
 | Survival | Waves from the edges, an upgrade every two waves. |
 | Duel | You against one rival fleet, with gray ships either side can recruit. |
-| Lessons | Sixteen short exercises, from moving as one to a full duel. |
 
 ### Duel rivals
 
@@ -55,7 +56,8 @@ js/worlds.js         seeded maps and Levels difficulty
 js/game.js           app controller: match lifecycle, fixed-step loop, events to effects
 js/modes.js          per-mode setup, waves, milestones, Zen shifts, checkpoints
 js/duel.js           duel lifecycle and the once-per-second rival clock
-js/tutorial.js       lesson runner;  js/lessons.js  lesson data
+js/tutorial.js       lesson runner (hidden for now);  js/lessons.js  lesson data
+js/guide.js          field-guide chapters; scripts/make-guide.mjs + scripts/guide/ render guide/*.webp
 js/renderer.js       canvas drawing;  js/ui.js  menus, HUD, dialogs;  js/input.js  pointer, touch, keys
 js/ai/actions.js     the shared 34-move vocabulary and target points
 js/ai/hard-bot.js    js/ai/search-bot.js (+ search-worker.js)    js/ai/local-policy.js    js/ai/jev.js
