@@ -32,6 +32,24 @@ The exact numbers (ranges, durations, cooldowns) appear in **How to play**, gene
 | Survival | Waves from the edges, an upgrade every two waves. |
 | Duel | You against one rival fleet, with gray ships either side can recruit. |
 
+### Online duels
+
+**Online duel** (under Duel) puts you in one shared lobby per region (Europe, Americas, Asia-Pacific, Africa & Middle East). Everyone in your region's lobby appears in a list; tap **Challenge**, they accept, and the duel starts. There are no codes to share.
+
+- Players are introduced through a Firebase Realtime Database using [Trystero](https://github.com/dmotz/trystero); the match itself runs over a direct WebRTC connection between the two browsers.
+- The challenger hosts: their browser runs the one real simulation, applies the other player's Rally and Freeze, and streams compact snapshots (about 20 a second). Leaving or disconnecting mid-match hands the win to the other player.
+- The card only appears once `FIREBASE_DATABASE_URL` in `js/net/config.js` is set. Add `?db=https://<your-db-url>` to the address to try a database before committing it, or `?net=local` to play two tabs against each other with no network at all.
+- There is no TURN relay, so two players behind very strict networks may not connect.
+
+#### Setting up the free Firebase database
+
+1. At [console.firebase.google.com](https://console.firebase.google.com), create a project. Leave it on the **Spark (free)** plan and never add a billing account: with no billing account, going over the free limits only stops matchmaking and can never cost anything.
+2. **Build → Realtime Database → Create database**, pick a location near your players, start in **locked mode**.
+3. On the database's **Rules** tab, paste `database.rules.json` from this repo and **Publish**. It only allows matchmaking data under `__trystero__`.
+4. Copy the database URL shown at the top of the **Data** tab into `FIREBASE_DATABASE_URL` in `js/net/config.js`.
+
+`js/vendor/trystero-firebase.js` is Trystero's Firebase strategy with the Firebase SDK bundled in, so the game still has no build step. See `js/vendor/README.md` to rebuild it.
+
 ### Duel rivals
 
 | Rival | How it decides | Needs |
@@ -62,6 +80,7 @@ js/renderer.js       canvas drawing;  js/ui.js  menus, HUD, dialogs;  js/input.j
 js/ai/actions.js     the shared 34-move vocabulary and target points
 js/ai/hard-bot.js    js/ai/search-bot.js (+ search-worker.js)    js/ai/local-policy.js    js/ai/jev.js
 js/ai/rivals.js      one interface over all four rivals
+js/net/*.js          online lobby (lobby.js), match flow (online.js), snapshots (sync.js), Trystero/local transport
 server.mjs           static server and Jev proxy (key stays server-side)
 ```
 

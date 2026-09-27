@@ -10,6 +10,7 @@ import { Renderer } from './renderer.js';
 import { InputHandler } from './input.js';
 import { ModeMethods } from './modes.js';
 import { DuelMethods } from './duel.js';
+import { OnlineMethods } from './net/online.js';
 
 export class Game {
     constructor({ canvas = document.getElementById('game-canvas') } = {}) {
@@ -27,6 +28,8 @@ export class Game {
         this.level = 1;
         this.mapSeed = null;
         this.rival = null;
+        this.online = null;
+        this.lobby = null;
         this.renderer.resize();
         this.input.pointer.set(this.renderer.width / 2, this.renderer.height / 2);
         this.sim = new Simulation({ width: this.renderer.width, height: this.renderer.height });
@@ -94,12 +97,13 @@ export class Game {
         this.ui.refresh();
     }
 
-    restart() { this.startGame(); }
+    restart() { if (!this.online) this.startGame(); }
 
     // Player controls ------------------------------------------------------
 
     setRally(active) {
         if (this.gameState !== 'playing') return;
+        if (this.online?.role === 'guest') { this.onlineControl(active ? 'rally' : 'release', this.input.pointer.x, this.input.pointer.y); return; }
         if (active) this.player.rally(this.input.pointer.x, this.input.pointer.y);
         else this.player.release();
     }
@@ -107,6 +111,11 @@ export class Game {
     castFreeze() {
         if (this.gameState !== 'playing') return;
         if (this.practice && !this.tutorial.allowsAbility('freeze')) return;
+        if (this.online?.role === 'guest') {
+            if (this.player.freezeWait <= 0) this.onlineControl('freeze', this.input.pointer.x, this.input.pointer.y);
+            this.input.endGesture();
+            return;
+        }
         this.player.freeze(this.input.pointer.x, this.input.pointer.y);
         this.input.endGesture();
     }
@@ -119,7 +128,8 @@ export class Game {
     }
 
     pause() {
-        if (this.gameState !== 'playing') return;
+        // An online match cannot stop for one player; leaving is a forfeit instead.
+        if (this.gameState !== 'playing' || this.online) return;
         this.resetHeldInput();
         this.stopRival();
         this.gameState = 'paused';
@@ -137,6 +147,7 @@ export class Game {
     }
 
     quitToMenu() {
+        this.forfeitOnline();
         this.disposeRival();
         this.resetHeldInput();
         this.practice = false;
@@ -146,6 +157,7 @@ export class Game {
 
     victory() {
         if (this.gameState === 'victory') return;
+        this.onlineFinished(true);
         this.stopRival();
         this.gameState = 'victory';
         this.audio.playVictory();
@@ -154,6 +166,7 @@ export class Game {
 
     defeat() {
         if (this.gameState === 'defeat') return;
+        this.onlineFinished(false);
         this.stopRival();
         this.gameState = 'defeat';
         this.audio.playDefeat();
@@ -191,16 +204,19 @@ export class Game {
 
     update(dt) {
         if (this.gameState !== 'playing') return;
+        if (this.online) this.onlineWatch(dt);
+        if (this.online?.role === 'guest') { this.onlineGuestTick(dt); return; }
         this.sim.dormant = this.practice && !this.playerActed;
         this.updateModeBefore(dt);
         if (this.player.rallying) this.player.moveTarget(this.input.pointer.x, this.input.pointer.y);
         this.sim.step(dt);
-        for (const event of this.sim.drainEvents()) this.handleEvent(event);
+        for (const event of this.sim.drainEvents()) { this.handleEvent(event); if (this.online) this.queueOnlineEvent(event); }
         if (this.combo > 0 && (this.comboTimer -= dt) <= 0) this.combo = 0;
         const playerCount = this.sim.counts[this.playerTeam] || 0;
         this.peakPlayerCount = Math.max(this.peakPlayerCount, playerCount);
         if ((this.hudTimer -= dt) <= 0) { this.hudTimer = 0.1; this.ui.refresh(); }
         this.updateModeAfter(dt, playerCount);
+        if (this.online?.role === 'host') this.onlineHostTick(dt);
     }
 
     handleEvent(event) {
@@ -269,4 +285,4 @@ export class Game {
     }
 }
 
-Object.assign(Game.prototype, ModeMethods, DuelMethods);
+Object.assign(Game.prototype, ModeMethods, DuelMethods, OnlineMethods);
