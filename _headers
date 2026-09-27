@@ -1,0 +1,3 @@
+# Cloudflare Pages headers (same syntax Netlify used).
+/models/*
+  Cache-Control: no-cache
