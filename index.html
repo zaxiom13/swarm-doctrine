@@ -26,7 +26,9 @@
             <p class="home-tagline">Move together. Recruit everyone.</p>
             <div class="home-actions">
                 <button type="button" id="btn-play" class="btn btn-primary btn-big" data-nav="mode-screen"><span aria-hidden="true">▶</span> Play</button>
-                <button type="button" id="btn-lessons" class="btn btn-secondary btn-big"><span aria-hidden="true">🎓</span> Lessons</button>
+                <button type="button" id="btn-field-guide" class="btn btn-secondary btn-big" data-nav="guide-screen"><span aria-hidden="true">📖</span> Field guide</button>
+                <!-- Lessons are hidden for now; the field guide teaches with pictures instead. -->
+                <button type="button" id="btn-lessons" class="btn btn-secondary btn-big hidden"><span aria-hidden="true">🎓</span> Lessons</button>
             </div>
             <nav class="home-links" aria-label="More">
                 <button type="button" class="pill" data-nav="help-screen"><span aria-hidden="true">❓</span> How to play</button>
@@ -54,6 +56,15 @@
         </div>
     </section>
 
+    <section id="guide-screen" class="screen screen-page hidden" aria-labelledby="guide-title">
+        <div class="page page-guide">
+            <header class="page-head"><button type="button" class="btn-back" data-back>Back</button><span class="eyebrow">Field guide</span><h2 tabindex="-1" id="guide-title">See how it works</h2></header>
+            <nav id="guide-chapters" class="guide-chapters" aria-label="Chapters"></nav>
+            <div id="guide-pages"></div>
+            <div class="page-actions"><button type="button" class="btn btn-primary" data-nav="mode-screen"><span aria-hidden="true">▶</span> Start playing</button></div>
+        </div>
+    </section>
+
     <section id="help-screen" class="screen screen-page hidden" aria-labelledby="help-title">
         <div class="page page-narrow">
             <header class="page-head"><button type="button" class="btn-back" data-back>Back</button><span class="eyebrow">Guide</span><h2 tabindex="-1" id="help-title">How to play</h2></header>
@@ -66,7 +77,7 @@
             </dl>
             <h3 class="section-title">Rules</h3>
             <ul id="help-rules" class="rule-list"></ul>
-            <div class="page-actions"><button type="button" id="btn-help-lessons" class="btn btn-primary">Open lessons</button></div>
+            <div class="page-actions"><button type="button" id="btn-help-guide" class="btn btn-primary" data-nav="guide-screen">Open the field guide</button><button type="button" id="btn-help-lessons" class="btn btn-primary hidden">Open lessons</button></div>
         </div>
     </section>
 

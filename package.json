@@ -11,6 +11,7 @@
         "train": "node scripts/train-local.mjs",
         "evaluate": "node scripts/evaluate.mjs",
         "jev:cost": "node scripts/jev-cost.mjs",
-        "icons": "node scripts/make-icons.mjs"
+        "icons": "node scripts/make-icons.mjs",
+        "guide": "node scripts/make-guide.mjs"
     }
 }
