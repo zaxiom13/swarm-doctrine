@@ -22,7 +22,7 @@ npm test             # every test, no browser needed
 
 The exact numbers (ranges, durations, cooldowns) appear in **How to play**, generated from the rules, so they are always current.
 
-**Field guide** (on the home screen) walks through every mechanic with annotated pictures: fleets, the HUD, Rally, recruiting, Freeze and its timing, terrain, gray ships, duels and survival. The pictures in `guide/` are rendered from the real simulation and renderer by `npm run guide` (needs Playwright with Chromium), so rerun it after a balance or look change. The interactive lessons are hidden for now; their code is still in `js/tutorial.js` and `js/lessons.js`.
+**Field guide** (on the home screen) walks through every mechanic one step at a time with annotated pictures: fleets, the screen, Rally, recruiting, Freeze and its timing, terrain, gray ships, duels and survival. Touch devices get the phone guide (portrait pictures, taps and the on-screen buttons); mouse devices get the computer guide (mouse and keyboard). Players can switch below the guide. The pictures in `guide/phone/` and `guide/desktop/` are rendered from the real simulation and renderer by `npm run guide` (needs Playwright with Chromium), so rerun it after a balance or look change. The interactive lessons are hidden for now; their code is still in `js/tutorial.js` and `js/lessons.js`.
 
 | Mode | What happens |
 |---|---|
