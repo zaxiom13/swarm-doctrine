@@ -2,7 +2,7 @@
 // Realtime Database URL of a Firebase project on the free Spark plan. Spark
 // has no billing account, so going over its limits stops matchmaking; it can
 // never cost money. Leave it empty to hide online play.
-export const FIREBASE_DATABASE_URL = '';
+export const FIREBASE_DATABASE_URL = 'https://online-duel-matchmaking-default-rtdb.europe-west1.firebasedatabase.app';
 
 /** One shared lobby per region. Players only see and challenge people in theirs. */
 export const REGIONS = [
