@@ -52,6 +52,8 @@ export class Simulation {
 
     addBoid(x, y, team) {
         const boid = new Boid(x, y, team, this.rules, this.random);
+        // A short id lets online snapshots follow each ship (0xffff means "none").
+        boid.id = this.nextBoidId = ((this.nextBoidId ?? -1) + 1) % 0xffff;
         this.boids.push(boid);
         return boid;
     }

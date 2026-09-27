@@ -3,6 +3,7 @@
 import { TEAMS, MODES, AVAILABLE_RIVALS, IS_LOCAL, LEVEL_ENEMIES, teamPerks } from './catalog.js';
 import { DEFAULT_RULES, describeRules } from './rules.js';
 import { GUIDE, GUIDE_DEVICES, detectGuideDevice, guideSteps } from './guide.js';
+import { REGIONS, onlineAvailable } from './net/config.js';
 import { settings, setSetting, resetSettings, SETTINGS_SCHEMA, SETTINGS_GROUPS } from './settings.js';
 
 const $ = id => document.getElementById(id);
@@ -54,6 +55,7 @@ export class UIManager {
         this.buildEnemyChoice();
         this.buildHelp();
         this.buildGuide();
+        this.buildOnline();
         this.buildSettings();
         $('jev-note').classList.toggle('hidden', !IS_LOCAL);
         this.showRecords();
@@ -67,7 +69,10 @@ export class UIManager {
         on('btn-help-lessons', () => game.tutorial.showLessons());
         on('btn-continue', () => { if (!game.resumeExpedition()) this.toast('No saved sector yet. Pick Levels to start.'); });
         on('btn-continue-lessons', () => game.tutorial.start(game.tutorial.firstIncomplete()));
-        on('btn-pause', () => game.pause());
+        on('btn-pause', () => {
+            if (!game.online) { game.pause(); return; }
+            if (!globalThis.confirm || globalThis.confirm('Leave this online match? Your opponent wins.')) game.backToLobby();
+        });
         on('btn-resume', () => game.resume());
         on('btn-restart', () => game.restart());
         on('btn-quit', () => game.quitToMenu());
@@ -105,6 +110,8 @@ export class UIManager {
             this.history.push(returnTo || this.screen);
             globalThis.history?.pushState?.({ screen: id }, '');
         }
+        // Leaving the lobby for anything but a match takes you out of it.
+        if (this.screen === 'online-screen' && id !== 'game-screen' && id !== 'online-screen') this.game.leaveLobby?.();
         for (const screen of document.querySelectorAll('.screen')) screen.classList.add('hidden');
         $(id).classList.remove('hidden');
         this.screen = id;
@@ -146,10 +153,11 @@ export class UIManager {
         const root = $('mode-groups');
         for (const group of new Set(MODES.map(mode => mode.group))) {
             root.appendChild(el('h3', { className: 'section-title', textContent: group }));
-            root.appendChild(el('div', { className: 'card-grid' }, MODES.filter(mode => mode.group === group).map(mode => card({ lead: icon(mode.icon), title: mode.name, text: mode.summary, className: 'tinted', style: `--tint:${mode.color}` }, () => {
+            root.appendChild(el('div', { className: 'card-grid' }, MODES.filter(mode => mode.group === group && (mode.id !== 'online' || onlineAvailable())).map(mode => card({ lead: icon(mode.icon), title: mode.name, text: mode.summary, className: 'tinted', style: `--tint:${mode.color}` }, () => {
                 this.game.audio.init();
                 this.game.audio.playClick();
                 if (mode.id === 'duel') this.showScreen('rival-screen');
+                else if (mode.id === 'online') this.game.openLobby();
                 else this.game.showTeamSelect(mode.id);
             }))));
         }
@@ -231,6 +239,77 @@ export class UIManager {
         this.showRecords();
         this.toast('Progress and records cleared.');
     }
+
+    // Online lobby -------------------------------------------------------------
+
+    buildOnline() {
+        const game = this.game, profile = game.onlineProfile();
+        $('online-name').value = profile.name;
+        $('online-name').addEventListener('change', () => {
+            game.saveOnlineProfile({ name: $('online-name').value });
+            game.lobby?.setName(profile.name);
+            $('online-name').value = game.lobby?.name ?? profile.name;
+        });
+        $('online-regions').replaceChildren(...REGIONS.map(region => {
+            const button = el('button', { type: 'button', className: 'segment', dataset: { region: region.id }, 'aria-pressed': String(region.id === profile.region) }, [region.name]);
+            button.addEventListener('click', () => {
+                game.audio.playClick();
+                game.saveOnlineProfile({ region: region.id });
+                for (const other of $('online-regions').children) other.setAttribute('aria-pressed', String(other === button));
+                if (onlineAvailable()) game.lobby?.join(region.id, profile.name);
+            });
+            return button;
+        }));
+        const answer = accept => { game.audio.playClick(); this.hideInvite(); game.lobby?.answer(accept); };
+        $('btn-invite-accept').addEventListener('click', () => answer(true));
+        $('btn-invite-decline').addEventListener('click', () => answer(false));
+    }
+
+    /** Draws the lobby: connection state, then every other player with a Challenge button. */
+    renderLobby(lobby) {
+        const status = $('online-status'), list = $('online-players');
+        $('online-setup').classList.toggle('hidden', !onlineAvailable());
+        if (!onlineAvailable()) {
+            status.textContent = 'Online play is not set up on this copy of the game yet.';
+            list.replaceChildren();
+            return;
+        }
+        const profile = this.game.onlineProfile();
+        if (document.activeElement !== $('online-name')) $('online-name').value = lobby?.name ?? profile.name;
+        for (const button of $('online-regions').children) button.setAttribute('aria-pressed', String(button.dataset.region === profile.region));
+        const region = REGIONS.find(r => r.id === lobby?.region)?.name ?? '';
+        const peers = [...(lobby?.peers.values() ?? [])].sort((a, b) => a.busy - b.busy || a.name.localeCompare(b.name));
+        status.dataset.state = lobby?.status ?? 'offline';
+        status.textContent = lobby?.status === 'connecting' ? `Joining the ${region} lobby…`
+            : lobby?.status === 'error' ? 'The lobby is unreachable right now. Try again later.'
+            : lobby?.outgoing ? `Waiting for ${lobby.peers.get(lobby.outgoing.peerId)?.name ?? 'them'} to answer…`
+            : peers.length ? `${peers.length} other pilot${peers.length === 1 ? '' : 's'} in the ${region} lobby`
+            : `You are the only pilot in the ${region} lobby. Share the game with a friend, or try another region.`;
+        list.replaceChildren(...peers.map(peer => {
+            const waiting = lobby.outgoing?.peerId === peer.id;
+            const button = el('button', { type: 'button', className: `btn ${waiting ? '' : 'btn-primary'}`, disabled: peer.busy || (lobby.outgoing && !waiting) || lobby.busy },
+                [waiting ? 'Cancel' : peer.busy ? 'In a match' : 'Challenge']);
+            button.addEventListener('click', () => {
+                this.game.audio.playClick();
+                if (waiting) lobby.cancelInvite(); else lobby.invite(peer.id);
+            });
+            return el('li', { className: `online-player${peer.busy ? ' busy' : ''}` }, [
+                el('span', { className: 'online-dot', 'aria-hidden': 'true' }),
+                el('strong', { textContent: peer.name }),
+                button,
+            ]);
+        }));
+    }
+
+    showInvite(peer) {
+        $('invite-title').textContent = peer.name;
+        $('invite-overlay').classList.remove('hidden');
+        this.game.audio.playClick();
+        this.haptic(40);
+        $('btn-invite-accept').focus();
+    }
+
+    hideInvite() { $('invite-overlay').classList.add('hidden'); }
 
     // Field guide ------------------------------------------------------------
 
@@ -527,7 +606,8 @@ export class UIManager {
 
     resultAction() {
         const game = this.game;
-        if (this.resultWon && game.practice) game.tutorial.next();
+        if (game.online || game.duelKind === 'duel-online') game.backToLobby();
+        else if (this.resultWon && game.practice) game.tutorial.next();
         else if (this.resultWon && game.gameMode === 'levels') game.advanceLevel();
         else game.restart();
     }

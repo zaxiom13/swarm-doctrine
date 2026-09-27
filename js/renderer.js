@@ -28,10 +28,20 @@ export class Renderer {
         // WORLD_SHORT_SIDE short side, so rules and balance match on every screen.
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
-        const shortSide = Math.min(this.canvas.width, this.canvas.height) || WORLD_SHORT_SIDE;
-        this.viewScale = shortSide / WORLD_SHORT_SIDE;
-        this.width = this.canvas.width / this.viewScale;
-        this.height = this.canvas.height / this.viewScale;
+        this.offsetX = this.offsetY = 0;
+        if (this.fixed) {
+            // Online matches share one arena size; fit it inside the screen.
+            this.viewScale = Math.min(this.canvas.width / this.fixed.width, this.canvas.height / this.fixed.height) || 1;
+            this.width = this.fixed.width;
+            this.height = this.fixed.height;
+            this.offsetX = (this.canvas.width - this.width * this.viewScale) / 2;
+            this.offsetY = (this.canvas.height - this.height * this.viewScale) / 2;
+        } else {
+            const shortSide = Math.min(this.canvas.width, this.canvas.height) || WORLD_SHORT_SIDE;
+            this.viewScale = shortSide / WORLD_SHORT_SIDE;
+            this.width = this.canvas.width / this.viewScale;
+            this.height = this.canvas.height / this.viewScale;
+        }
         this.shipScale = Math.max(1, 0.75 / this.viewScale);
         this.textScale = 1 / this.viewScale;
         this.vignette = null;
@@ -39,7 +49,10 @@ export class Renderer {
     }
 
     /** Screen pixels relative to the canvas to world units. */
-    toWorld(x, y) { return { x: x / this.viewScale, y: y / this.viewScale }; }
+    toWorld(x, y) { return { x: (x - this.offsetX) / this.viewScale, y: (y - this.offsetY) / this.viewScale }; }
+
+    /** Pins the world to a fixed size (online play) or, with null, back to the screen's shape. */
+    fixArena(size) { this.fixed = size; this.resize(); }
 
     /** The background grid is drawn once per resize into its own canvas. */
     buildGrid() {
@@ -87,7 +100,13 @@ export class Renderer {
         this.shake = Math.max(0, this.shake - dt * 2.8);
         ctx.clearRect(-20, -20, this.canvas.width + 40, this.canvas.height + 40);
         this.drawGrid();
+        ctx.translate(this.offsetX, this.offsetY);
         ctx.scale(this.viewScale, this.viewScale);
+        if (this.fixed && inMatch) {
+            ctx.strokeStyle = 'rgba(55, 226, 213, 0.35)';
+            ctx.lineWidth = 2 / this.viewScale;
+            ctx.strokeRect(0, 0, this.width, this.height);
+        }
         if (inMatch) {
             const sim = game.sim;
             for (const field of sim.terrain) this.drawTerrain(field, live ? dt : 0);

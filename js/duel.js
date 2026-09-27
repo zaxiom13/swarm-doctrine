@@ -5,7 +5,7 @@ import { getOpponentStatus } from './ai/jev.js';
 import { stepNeutralWaves } from './arena.js';
 
 export const DuelMethods = {
-    rivalName() { return RIVAL_NAMES[this.duelKind] ?? 'Rival'; },
+    rivalName() { return this.online?.peerName ?? RIVAL_NAMES[this.duelKind] ?? 'Rival'; },
 
     /** Opens a duel against `kind`, checking the rival's requirements first. */
     async startDuelMode(kind) {
@@ -35,7 +35,7 @@ export const DuelMethods = {
     },
 
     startDuel() {
-        this.rival = createRival(this.duelKind, { model: this.localModel, style: (this.world?.seed ?? 0) % 3 });
+        this.rival = this.duelKind === 'duel-online' ? this.onlineRival() : createRival(this.duelKind, { model: this.localModel, style: (this.world?.seed ?? 0) % 3 });
         this.decisionClock = 1;
         this.decisionSecond = 0;
         if (document.hidden) this.pause();

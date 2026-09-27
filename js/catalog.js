@@ -33,6 +33,7 @@ export const MODES = [
     { id: 'zen', group: 'Solo', name: 'Zen', icon: '🌿', color: '#4cf0a8', summary: 'Terrain shifts. No game over.' },
     { id: 'survival', group: 'Solo', name: 'Survival', icon: '🛡️', color: '#ff5d7a', summary: 'Hold out against waves. Pick upgrades.' },
     { id: 'duel', group: 'Duel', name: 'Duel', icon: '⚔️', color: '#6aa8ff', summary: 'One on one. Pick your rival.' },
+    { id: 'online', group: 'Duel', name: 'Online duel', icon: '🌐', color: '#4cf0a8', summary: 'Challenge real players in your region.' },
 ];
 
 export const DUEL_RIVALS = [

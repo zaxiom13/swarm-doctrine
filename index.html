@@ -78,6 +78,28 @@
         </div>
     </section>
 
+    <section id="online-screen" class="screen screen-page hidden" aria-labelledby="online-title">
+        <div class="page page-narrow">
+            <header class="page-head"><button type="button" class="btn-back" data-back>Back</button><span class="eyebrow">Online</span><h2 tabindex="-1" id="online-title">Online duel</h2></header>
+            <div id="online-setup" class="online-setup">
+                <label class="online-field"><span>Your name</span><input id="online-name" class="field" maxlength="16" autocomplete="nickname" spellcheck="false"></label>
+                <div class="online-field"><span>Lobby</span><div id="online-regions" class="segmented segmented-wrap" role="group" aria-label="Region"></div></div>
+            </div>
+            <p id="online-status" class="online-status" aria-live="polite"></p>
+            <ul id="online-players" class="online-players" aria-label="Players in this lobby"></ul>
+            <p class="note">Tap <b>Challenge</b> on an idle player. Whoever challenges hosts the match. Games connect directly between your browsers, so a strict office or school network can block them.</p>
+        </div>
+        <div id="invite-overlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="invite-title">
+            <div class="dialog">
+                <span class="eyebrow">Challenge</span>
+                <h2 tabindex="-1" id="invite-title"></h2>
+                <p>wants to duel you.</p>
+                <button type="button" id="btn-invite-accept" class="btn btn-primary">Accept</button>
+                <button type="button" id="btn-invite-decline" class="btn">Decline</button>
+            </div>
+        </div>
+    </section>
+
     <section id="help-screen" class="screen screen-page hidden" aria-labelledby="help-title">
         <div class="page page-narrow">
             <header class="page-head"><button type="button" class="btn-back" data-back>Back</button><span class="eyebrow">Guide</span><h2 tabindex="-1" id="help-title">How to play</h2></header>
