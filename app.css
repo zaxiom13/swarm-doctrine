@@ -1,4 +1,4 @@
-/* Swarm Doctrine — one stylesheet. Arcade night sky, chunky buttons, big thumbs. */
+/* Swarm Doctrine — one stylesheet. Arcade night sky, chunky buttons, big thumbs; a sleeker title screen. */
 
 :root {
     --bg: #0d0826;
@@ -72,17 +72,44 @@ h2:focus { outline: none; }
 .note { color: var(--text-2); font-size: 14px; font-weight: 600; }
 .section-title { font: 700 14px var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-2); margin-top: 8px; }
 
-/* Home */
-.screen-home { overflow: hidden; background: var(--sky); display: grid; place-items: center; }
-#swarm-preview { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.8; }
-.home-hero { position: relative; z-index: 2; width: min(420px, 100%); padding: calc(24px + var(--safe-top)) 24px calc(24px + var(--safe-bottom)); display: grid; justify-items: center; text-align: center; }
-.home-logo { width: 88px; height: 88px; display: grid; place-items: center; font-size: 50px; color: #1a0f45; background: linear-gradient(145deg, #7ff7ee, var(--accent-2)); border-radius: 28px; box-shadow: 0 8px 0 var(--accent-2-deep), 0 20px 40px #37e2d544; animation: float 4s ease-in-out infinite; margin-bottom: 18px; }
-.home-title { font: 700 clamp(52px, 13vw, 84px)/0.95 var(--display); letter-spacing: 0.5px; color: var(--text); text-shadow: 0 5px 0 #6a4bff, 0 12px 30px #000a; }
-.home-title em { font-style: normal; background: linear-gradient(90deg, var(--accent), #ff8a3d, #ff4fd8, var(--accent)); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 6s linear infinite; text-shadow: none; filter: drop-shadow(0 5px 0 #6a4bff); }
-.home-tagline { color: var(--text-2); font-size: 17px; font-weight: 700; margin: 18px 0 28px; }
-.home-actions { display: grid; gap: 14px; width: 100%; }
-.home-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; }
-.home-record { margin-top: 18px; color: var(--accent); font-size: 14px; font-weight: 800; min-height: 1.4em; }
+/* Home: the arcade sky, sharpened. A faint arena grid, a vector mark and
+   chamfered HUD buttons keep it a game without looking like a toy. */
+.screen-home { --home-font: 'Chakra Petch', var(--display); overflow: hidden; display: grid; place-items: center;
+    background: radial-gradient(ellipse at 50% 42%, #2a1a7055, transparent 60%), radial-gradient(ellipse at 50% 120%, #37e2d51f, transparent 55%), linear-gradient(180deg, #120a36, #07041a); }
+.screen-home::before { content: ''; position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(#00f7ff0d 1px, transparent 1px), linear-gradient(90deg, #00f7ff0d 1px, transparent 1px); background-size: 64px 64px; background-position: center;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 45%, #000 20%, transparent 75%); mask-image: radial-gradient(ellipse at 50% 45%, #000 20%, transparent 75%); }
+.screen-home::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 50%, transparent 55%, #05021299 100%); }
+#swarm-preview { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.55; }
+.home-hero > * { max-width: 100%; }
+.home-hero { position: relative; z-index: 2; width: min(400px, 100%); padding: calc(24px + var(--safe-top)) 24px calc(24px + var(--safe-bottom)); display: grid; justify-items: center; text-align: center; }
+.home-mark { width: 72px; height: 68px; color: var(--accent-2); filter: drop-shadow(0 0 14px #37e2d599); margin-bottom: 22px; animation: float 5s ease-in-out infinite; }
+.home-title { display: grid; font-family: var(--home-font); font-weight: 700; line-height: 0.9; text-transform: uppercase; }
+.home-title span { font-size: clamp(50px, 14vw, 78px); letter-spacing: 0.08em; margin-right: -0.08em; color: var(--text); text-shadow: 0 0 30px #6a4bff66; }
+.home-title em { font-style: normal; font-weight: 600; font-size: clamp(22px, 6.2vw, 34px); letter-spacing: 0.42em; margin-right: -0.42em; margin-top: 10px;
+    background: linear-gradient(90deg, var(--accent-2), #8f7bff 50%, #ff6bd6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.home-tagline { display: flex; align-items: center; gap: 12px; color: var(--text-3); font: 600 12px var(--home-font); letter-spacing: 0.2em; text-transform: uppercase; white-space: nowrap; margin: 22px 0 34px; }
+.home-tagline::before, .home-tagline::after { content: ''; width: 28px; height: 1px; background: linear-gradient(90deg, transparent, var(--text-3)); }
+.home-tagline::after { transform: scaleX(-1); }
+.home-actions { display: grid; gap: 12px; width: 100%; }
+.screen-home .btn-big { --cut: 14px; min-height: 60px; border-radius: 0; font: 700 18px var(--home-font); letter-spacing: 0.18em; text-transform: uppercase; box-shadow: none; text-shadow: none;
+    clip-path: polygon(var(--cut) 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%, 0 var(--cut)); transition: filter .15s, transform .08s; }
+.screen-home .btn-big svg { width: 20px; height: 20px; flex: none; }
+.screen-home .btn-big:active { transform: scale(0.985); box-shadow: none; }
+.screen-home .btn-primary { background: linear-gradient(135deg, #ffe27a, var(--accent) 45%, #ffae2b); color: #1d1200; filter: drop-shadow(0 0 18px #ffc83d55); }
+.screen-home .btn-primary:hover { filter: drop-shadow(0 0 26px #ffc83d88) brightness(1.05); }
+.screen-home .btn-secondary { background: linear-gradient(135deg, #37e2d5, #37e2d566); color: #bdfbf6; isolation: isolate; }
+/* A chamfered outline: the gradient shows through a 1.5px gap around an inner panel with the same cut. */
+.screen-home .btn-secondary::before { content: ''; position: absolute; inset: 1.5px; z-index: -1; background: linear-gradient(135deg, #133a4a, #0e1238);
+    clip-path: polygon(calc(var(--cut) - 0.6px) 0, 100% 0, 100% calc(100% - var(--cut) + 0.6px), calc(100% - var(--cut) + 0.6px) 100%, 0 100%, 0 calc(var(--cut) - 0.6px)); transition: background .15s; }
+.screen-home .btn-secondary:hover { filter: none; }
+.screen-home .btn-secondary:hover::before { background: linear-gradient(135deg, #1a4d5e, #151a4a); }
+#btn-play { animation: none; }
+.home-links { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 26px; }
+.home-link { min-height: var(--tap); padding: 0 6px; border: 0; background: none; color: var(--text-2); font: 600 13px var(--home-font); letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: color .15s; }
+.home-link:hover, .home-link:focus-visible { color: var(--accent-2); }
+.home-link-sep { width: 4px; height: 4px; transform: rotate(45deg); background: var(--text-3); }
+.home-record { margin-top: 12px; color: var(--accent); font: 600 12px var(--home-font); letter-spacing: 0.18em; text-transform: uppercase; min-height: 1.4em; }
 
 /* Buttons ----------------------------------------------------------------- */
 
@@ -163,6 +190,7 @@ h2:focus { outline: none; }
 .guide-card figcaption { display: grid; gap: 4px; padding: 14px 18px 18px; }
 .guide-card strong { font: 700 21px/1.25 var(--display); }
 .guide-card p { color: var(--text-2); font-size: 16px; line-height: 1.5; }
+@media (max-width: 440px) { .home-tagline { font-size: 11px; letter-spacing: 0.12em; gap: 8px; } .home-tagline::before, .home-tagline::after { width: 14px; } }
 @media (max-width: 480px) { .guide-card figcaption { padding: 12px 14px 14px; } .guide-card strong { font-size: 19px; } .guide-card p { font-size: 15px; line-height: 1.45; } }
 .guide-nav { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
 .guide-nav .btn { white-space: nowrap; padding-inline: 12px; }

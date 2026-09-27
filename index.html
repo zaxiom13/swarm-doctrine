@@ -14,25 +14,26 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap">
     <link rel="stylesheet" href="app.css">
 </head>
 <body>
     <main id="main-menu" class="screen screen-home">
         <canvas id="swarm-preview" aria-hidden="true"></canvas>
         <section class="home-hero">
-            <div class="home-logo" aria-hidden="true">◇</div>
-            <h1 class="home-title">Swarm<br><em>Doctrine</em></h1>
-            <p class="home-tagline">Move together. Recruit everyone.</p>
+            <svg class="home-mark" viewBox="0 0 64 60" aria-hidden="true"><path transform="translate(32 16) scale(1.35)" d="M0 -9 L6.5 7 L0 3.5 L-6.5 7 Z" fill="currentColor" opacity="1"/><path transform="translate(21 30) scale(1.05)" d="M0 -9 L6.5 7 L0 3.5 L-6.5 7 Z" fill="currentColor" opacity="0.85"/><path transform="translate(43 30) scale(1.05)" d="M0 -9 L6.5 7 L0 3.5 L-6.5 7 Z" fill="currentColor" opacity="0.85"/><path transform="translate(11 44) scale(0.8)" d="M0 -9 L6.5 7 L0 3.5 L-6.5 7 Z" fill="currentColor" opacity="0.55"/><path transform="translate(53 44) scale(0.8)" d="M0 -9 L6.5 7 L0 3.5 L-6.5 7 Z" fill="currentColor" opacity="0.55"/></svg>
+            <h1 class="home-title"><span>Swarm</span><em>Doctrine</em></h1>
+            <p class="home-tagline">Move together · Recruit everyone</p>
             <div class="home-actions">
-                <button type="button" id="btn-play" class="btn btn-primary btn-big" data-nav="mode-screen"><span aria-hidden="true">▶</span> Play</button>
-                <button type="button" id="btn-field-guide" class="btn btn-secondary btn-big" data-nav="guide-screen"><span aria-hidden="true">📖</span> Field guide</button>
+                <button type="button" id="btn-play" class="btn btn-primary btn-big" data-nav="mode-screen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" fill="currentColor"/></svg>Play</button>
+                <button type="button" id="btn-field-guide" class="btn btn-secondary btn-big" data-nav="guide-screen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C7 4 9.5 4 12 6c2.5-2 5-2 8-.5v13c-3-1.5-5.5-1.5-8 .5-2.5-2-5-2-8-.5z M12 6v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Field guide</button>
                 <!-- Lessons are hidden for now; the field guide teaches with pictures instead. -->
-                <button type="button" id="btn-lessons" class="btn btn-secondary btn-big hidden"><span aria-hidden="true">🎓</span> Lessons</button>
+                <button type="button" id="btn-lessons" class="btn btn-secondary btn-big hidden">Lessons</button>
             </div>
             <nav class="home-links" aria-label="More">
-                <button type="button" class="pill" data-nav="help-screen"><span aria-hidden="true">❓</span> How to play</button>
-                <button type="button" class="pill" data-nav="settings-screen"><span aria-hidden="true">⚙️</span> Settings</button>
+                <button type="button" class="home-link" data-nav="help-screen">How to play</button>
+                <span class="home-link-sep" aria-hidden="true"></span>
+                <button type="button" class="home-link" data-nav="settings-screen">Settings</button>
             </nav>
             <p id="home-record" class="home-record"></p>
         </section>
