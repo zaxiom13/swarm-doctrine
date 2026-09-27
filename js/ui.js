@@ -2,12 +2,12 @@
 // lessons and settings schema so there is one source for every label.
 import { TEAMS, MODES, AVAILABLE_RIVALS, IS_LOCAL, LEVEL_ENEMIES, teamPerks } from './catalog.js';
 import { DEFAULT_RULES, describeRules } from './rules.js';
-import { GUIDE, guideText } from './guide.js';
+import { GUIDE, GUIDE_DEVICES, detectGuideDevice, guideSteps } from './guide.js';
 import { settings, setSetting, resetSettings, SETTINGS_SCHEMA, SETTINGS_GROUPS } from './settings.js';
 
 const $ = id => document.getElementById(id);
 const OVERLAYS = ['pause-overlay', 'result-overlay', 'upgrade-overlay', 'intro-overlay'];
-const secs = seconds => `${Math.round(seconds * 100) / 100} seconds`;
+const GUIDE_DEVICE_KEY = 'swarm-guide-device';
 const RECORD_PREFIX = 'swarm-best-';
 const PROGRESS_KEYS = ['swarm-lessons-v2', 'swarm-lessons-v1', 'swarm-expedition-v1'];
 
@@ -232,25 +232,82 @@ export class UIManager {
         this.toast('Progress and records cleared.');
     }
 
-    /** The field guide: chapters of annotated pictures from the real simulation. */
+    // Field guide ------------------------------------------------------------
+
+    /** The field guide: one annotated picture at a time, for the device in hand. */
     buildGuide() {
-        const rules = DEFAULT_RULES;
-        let n = 0;
-        $('guide-chapters').replaceChildren(...GUIDE.map(chapter => el('a', { className: 'pill', href: `#guide-${chapter.id}` }, [el('span', { 'aria-hidden': 'true', textContent: chapter.icon }), chapter.title])));
-        $('guide-chapters').addEventListener('click', event => {
-            const link = event.target.closest('a');
-            if (!link) return;
-            event.preventDefault();
-            document.querySelector(link.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        let device = detectGuideDevice();
+        try { device = GUIDE_DEVICES[localStorage.getItem(GUIDE_DEVICE_KEY)] ? localStorage.getItem(GUIDE_DEVICE_KEY) : device; } catch { /* Optional. */ }
+        this.guide = { device, index: 0, steps: [] };
+        $('guide-device').replaceChildren(...Object.entries(GUIDE_DEVICES).map(([id, info]) => {
+            const button = el('button', { type: 'button', className: 'segment', dataset: { device: id }, 'aria-pressed': 'false' }, [el('span', { 'aria-hidden': 'true', textContent: info.icon }), info.label]);
+            button.addEventListener('click', () => { this.game.audio.playClick(); this.setGuideDevice(id, true); });
+            return button;
+        }));
+        $('guide-chapters').replaceChildren(...GUIDE.map(chapter => {
+            const button = el('button', { type: 'button', className: 'pill', dataset: { chapter: chapter.id } }, [el('span', { 'aria-hidden': 'true', textContent: chapter.icon }), chapter.title]);
+            button.addEventListener('click', () => { this.game.audio.playClick(); this.showGuideStep(this.guide.steps.findIndex(s => s.chapter === chapter)); });
+            return button;
+        }));
+        const on = (id, delta) => $(id).addEventListener('click', () => { this.game.audio.playClick(); this.guideAdvance(delta); });
+        on('btn-guide-prev', -1);
+        on('btn-guide-next', 1);
+        document.addEventListener('keydown', event => {
+            if (this.screen !== 'guide-screen' || event.target?.tagName === 'INPUT') return;
+            if (event.key === 'ArrowRight') this.guideAdvance(1);
+            else if (event.key === 'ArrowLeft') this.guideAdvance(-1);
         });
-        $('guide-pages').replaceChildren(...GUIDE.map(chapter => el('section', { id: `guide-${chapter.id}`, className: 'guide-chapter' }, [
-            el('h3', { className: 'section-title' }, [el('span', { 'aria-hidden': 'true', textContent: `${chapter.icon} ` }), chapter.title]),
-            ...chapter.pages.map(page => el('figure', { className: 'guide-shot' }, [
-                el('a', { href: page.image, target: '_blank', rel: 'noopener', 'aria-label': `${page.title}: open full size` }, [el('img', { src: page.image, alt: page.alt, loading: 'lazy', decoding: 'async', width: 1280, height: 720 })]),
-                el('figcaption', {}, [el('span', { className: 'guide-step', textContent: String(++n) }), el('strong', { textContent: page.title }), el('p', { textContent: guideText(page.text, rules) })]),
-            ])),
-            chapter.timeline && this.freezeTimeline(rules),
-        ])));
+        // Swipe the picture to move between steps.
+        let start = null;
+        $('guide-media').addEventListener('pointerdown', event => { start = { x: event.clientX, y: event.clientY }; });
+        $('guide-media').addEventListener('pointerup', event => {
+            if (!start) return;
+            const dx = event.clientX - start.x, dy = event.clientY - start.y;
+            start = null;
+            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) this.guideAdvance(dx < 0 ? 1 : -1);
+        });
+        this.setGuideDevice(device, false);
+    }
+
+    /** Switches between the phone and computer guides, staying on the same topic. */
+    setGuideDevice(device, remember) {
+        const guide = this.guide, current = guide.steps[guide.index];
+        guide.device = device;
+        guide.steps = guideSteps(device, DEFAULT_RULES);
+        const same = current ? guide.steps.findIndex(s => s.title === current.title) : 0;
+        guide.index = same >= 0 ? same : Math.max(0, guide.steps.findIndex(s => s.chapter === current.chapter));
+        if (remember) try { localStorage.setItem(GUIDE_DEVICE_KEY, device); } catch { /* Optional. */ }
+        for (const button of $('guide-device').children) button.setAttribute('aria-pressed', String(button.dataset.device === device));
+        $('guide-screen').dataset.device = device;
+        this.showGuideStep(guide.index);
+    }
+
+    guideAdvance(delta) {
+        const next = this.guide.index + delta;
+        if (next >= this.guide.steps.length) this.showScreen('mode-screen');
+        else if (next >= 0) this.showGuideStep(next);
+    }
+
+    showGuideStep(index) {
+        const guide = this.guide, steps = guide.steps, current = steps[index];
+        guide.index = index;
+        const media = current.timeline ? this.freezeTimeline(DEFAULT_RULES)
+            : el('img', { src: current.image, alt: current.alt, decoding: 'async' });
+        $('guide-media').replaceChildren(media);
+        $('guide-count').textContent = `${current.chapter.icon} ${current.chapter.title} · Step ${index + 1} of ${steps.length}`;
+        $('guide-step-title').textContent = current.title;
+        $('guide-step-text').textContent = current.text;
+        $('guide-progress-fill').style.width = `${(index + 1) / steps.length * 100}%`;
+        for (const button of $('guide-chapters').children) {
+            const active = button.dataset.chapter === current.chapter.id;
+            button.classList.toggle('active', active);
+            if (active) button.setAttribute('aria-current', 'step'); else button.removeAttribute('aria-current');
+        }
+        $('btn-guide-prev').disabled = index === 0;
+        $('btn-guide-next').textContent = index === steps.length - 1 ? 'Start playing ▶' : 'Next →';
+        // Warm the next picture so tapping Next feels instant.
+        const upcoming = steps[index + 1]?.image;
+        if (upcoming && globalThis.Image) new Image().src = upcoming;
     }
 
     /** Freeze timing drawn to scale from the rules. */
@@ -259,16 +316,12 @@ export class UIManager {
         const bar = (label, start, length, kind) => el('div', { className: `timeline-bar ${kind}`, style: `left:${start / total * 100}%;width:${length / total * 100}%`, title: label }, [el('span', { textContent: label })]);
         const cast = (at, label) => el('div', { className: 'timeline-cast', style: `left:${at / total * 100}%` }, [el('span', { textContent: label })]);
         const first = rules.freezeLockout, second = first + rules.freezeCooldown;
-        return el('figure', { className: 'guide-shot guide-timeline' }, [
-            el('div', { className: 'timeline', role: 'img', 'aria-label': `Freeze is locked for the first ${rules.freezeLockout} seconds, freezes rivals for ${rules.freezeDuration} seconds and recharges in ${rules.freezeCooldown} seconds.` }, [
-                el('div', { className: 'timeline-row' }, [el('b', { textContent: 'Charge' }), el('div', { className: 'timeline-track' }, [
-                    bar(`Locked ${rules.freezeLockout}s`, 0, rules.freezeLockout, 'locked'), bar(`Recharging ${rules.freezeCooldown}s`, first, rules.freezeCooldown, 'charging'), bar(`Recharging ${rules.freezeCooldown}s`, second, rules.freezeCooldown, 'charging')])]),
-                el('div', { className: 'timeline-row' }, [el('b', { textContent: 'Rivals' }), el('div', { className: 'timeline-track' }, [
-                    bar(`Frozen ${rules.freezeDuration}s`, first, rules.freezeDuration, 'frozen'), bar(`Frozen ${rules.freezeDuration}s`, second, rules.freezeDuration, 'frozen'), cast(first, '❄ cast'), cast(second, '❄ cast')])]),
-                el('div', { className: 'timeline-axis' }, [el('span', { textContent: '0s' }), el('span', { textContent: `${Math.round(total)}s` })]),
-            ]),
-            el('figcaption', {}, [el('span', { className: 'guide-step', textContent: '⏱' }), el('strong', { textContent: 'Freeze timing' }),
-                el('p', { textContent: `Freeze is locked for the first ${secs(rules.freezeLockout)} of a match. Each cast freezes for ${secs(rules.freezeDuration)} and recharges in ${secs(rules.freezeCooldown)}. The Freeze button counts down while it recharges.` })]),
+        return el('div', { className: 'timeline', role: 'img', 'aria-label': `Freeze is locked for the first ${rules.freezeLockout} seconds, freezes rivals for ${rules.freezeDuration} seconds and recharges in ${rules.freezeCooldown} seconds.` }, [
+            el('div', { className: 'timeline-row' }, [el('b', { textContent: 'Charge' }), el('div', { className: 'timeline-track' }, [
+                bar(`Locked ${rules.freezeLockout}s`, 0, rules.freezeLockout, 'locked'), bar(`Recharging ${rules.freezeCooldown}s`, first, rules.freezeCooldown, 'charging'), bar(`Recharging ${rules.freezeCooldown}s`, second, rules.freezeCooldown, 'charging')])]),
+            el('div', { className: 'timeline-row' }, [el('b', { textContent: 'Rivals' }), el('div', { className: 'timeline-track' }, [
+                bar(`Frozen ${rules.freezeDuration}s`, first, rules.freezeDuration, 'frozen'), bar(`Frozen ${rules.freezeDuration}s`, second, rules.freezeDuration, 'frozen'), cast(first, '❄ cast'), cast(second, '❄ cast')])]),
+            el('div', { className: 'timeline-axis' }, [el('span', { textContent: '0s' }), el('span', { textContent: `${Math.round(total)}s` })]),
         ]);
     }
 

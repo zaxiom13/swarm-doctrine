@@ -1,59 +1,98 @@
-// The illustrated field guide. Pictures in guide/ are rendered from the real
-// simulation by scripts/make-guide.mjs; text that states a number reads the rules.
-const s = seconds => `${Math.round(seconds * 100) / 100} seconds`;
+// The illustrated field guide, one step at a time. Each device gets its own
+// pictures (guide/<device>/*.webp, rendered from the real simulation by
+// scripts/make-guide.mjs) and its own wording, so a phone player only ever
+// reads about taps and a desktop player about the mouse and keyboard.
+// Text that states a number reads the rules.
+const secs = seconds => `${Math.round(seconds * 100) / 100} seconds`;
 const half = r => r.freezeFraction === 0.5 ? 'half' : `${Math.round(r.freezeFraction * 100)}%`;
-const shot = (image, title, text, alt) => ({ image: `guide/${image}.webp`, title, text, alt });
+
+export const GUIDE_DEVICES = {
+    phone: { label: 'Phone', icon: '📱' },
+    desktop: { label: 'Computer', icon: '🖥️' },
+};
+
+/**
+ * A step: `text` is a string, a function of (rules, device), or
+ * { phone, desktop } with either form inside. `only` limits it to one device.
+ */
+const step = (image, title, text, alt, only = null) => ({ image, title, text, alt, only });
 
 export const GUIDE = [
-    { id: 'basics', title: 'The basics', icon: '👀', pages: [
-        shot('fleets', 'Who is who', () => 'Your fleet is the one marked YOU. Every other colour is a rival fleet. Gray diamonds belong to nobody. You win when every ship on the map flies your colour.',
+    { id: 'basics', title: 'Basics', icon: '👀', steps: [
+        step('fleets', 'Who is who', 'Your fleet is the one marked YOU. Every other colour is a rival. Gray diamonds belong to nobody. You win when every ship flies your colour.',
             'Your cyan fleet labelled YOU, a red and an orange rival fleet, and a group of gray diamond ships.'),
-        shot('hud', 'The screen', () => 'Pause is top left. The centre shows time and score. Details opens your share of the arena and every fleet’s size. Rally and Freeze sit at the bottom for touch play.',
-            'A live match with the Pause button, timer, Guide and Details chips, and the Rally and Freeze buttons outlined.'),
+        step('hud', 'Your screen', {
+            phone: 'Pause is top left, time and score in the middle, and your share of the arena top right. Rally and Freeze are the two big buttons at the bottom.',
+            desktop: 'Pause is top left (or Esc). Time and score sit in the middle; Details, top right, shows your share of the arena. You will mostly use the mouse and Space instead of the buttons at the bottom.',
+        }, 'A live match with its controls outlined and labelled.'),
     ] },
-    { id: 'rally', title: 'Rally', icon: '◎', pages: [
-        shot('rally-hold', 'Hold and drag to move', r => `Press and hold anywhere in the arena. Ships within ${r.rallyRadius}px of your pointer stream toward it while you drag. On touch you can also tap Rally, then tap destinations.`,
-            'Cyan ships streaming along a dragged path toward an orange Rally ring under the pointer.'),
-        shot('rally-disarmed', 'Holding disarms you', () => 'While Rally is held your fleet cannot recruit, and nearby rivals are pushed away. Rally is for getting into position, not for attacking.',
-            'The fleet packed inside an orange Gathering ring while a red group drifts away to the side.'),
-        shot('release', 'Let go to spread out', r => `Releasing blooms the knot outward into a ring around whatever is nearby. After a ${s(r.rallyCoolOff)} cool-off (the red ring) your ships can recruit again.`,
-            'The fleet spreading out in all directions under a red dotted cool-off ring.'),
+    { id: 'move', title: 'Move', icon: '◎', steps: [
+        step('rally-hold', 'Hold and drag to move', {
+            phone: r => `Put a finger on the arena and keep it down. Your ships within ${r.rallyRadius}px of it gather and follow as you drag.`,
+            desktop: r => `Hold the left mouse button in the arena and drag. Your ships within ${r.rallyRadius}px of the pointer gather and follow it.`,
+        }, 'Cyan ships streaming along a dragged path toward an orange Rally ring.'),
+        step('tap-rally', 'Or tap to steer', 'Tired thumbs? Tap the Rally button once and it stays on. Now tap anywhere to send your fleet there, and tap again to change course. Tap Rally again to let go.',
+            'The Rally button highlighted, with numbered taps on the button and on the arena.', 'phone'),
+        step('rally-disarmed', 'Moving means not attacking', 'While Rally is held your ships cannot recruit, and rivals nearby are pushed away. Use it to get into position.',
+            'The fleet packed inside an orange Gathering ring while a red group drifts away.'),
+        step('release', 'Let go beside a group', {
+            phone: r => `Lift your finger next to a smaller group. Your fleet spreads out around it and, after a ${secs(r.rallyCoolOff)} pause, starts recruiting.`,
+            desktop: r => `Release the mouse button next to a smaller group. Your fleet spreads out around it and, after a ${secs(r.rallyCoolOff)} pause, starts recruiting.`,
+        }, 'The fleet spreading out under a red cool-off ring beside a red group.'),
     ] },
-    { id: 'recruit', title: 'Recruit', icon: '🤝', pages: [
-        shot('recruit', 'Surround to recruit', r => `A ship is recruited when ${r.conversionThreshold} or more of your ships are within ${r.conversionRadius}px of it and they outnumber its own nearby defenders. Lines and a white halo show pressure building, about ${s(r.conversionTicks / 60)} per ship.`,
-            'A ring of cyan ships around eight red ships, with lines and white halos showing recruit pressure.'),
-        shot('recruited', 'Recruits join you', () => 'Recruited ships switch colour on the spot and fight for you straight away, so every win makes the next one easier.',
+    { id: 'recruit', title: 'Recruit', icon: '🤝', steps: [
+        step('recruit', 'Surround to recruit', r => `A rival turns when ${r.conversionThreshold} or more of your ships are within ${r.conversionRadius}px of it and outnumber its nearby friends. Lines and a white halo show it happening.`,
+            'A ring of cyan ships around eight red ships, with lines and white halos.'),
+        step('recruited', 'They join you', 'Recruited ships switch colour on the spot and fight for you, so every win makes the next one easier.',
             'The red group has turned cyan; the counter shows You 38, Coral 0.'),
-        shot('outnumbered', 'It works both ways', () => 'Rivals recruit by the same rule. A small group parked beside a bigger one gets taken, so keep your fleet together and pick fights you outnumber.',
-            'Six cyan ships beside twenty-six red ones, with halos showing the cyan ships being recruited.'),
+        step('outnumbered', 'It works both ways', 'Rivals recruit by the same rule. A small group next to a bigger one gets taken, so keep your fleet together.',
+            'Six cyan ships beside twenty-six red ones, being recruited.'),
     ] },
-    { id: 'freeze', title: 'Freeze', icon: '❄', timeline: true, pages: [
-        shot('freeze-aim', 'Aim Freeze', r => `Point at a rival group and press Space or right-click (Q, E, 1 and 2 also work). On touch, tap Freeze, then the arena. The dashed circle shows its ${r.freezeRadius}px reach. A cast that hits nothing keeps its charge.`,
-            'A large dashed circle centred on a red group, with a ruler marking its radius.'),
-        shot('freeze-hit', 'Frozen ships stop', r => `Freeze stops ${half(r)} of the rivals inside the circle for ${s(r.freezeDuration)}. Frozen ships turn gray with a crosshair. They cannot move, recruit or help defend their neighbours.`,
-            'Red ships with gray hulls and crosshair rings, frozen in place.'),
-        shot('freeze-recruit', 'Freeze, then recruit', () => 'Freeze lets go of Rally for you. Freeze a group, rally onto it, and release: frozen ships are the easiest recruits on the map.',
-            'Numbered steps beside the cyan fleet closing around a cluster of frozen orange ships.'),
+    { id: 'freeze', title: 'Freeze', icon: '❄', steps: [
+        step('freeze-aim', 'Aim Freeze', {
+            phone: r => `Tap the Freeze button, then tap a rival group. The dashed circle shows its ${r.freezeRadius}px reach. Tapping empty space keeps the charge.`,
+            desktop: r => `Point at a rival group and press Space or right-click (Q, E, 1 and 2 work too). The dashed circle shows its ${r.freezeRadius}px reach. Missing keeps the charge.`,
+        }, 'A dashed circle centred on a red group, with the controls to cast it.'),
+        step('freeze-hit', 'Frozen ships stop', r => `Freeze stops ${half(r)} of the rivals in the circle for ${secs(r.freezeDuration)}. They turn gray with a crosshair and cannot move, recruit or defend.`,
+            'Red ships with gray hulls and crosshair rings.'),
+        step('freeze-recruit', 'Freeze, then recruit', 'Freeze lets go of Rally for you. Freeze a group, move onto it, and let go: frozen ships are the easiest recruits there are.',
+            'Numbered steps beside the fleet closing around frozen orange ships.'),
+        { timeline: true, title: 'Freeze timing', text: r => `Freeze is locked for the first ${secs(r.freezeLockout)} of a match. Each cast freezes for ${secs(r.freezeDuration)} and recharges in ${secs(r.freezeCooldown)}. The Freeze button counts down while it recharges.` },
     ] },
-    { id: 'terrain', title: 'Terrain', icon: '🌌', pages: [
-        shot('asteroids', 'Asteroids scatter', () => 'Asteroid fields knock ships off course but never destroy them. Routing around them keeps your fleet in one piece.',
-            'The fleet ploughing into an asteroid field, with a dotted green route curving below it.'),
-        shot('nebula', 'Nebulae slow', () => 'Blue nebulae slow every ship inside. Your fleet stretches out as it crosses, so keep holding Rally until the stragglers catch up.',
-            'The fleet strung out in a line inside a blue cloud.'),
-        shot('black-hole', 'Black holes destroy', () => 'The purple glow pulls ships inward and the dark core destroys them. Freeze cannot stop terrain, so steer well clear.',
-            'The fleet flying into a black hole, with its pull zone outlined and a count of ships lost.'),
+    { id: 'terrain', title: 'Terrain', icon: '🌌', steps: [
+        step('asteroids', 'Asteroids scatter', 'Asteroids knock ships off course but never destroy them. Go around to keep your fleet together.',
+            'The fleet ploughing into an asteroid field.'),
+        step('nebula', 'Nebulae slow', {
+            phone: 'Blue clouds slow every ship inside. Keep your finger down until the stragglers catch up.',
+            desktop: 'Blue clouds slow every ship inside. Keep holding until the stragglers catch up.',
+        }, 'The fleet strung out inside a blue cloud.'),
+        step('black-hole', 'Black holes destroy', 'The glow pulls ships in and the dark core destroys them. Freeze cannot stop terrain, so steer well clear.',
+            'The fleet flying into a black hole, with its pull zone outlined.'),
     ] },
-    { id: 'modes', title: 'Modes', icon: '🎮', pages: [
-        shot('neutrals', 'Gray ships', () => 'Gray ships never attack. Whoever surrounds them first gets them; if two fleets tie over one, nobody does.',
-            'Cyan ships curving around a cluster of gray diamonds.'),
-        shot('duel', 'Duel', r => `One rival fleet uses exactly your Rally and Freeze. Its Rally point is drawn on the map, so you can read its plan. ${r.duelNeutralWave} gray ships arrive every ${s(r.duelNeutralInterval)}.`,
-            'Blue and orange fleets facing off, with the rival’s Rally circle labelled and gray ships between them.'),
-        shot('survival', 'Survival', () => 'Rivals arrive in waves from the edges, and you pick an upgrade every two waves. Meet each wave with your whole fleet.',
-            'Red and orange groups flying in from the left and right edges toward the cyan fleet.'),
-        shot('victory', 'Winning', () => 'Levels and duels end when one colour holds every ship. Zen never ends and reshapes the map as you play.',
+    { id: 'modes', title: 'Modes', icon: '🎮', steps: [
+        step('neutrals', 'Gray ships', 'Gray ships never fight back. Whoever surrounds them first gets them; if two fleets tie over one, nobody does.',
+            'Cyan ships curving around gray diamonds.'),
+        step('duel', 'Duel', r => `One rival with exactly your Rally and Freeze. Its Rally point is drawn on the map, so you can read its plan. ${r.duelNeutralWave} gray ships arrive every ${secs(r.duelNeutralInterval)}.`,
+            'Blue and orange fleets facing off, with gray ships between them.'),
+        step('survival', 'Survival', 'Rivals arrive in waves from the edges, and you pick an upgrade every two waves.',
+            'Red and orange groups flying in from the edges toward the cyan fleet.'),
+        step('victory', 'Winning', 'Levels and duels end when one colour holds every ship. Zen never ends and reshapes the map as you play. You are ready!',
             'The whole arena filled with cyan ships.'),
     ] },
 ];
 
-/** Resolves page text that may depend on the current rules. */
-export function guideText(value, rules) { return typeof value === 'function' ? value(rules) : value; }
+/** The device a player is probably on. Touch-first screens get the phone guide, like the game's own touch controls. */
+export function detectGuideDevice() {
+    return globalThis.matchMedia?.('(pointer: coarse)').matches ? 'phone' : 'desktop';
+}
+
+/** The flat list of steps for one device, each with its chapter and resolved text. */
+export function guideSteps(device, rules) {
+    const resolve = value => {
+        if (value && typeof value === 'object') value = value[device];
+        return typeof value === 'function' ? value(rules, device) : value;
+    };
+    return GUIDE.flatMap(chapter => chapter.steps.filter(s => !s.only || s.only === device).map(s => ({
+        ...s, chapter, text: resolve(s.text), image: s.image && `guide/${device}/${s.image}.webp`,
+    })));
+}

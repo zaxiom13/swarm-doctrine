@@ -58,10 +58,22 @@
 
     <section id="guide-screen" class="screen screen-page hidden" aria-labelledby="guide-title">
         <div class="page page-guide">
-            <header class="page-head"><button type="button" class="btn-back" data-back>Back</button><span class="eyebrow">Field guide</span><h2 tabindex="-1" id="guide-title">See how it works</h2></header>
+            <header class="page-head"><button type="button" class="btn-back" data-back>Back</button><span class="eyebrow">Field guide</span><h2 tabindex="-1" id="guide-title">How it works</h2></header>
             <nav id="guide-chapters" class="guide-chapters" aria-label="Chapters"></nav>
-            <div id="guide-pages"></div>
-            <div class="page-actions"><button type="button" class="btn btn-primary" data-nav="mode-screen"><span aria-hidden="true">▶</span> Start playing</button></div>
+            <div class="guide-progress" aria-hidden="true"><div id="guide-progress-fill"></div></div>
+            <figure class="guide-card" aria-live="polite">
+                <div id="guide-media" class="guide-media"></div>
+                <figcaption>
+                    <span id="guide-count" class="eyebrow"></span>
+                    <strong id="guide-step-title"></strong>
+                    <p id="guide-step-text"></p>
+                </figcaption>
+            </figure>
+            <div class="guide-nav">
+                <button type="button" id="btn-guide-prev" class="btn">← Back</button>
+                <button type="button" id="btn-guide-next" class="btn btn-primary">Next →</button>
+            </div>
+            <div class="guide-device"><span class="note">Controls shown for</span><div id="guide-device" class="segmented" role="group" aria-label="Show controls for"></div></div>
         </div>
     </section>
 
