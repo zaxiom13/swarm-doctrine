@@ -1,0 +1,822 @@
+diff --git a/js/boid.js b/js/boid.js
+index 7c229f6..b39de6c 100644
+--- a/js/boid.js
++++ b/js/boid.js
+@@ -2,6 +2,13 @@
+ import { Vector } from './vector.js';
+ import { CONFIG, TEAMS } from './config.js';
+ 
++// Unknown teams can appear briefly while a mode is assembling a fleet. Keep
++// them visible and neutral instead of silently painting them as Dragon units.
++const NEUTRAL_RENDER_TEAM = {
++    color: '#aab4c3',
++    colorRgb: '170, 180, 195'
++};
++
+ export class Boid {
+     constructor(x, y, team) {
+         this.pos = new Vector(x, y);
+@@ -19,14 +26,28 @@ export class Boid {
+         this.freezeRemaining = 0;
+         this.slowMultiplier = 1;
+ 
+-        // Visual trail buffer (limited length for performance)
+-        this.trail = [];
+         this.maxTrail = 4;
+         this.trailCounter = 0;
+ 
+         // Slight unique variations for organic movement
+         this.agility = 0.9 + Math.random() * 0.2;
+         this.size = CONFIG.boidSize * (0.95 + Math.random() * 0.1);
++
++        // Flocking helpers are called once per simulation tick. Reusing these
++        // buffers avoids creating several short-lived Vector objects per boid.
++        this._separationForce = new Vector();
++        this._alignmentForce = new Vector();
++        this._cohesionForce = new Vector();
++        this._rallyForce = new Vector();
++        this._fleeForce = new Vector();
++        this._seekForce = new Vector();
++        this._renderTeam = null;
++        this._renderPalette = null;
++
++        // Fixed-size ring buffer avoids trail.shift() and per-sample allocations.
++        this.trail = new Array(this.maxTrail);
++        this.trailHead = 0;
++        this.trailLen = 0;
+     }
+ 
+     applyForce(force) {
+@@ -35,7 +56,7 @@ export class Boid {
+     }
+ 
+     // Separation: avoid crowding local flockmates (with emergency separation for close quarters)
+-    separate(neighbors) {
++    separate(neighbors, out = this._separationForce) {
+         let steerX = 0, steerY = 0;
+         let count = 0;
+         const sepRadius = CONFIG.separationRadius;
+@@ -76,11 +97,13 @@ export class Boid {
+             }
+         }
+ 
+-        return new Vector(steerX, steerY);
++        out.x = steerX;
++        out.y = steerY;
++        return out;
+     }
+ 
+     // Alignment: match heading with every nearby ship, any allegiance
+-    align(neighbors) {
++    align(neighbors, out = this._alignmentForce) {
+         let sumX = 0, sumY = 0;
+         let count = 0;
+ 
+@@ -108,14 +131,18 @@ export class Boid {
+                 steerX = steerX / steerMag * CONFIG.maxForce;
+                 steerY = steerY / steerMag * CONFIG.maxForce;
+             }
+-            return new Vector(steerX, steerY);
++            out.x = steerX;
++            out.y = steerY;
++            return out;
+         }
+ 
+-        return new Vector();
++        out.x = 0;
++        out.y = 0;
++        return out;
+     }
+ 
+     // Cohesion: steer toward the center of every nearby ship, any allegiance
+-    cohere(neighbors) {
++    cohere(neighbors, out = this._cohesionForce) {
+         let sumX = 0, sumY = 0;
+         let count = 0;
+ 
+@@ -131,17 +158,19 @@ export class Boid {
+         if (count > 0) {
+             sumX /= count;
+             sumY /= count;
+-            return this.seekXY(sumX, sumY);
++            return this.seekXY(sumX, sumY, out);
+         }
+ 
+-        return new Vector();
++        out.x = 0;
++        out.y = 0;
++        return out;
+     }
+ 
+-    seek(target) {
+-        return this.seekXY(target.x, target.y);
++    seek(target, out = this._seekForce) {
++        return this.seekXY(target.x, target.y, out);
+     }
+ 
+-    seekXY(tx, ty) {
++    seekXY(tx, ty, out = this._seekForce) {
+         let dx = tx - this.pos.x;
+         let dy = ty - this.pos.y;
+         const mag = Math.sqrt(dx * dx + dy * dy);
+@@ -156,15 +185,21 @@ export class Boid {
+             steerX = steerX / steerMag * CONFIG.maxForce;
+             steerY = steerY / steerMag * CONFIG.maxForce;
+         }
+-        return new Vector(steerX, steerY);
++        out.x = steerX;
++        out.y = steerY;
++        return out;
+     }
+ 
+     // Direct Tactical Beacon command (Friendly units orbit and maintain perimeter escort around beacon, never collapsing to a point)
+-    rallyTowardsBeacon(target, forceMult = 1.0) {
++    rallyTowardsBeacon(target, forceMult = 1.0, out = this._rallyForce) {
+         let dx = target.x - this.pos.x;
+         let dy = target.y - this.pos.y;
+         const dist = Math.sqrt(dx * dx + dy * dy);
+-        if (dist === 0) return new Vector();
++        if (dist === 0) {
++            out.x = 0;
++            out.y = 0;
++            return out;
++        }
+ 
+         const speed = CONFIG.maxSpeed * 1.25;
+         let desiredX = 0;
+@@ -195,11 +230,13 @@ export class Boid {
+             steerX = (steerX / steerMag) * maxF;
+             steerY = (steerY / steerMag) * maxF;
+         }
+-        return new Vector(steerX, steerY);
++        out.x = steerX;
++        out.y = steerY;
++        return out;
+     }
+ 
+     // Kinetic Shockwave / Scatter blast
+-    fleePoint(target, force = 4.0, maxSpeed = 7.0) {
++    fleePoint(target, force = 4.0, maxSpeed = 7.0, out = this._fleeForce) {
+         let dx = this.pos.x - target.x;
+         let dy = this.pos.y - target.y;
+         const dist = Math.sqrt(dx * dx + dy * dy);
+@@ -219,11 +256,13 @@ export class Boid {
+             steerX = (steerX / steerMag) * maxF;
+             steerY = (steerY / steerMag) * maxF;
+         }
+-        return new Vector(steerX, steerY);
++        out.x = steerX;
++        out.y = steerY;
++        return out;
+     }
+ 
+     fleeMouse(target) {
+-        return this.fleePoint(target, 4.0, CONFIG.maxSpeed * 1.6);
++        return this.fleePoint(target, 4.0, CONFIG.maxSpeed * 1.6, this._fleeForce);
+     }
+ 
+ 
+@@ -311,40 +350,77 @@ export class Boid {
+         if (this.pos.y < 0) { this.pos.y = height; wrapped = true; }
+         if (this.pos.y > height) { this.pos.y = 0; wrapped = true; }
+         if (wrapped) {
+-            this.trail = [];
++            this.trailHead = 0;
++            this.trailLen = 0;
+         }
+ 
+         // Update trail buffer
+         this.trailCounter++;
+         if (this.trailCounter % 2 === 0 && !wrapped) {
+-            this.trail.push({ x: this.pos.x, y: this.pos.y });
+-            if (this.trail.length > this.maxTrail) {
+-                this.trail.shift();
+-            }
++            let slot = this.trail[this.trailHead];
++            if (!slot) slot = this.trail[this.trailHead] = { x: 0, y: 0 };
++            slot.x = this.pos.x;
++            slot.y = this.pos.y;
++            this.trailHead = (this.trailHead + 1) % this.maxTrail;
++            if (this.trailLen < this.maxTrail) this.trailLen++;
+         }
+ 
+         this.pulsePhase += 0.12;
+         this.justConverted = false;
+     }
+ 
+-    draw(ctx) {
+-        const teamData = TEAMS[this.team] || TEAMS.dragon;
+-        const baseColor = teamData.color;
++    draw(ctx, options = {}) {
++        let teamData;
++        if (this._renderTeam === this.team && this._renderPalette) {
++            teamData = this._renderPalette;
++        } else {
++            teamData = TEAMS[this.team] || NEUTRAL_RENDER_TEAM;
++            this._renderTeam = this.team;
++            this._renderPalette = {
++                baseColor: teamData.color,
++                colorRgb: teamData.colorRgb,
++                trailColor: `rgba(${teamData.colorRgb}, 0.28)`
++            };
++            teamData = this._renderPalette;
++        }
++        const baseColor = teamData.baseColor;
+         const colorRgb = teamData.colorRgb;
+         const angle = Math.atan2(this.vel.y, this.vel.x);
+-        const size = this.size;
++        const defaultScale = typeof window !== 'undefined' ? (window.shipScale || 1) : 1;
++        const size = this.size * (options.scale || defaultScale);
++        const showTrail = options.showTrail !== false;
++        const showPanels = options.showPanels !== false;
++        const showThruster = options.showThruster !== false;
++        const useThrusterGradient = options.useThrusterGradient !== false;
++        const simpleDraw = options.simpleDraw === true;
++
++        // Unclaimed recruits have a distinct outline, not a third fleet livery.
++        if (this.team === 'neutral') {
++            ctx.save(); ctx.translate(this.pos.x, this.pos.y); ctx.rotate(angle);
++            ctx.strokeStyle = '#aab4c3'; ctx.fillStyle = '#aab4c3'; ctx.lineWidth = 1.5;
++            ctx.beginPath(); ctx.moveTo(size*.8,0); ctx.lineTo(0,size*.5);
++            ctx.lineTo(-size*.8,0); ctx.lineTo(0,-size*.5); ctx.closePath(); ctx.stroke();
++            ctx.beginPath(); ctx.arc(0,0,1.5,0,Math.PI*2); ctx.fill(); ctx.restore();
++            return;
++        }
++
++        if (simpleDraw && !this.frozen && this.conversionPressure <= 5 && !this.justConverted) {
++            this._drawHullFast(ctx, this.frozen ? '#606470' : baseColor, angle, size);
++            return;
++        }
+ 
+         // 1. Draw motion trail - with distance check to strictly prevent screen-wrap slashes
+-        if (this.trail.length > 1 && !this.frozen) {
++        if (showTrail && this.trailLen > 1 && !this.frozen) {
+             ctx.beginPath();
+             let drawing = false;
+-            for (let i = 0; i < this.trail.length; i++) {
+-                const p = this.trail[i];
+-                if (i === 0) {
++            let prev = null;
++            const start = this.trailLen < this.maxTrail ? 0 : this.trailHead;
++            for (let step = 0; step < this.trailLen; step++) {
++                const p = this.trail[(start + step) % this.maxTrail];
++                if (step === 0) {
+                     ctx.moveTo(p.x, p.y);
+                     drawing = true;
+                 } else {
+-                    const prev = this.trail[i - 1];
+                     const dx = p.x - prev.x;
+                     const dy = p.y - prev.y;
+                     // If distance between samples is over 35px, it wrapped around screen: split line
+@@ -354,16 +430,16 @@ export class Boid {
+                         ctx.lineTo(p.x, p.y);
+                     }
+                 }
++                prev = p;
+             }
+-            if (drawing && this.trail.length > 0) {
+-                const last = this.trail[this.trail.length - 1];
+-                const dx = this.pos.x - last.x;
+-                const dy = this.pos.y - last.y;
++            if (drawing && prev) {
++                const dx = this.pos.x - prev.x;
++                const dy = this.pos.y - prev.y;
+                 if (dx * dx + dy * dy <= 1225) {
+                     ctx.lineTo(this.pos.x, this.pos.y);
+                 }
+             }
+-            ctx.strokeStyle = `rgba(${colorRgb}, 0.28)`;
++            ctx.strokeStyle = teamData.trailColor;
+             ctx.lineWidth = size * 0.35;
+             ctx.lineCap = 'round';
+             ctx.stroke();
+@@ -416,20 +492,28 @@ export class Boid {
+         ctx.rotate(angle);
+ 
+         // Thruster plume
+-        if (!this.frozen) {
++        if (!this.frozen && showThruster) {
+             const thrustLength = size * (0.8 + Math.sin(this.pulsePhase * 3) * 0.3);
+-            const thrustGrad = ctx.createLinearGradient(0, 0, -thrustLength - size * 0.5, 0);
+-            thrustGrad.addColorStop(0, '#ffffff');
+-            thrustGrad.addColorStop(0.3, `rgba(${colorRgb}, 0.8)`);
+-            thrustGrad.addColorStop(1, 'transparent');
+ 
+             ctx.beginPath();
+             ctx.moveTo(-size * 0.4, -size * 0.25);
+             ctx.lineTo(-size * 0.4 - thrustLength, 0);
+             ctx.lineTo(-size * 0.4, size * 0.25);
+             ctx.closePath();
+-            ctx.fillStyle = thrustGrad;
++            if (useThrusterGradient) {
++                const thrustGrad = ctx.createLinearGradient(0, 0, -thrustLength - size * 0.5, 0);
++                thrustGrad.addColorStop(0, '#ffffff');
++                thrustGrad.addColorStop(0.3, `rgba(${colorRgb}, 0.8)`);
++                thrustGrad.addColorStop(1, 'transparent');
++                ctx.fillStyle = thrustGrad;
++            } else {
++                // A solid, high-contrast plume is substantially cheaper on
++                // small screens and remains readable at fleet density.
++                ctx.fillStyle = teamData.baseColor;
++                ctx.globalAlpha = 0.72;
++            }
+             ctx.fill();
++            if (!useThrusterGradient) ctx.globalAlpha = 1;
+         }
+ 
+         // Ship Hull (faceted stealth fighter chassis)
+@@ -449,16 +533,40 @@ export class Boid {
+         ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+         ctx.fill();
+ 
+-        // Wing panel accents
+-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+-        ctx.lineWidth = 1;
+-        ctx.beginPath();
+-        ctx.moveTo(size * 0.7, 0);
+-        ctx.lineTo(-size * 0.6, size * 0.5);
+-        ctx.moveTo(size * 0.7, 0);
+-        ctx.lineTo(-size * 0.6, -size * 0.5);
+-        ctx.stroke();
++        // Wing panel accents are useful at low density, but become a large
++        // number of extra path operations when the fleet fills the screen.
++        if (showPanels) {
++            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
++            ctx.lineWidth = 1;
++            ctx.beginPath();
++            ctx.moveTo(size * 0.7, 0);
++            ctx.lineTo(-size * 0.6, size * 0.5);
++            ctx.moveTo(size * 0.7, 0);
++            ctx.lineTo(-size * 0.6, -size * 0.5);
++            ctx.stroke();
++        }
+ 
+         ctx.restore();
+     }
++
++    // One world-space path: no save/restore, gradients, or extra accents.
++    _drawHullFast(ctx, color, angle, size) {
++        const cos = Math.cos(angle);
++        const sin = Math.sin(angle);
++        const px = this.pos.x;
++        const py = this.pos.y;
++        const noseX = size * 1.3;
++        const wingX = size * 0.8;
++        const wingY = size * 0.75;
++        const notchX = size * 0.4;
++
++        ctx.beginPath();
++        ctx.moveTo(px + cos * noseX, py + sin * noseX);
++        ctx.lineTo(px - cos * wingX + sin * wingY, py - sin * wingX - cos * wingY);
++        ctx.lineTo(px - cos * notchX, py - sin * notchX);
++        ctx.lineTo(px - cos * wingX - sin * wingY, py - sin * wingX + cos * wingY);
++        ctx.closePath();
++        ctx.fillStyle = color;
++        ctx.fill();
++    }
+ }
+diff --git a/js/game.js b/js/game.js
+index fd40664..868ec93 100644
+--- a/js/game.js
++++ b/js/game.js
+@@ -1,3 +1,4 @@
++import { DuelMethods } from './duel.js';
+ import { WorldMethods } from './modes.js';
+ // Enhanced Game Controller - Dynamic doctrines, tactical beacon, ability suite, combos, and wave survival
+ import { CONFIG, DIFFICULTY_MODS, TEAMS, DOCTRINES_CATALOG } from './config.js';
+@@ -23,6 +24,10 @@ export class Game {
+         // Game state
+         this.boids = [];
+         this.quadTree = null;
++        this._spatialBoundary = new Rectangle(0, 0, 1, 1);
++        this._spatialQuery = new Circle(0, 0, 1);
++        this._spatialNeighbors = [];
++        this._conversionRadiusSq = CONFIG.conversionRadius * CONFIG.conversionRadius;
+         this.gameState = 'menu'; // menu, team-select, playing, paused, victory, defeat, doctrine-select
+         this.gameTime = 0;
+         this.conversions = 0;
+@@ -102,6 +107,7 @@ export class Game {
+     setBeaconActive(active) {
+         const wasActive = this.beaconActive;
+         this.beaconActive = active;
++        if (!active) this.input.rallyLatched = false;
+         if (active) {
+             this.rallyCoolOffTimer = this.rallyCoolOffDuration;
+             if (this.gameState === 'playing') {
+@@ -138,7 +144,7 @@ export class Game {
+         if (this.practice && this.tutorial && !this.tutorial.allowsAbility('emp')) return;
+         const target = this.input.mousePos;
+         const radius = CONFIG.empRadius;
+-        const victims = this.boids.filter(b => b.team !== this.playerTeam && b.pos.distSq(target) <= radius * radius);
++        const victims = this.boids.filter(b => b.team !== this.playerTeam && b.team !== 'neutral' && b.pos.distSq(target) <= radius * radius);
+         if (!victims.length) {
+             this.renderer.addFloatingText('No rivals in range ┬À charge kept', target.x, target.y - 25, '#b8d9e5', 13);
+             return;
+@@ -174,11 +180,15 @@ export class Game {
+     }
+ 
+     resetInteraction() {
++        this.stopDuel();
++        for (const id of ['duel-status', 'duel-pause-status']) { const el = document.getElementById(id); if (el) el.textContent = ''; }
++        document.getElementById('duel-reconnect')?.classList.add('hidden');
+         this.restoreRunTuning();
+         const keys = ['peerPressureTime', 'beaconRadius', 'beaconAttractForce', 'maxSpeed', 'empRadius', 'empDuration'];
+         this.runTuning = Object.fromEntries(keys.map(key => [key, CONFIG[key]]));
+         this.beaconActive = false;
+         this.rallyCoolOffTimer = 0;
++        this.input.rallyLatched = false;
+         this.input.mouseDown = false;
+         this.input.rightMouseDown = false;
+         this.input.freezeAiming = false;
+@@ -215,8 +225,9 @@ export class Game {
+ 
+         this.prepareWorld(fresh);
+         const allTeams = [this.playerTeam, ...Object.keys(TEAMS).filter(t => t !== this.playerTeam)];
+-        const teamIds = this.practice ? ['dragon', 'salamander'] : this.gameMode === 'levels' ? allTeams.slice(0, this.rules.rivals + 1) : allTeams;
+-        const boidsPerTeam = Math.floor(CONFIG.boidCount / teamIds.length);
++        const teamIds = this.gameMode === 'duel' ? allTeams.slice(0, 2) : this.practice ? ['dragon', 'salamander'] : this.gameMode === 'levels' ? allTeams.slice(0, this.rules.rivals + 1) : allTeams;
++        this.activeTeamIds = [...teamIds];
++        const boidsPerTeam = this.gameMode === 'duel' ? 80 : Math.floor(CONFIG.boidCount / teamIds.length);
+         const width = this.canvas.width;
+         const height = this.canvas.height;
+ 
+@@ -254,6 +265,7 @@ export class Game {
+         this.obstacleTimer = 25;
+         if (this.practice && this.tutorial) this.tutorial.setupArena();
+         else { this.restoreLessonControls(); this.showSectorBriefing(); }
++        if (this.gameMode === 'duel') { this.difficultyMod = { enemySpeed: 1, enemyCohesion: 1, conversionResist: 1 }; this.startDuel(); }
+         this.updateWorld(0);
+     }
+ 
+@@ -378,7 +390,9 @@ export class Game {
+     }
+ 
+     resetHeldInput() {
++        this.stopDuel();
+         this.beaconActive = false;
++        this.input.rallyLatched = false;
+         this.input.mouseDown = false;
+         this.input.rightMouseDown = false;
+         this.input.freezeAiming = false;
+@@ -388,6 +402,7 @@ export class Game {
+     resume() {
+         this.gameState = 'playing';
+         this.ui.hidePause();
++        this.resumeDuel();
+     }
+ 
+     quitToMenu() {
+@@ -398,12 +413,15 @@ export class Game {
+     }
+ 
+     victory() {
++        if (this.gameState === 'victory') return;
++        this.stopDuel();
+         this.gameState = 'victory';
+         this.audio.playVictory();
+         this.ui.showVictory(this.gameTime, this.conversions, this.score);
+     }
+ 
+     defeat() {
++        this.stopDuel();
+         this.gameState = 'defeat';
+         this.audio.playDefeat();
+         if (this.gameMode === 'survival') {
+@@ -417,7 +435,10 @@ export class Game {
+         if (this.gameState !== 'playing') return;
+ 
+         this.gameTime += deltaTime;
+-        this.ui.updateCoach?.();
++        this.updateDuel(deltaTime);
++        this.hudTimer = (this.hudTimer || 0) - deltaTime;
++        const refreshHUD = this.hudTimer <= 0;
++        if (refreshHUD) { this.hudTimer = .1; this.ui.updateCoach?.(); }
+         this.updateWorld(deltaTime);
+         this.releaseSettleTimer = Math.max(0, (this.releaseSettleTimer || 0) - deltaTime);
+ 
+@@ -448,7 +469,8 @@ export class Game {
+         const destroyedBoids = this.obstacles.update(deltaTime, this.boids);
+         if (destroyedBoids.length > 0) {
+             this.losses = (this.losses || 0) + destroyedBoids.filter(b => b.team === this.playerTeam).length;
+-            this.boids = this.boids.filter(b => !destroyedBoids.includes(b));
++            const destroyed = new Set(destroyedBoids);
++            this.boids = this.boids.filter(b => !destroyed.has(b));
+             for (const boid of destroyedBoids) {
+                 const teamData = TEAMS[boid.team];
+                 if (teamData) {
+@@ -479,22 +501,34 @@ export class Game {
+         const width = this.canvas.width;
+         const height = this.canvas.height;
+ 
+-        // QuadTree spatial partitioning
+-        const boundary = new Rectangle(width / 2, height / 2, width / 2, height / 2);
+-        this.quadTree = new QuadTree(boundary, 4);
++        // QuadTree spatial partitioning (reuse tree + query buffers each tick)
++        const boundary = this._spatialBoundary;
++        boundary.x = width / 2;
++        boundary.y = height / 2;
++        boundary.w = width / 2;
++        boundary.h = height / 2;
++        if (!this.quadTree) {
++            this.quadTree = new QuadTree(boundary, 4);
++        } else {
++            this.quadTree.clear();
++        }
+         for (let i = 0; i < this.boids.length; i++) {
+             this.quadTree.insert(this.boids[i]);
+         }
+ 
+         const queryRadius = Math.max(CONFIG.perceptionRadius, CONFIG.separationRadius, CONFIG.conversionRadius);
++        const queryRange = this._spatialQuery;
++        queryRange.r = queryRadius;
++        queryRange.rSquared = queryRadius * queryRadius;
++        const nearby = this._spatialNeighbors;
+         const beaconPos = this.input.mousePos;
+         const beaconRad = CONFIG.beaconRadius || 180;
+         const beaconRadSq = beaconRad * beaconRad;
+ 
+         // Reset team counts
+-        const teamIds = Object.keys(TEAMS);
++        const teamIds = this.gameMode === 'duel' ? this.activeTeamIds : Object.keys(TEAMS);
+         this.teamCounts = {};
+-        for (const id of teamIds) this.teamCounts[id] = 0;
++        for (const id of [...teamIds, 'neutral']) this.teamCounts[id] = 0;
+ 
+         // Process each boid
+         for (let i = 0; i < this.boids.length; i++) {
+@@ -508,12 +542,14 @@ export class Game {
+             }
+ 
+             // Spatial query
+-            const range = new Circle(boid.pos.x, boid.pos.y, queryRadius);
+-            const neighbors = this.quadTree.query(range);
++            queryRange.x = boid.pos.x; queryRange.y = boid.pos.y; nearby.length = 0;
++            const neighbors = this.quadTree.query(queryRange, nearby);
+ 
+             // Flocking
+             boid.flock(neighbors, this.difficultyMod, !isPlayer);
+ 
++            this.applyDuelForces(boid);
++
+             // Beacon Influence
+             if (this.beaconActive) {
+                 const distSq = boid.pos.distSq(beaconPos);
+@@ -521,7 +557,7 @@ export class Game {
+                     // Friendly boids actively maneuver towards beacon
+                     const rally = boid.rallyTowardsBeacon(beaconPos, CONFIG.beaconAttractForce || 1.5);
+                     boid.applyForce(rally);
+-                } else if (distSq < beaconRadSq) {
++                } else if (boid.team !== 'neutral' && distSq < beaconRadSq) {
+                     // Enemies inside the beacon are disrupted/repelled
+                     const repel = boid.fleePoint(beaconPos, CONFIG.beaconRepelEnemies || 0.8, CONFIG.maxSpeed * 0.8);
+                     boid.applyForce(repel);
+@@ -544,7 +580,7 @@ export class Game {
+                     const wasEnemy = (boid.team !== this.playerTeam);
+                     const nowPlayer = (convertingTeam === this.playerTeam);
+ 
+-                    if (this.practice && nowPlayer && wasEnemy) this.tutorial?.recordConversion(boid.frozen);
++                    if (this.practice && nowPlayer && wasEnemy) this.tutorial?.recordConversion(boid.frozen, boid.team === 'neutral');
+                     boid.convert(convertingTeam);
+                     this.conversions++;
+ 
+@@ -597,8 +633,8 @@ export class Game {
+         this.peakPlayerCount = Math.max(this.peakPlayerCount, playerTeamCount);
+ 
+         // HUD Update
+-        this.ui.updateHUD(this.teamCounts, this.playerTeam, this.gameTime, this.score, this.combo);
+-        this.ui.updateAbilitiesHUD(
++        if (refreshHUD) this.ui.updateHUD(this.teamCounts, this.playerTeam, this.gameTime, this.score, this.combo);
++        if (refreshHUD) this.ui.updateAbilitiesHUD(
+             this.empCooldown, this.empCooldownMax,
+             this.beaconActive, this.rallyCoolOffTimer, this.rallyCoolOffDuration
+         );
+@@ -643,7 +679,7 @@ export class Game {
+             this.defeat();
+         } else if (this.practice && this.tutorial) {
+             this.tutorial.update();
+-        } else if (['conquest','levels'].includes(this.gameMode) && aliveTeams.length === 1 && aliveTeams[0] === this.playerTeam) {
++        } else if (['conquest','levels','duel'].includes(this.gameMode) && aliveTeams.length === 1 && aliveTeams[0] === this.playerTeam) {
+             this.victory();
+         }
+     }
+@@ -657,19 +693,21 @@ export class Game {
+         const teamCounts = {};
+         let nearestEnemyBoid = null;
+         let nearestDistSq = Infinity;
++        const convRadSq = this._conversionRadiusSq;
+ 
+         for (let i = 0; i < neighbors.length; i++) {
+             const other = neighbors[i];
+-            if (other !== boid) {
+-                teamCounts[other.team] = (teamCounts[other.team] || 0) + 1;
+-
+-                if (other.team !== boid.team) {
+-                    const dSq = boid.pos.distSq(other.pos);
+-                    if (dSq < nearestDistSq) {
+-                        nearestDistSq = dSq;
+-                        nearestEnemyBoid = other;
+-                    }
+-                }
++            if (other === boid || other.team === 'neutral') continue;
++            const dx = other.pos.x - boid.pos.x;
++            const dy = other.pos.y - boid.pos.y;
++            const dSq = dx * dx + dy * dy;
++            if (dSq > convRadSq) continue;
++
++            teamCounts[other.team] = (teamCounts[other.team] || 0) + 1;
++
++            if (other.team !== boid.team && dSq < nearestDistSq) {
++                nearestDistSq = dSq;
++                nearestEnemyBoid = other;
+             }
+         }
+ 
+@@ -689,6 +727,8 @@ export class Game {
+             resistMod = this.difficultyMod.conversionResist * (TEAMS[boid.team]?.resistMult || 1.0);
+         }
+ 
++        if (this.gameMode === 'duel' && boid.team === this.opponentTeam && (this.duelRally?.active || this.duelRally?.cooldown > 0)) resistMod *= .75;
++
+         if (learning && boid.team !== this.playerTeam) resistMod *= 0.55;
+         let dominantTeam = null;
+         let dominantCount = 0;
+@@ -699,6 +739,8 @@ export class Game {
+             }
+         }
+ 
++        if (dominantTeam === this.opponentTeam && this.gameMode === 'duel' && (this.duelRally?.active || this.duelRally?.cooldown > 0)) return null;
++
+         // RALLY DISARM: If the dominant team is player's team, but player is rallying or in cool-off, player CANNOT convert!
+         if (dominantTeam === this.playerTeam && (this.beaconActive || this.rallyCoolOffTimer > 0)) {
+             boid.conversionPressure = Math.max(0, boid.conversionPressure - 2);
+@@ -708,6 +750,8 @@ export class Game {
+             return null; // DISARMED: Conversion offline while rallying/cooling off
+         }
+ 
++        if (boid.team === 'neutral' && Object.entries(teamCounts).some(([team, count]) => team !== dominantTeam && count === dominantCount)) dominantTeam = null;
++
+         if (dominantTeam && dominantCount >= threshold && dominantCount > sameTeamCount * resistMod) {
+             boid.conversionSource = nearestEnemyBoid;
+             boid.conversionPressure += 1;
+@@ -732,6 +776,7 @@ export class Game {
+         // Boid steering is tuned at 60 Hz; keep play identical on fast displays.
+         if (this.gameState === 'playing') {
+             this.physicsAccumulator = (this.physicsAccumulator || 0) + deltaTime;
++            this.physicsAccumulator = Math.min(this.physicsAccumulator, 3 / 60);
+             while (this.physicsAccumulator >= 1 / 60 && this.gameState === 'playing') {
+                 this.update(1 / 60);
+                 this.physicsAccumulator -= 1 / 60;
+@@ -777,4 +822,4 @@ export class Game {
+     }
+ }
+ 
+-Object.assign(Game.prototype, WorldMethods);
++Object.assign(Game.prototype, WorldMethods, DuelMethods);
+diff --git a/js/renderer.js b/js/renderer.js
+index f6086cf..7076c8b 100644
+--- a/js/renderer.js
++++ b/js/renderer.js
+@@ -10,12 +10,70 @@ export class Renderer {
+         this.floatingTexts = [];
+         this.shockwaveRings = [];
+         this.vignetteGradient = null;
++        this.gridCanvas = null;
++        this.gridContext = null;
++        this.shipScale = 1;
++        this.boidDrawOptions = {
++            scale: 1,
++            showTrail: true,
++            showPanels: true,
++            showThruster: true,
++            useThrusterGradient: true,
++            simpleDraw: false
++        };
+     }
+     
+     resize() {
+-        this.canvas.width = window.innerWidth;
+-        this.canvas.height = window.innerHeight;
++        const cssW = window.innerWidth;
++        const cssH = window.innerHeight;
++        // Game logic uses canvas.width as logical space. Keep 1:1 backing store
++        // (no full DPR) for snappy fill rate on compact screens.
++        this.canvas.width = cssW;
++        this.canvas.height = cssH;
++        this.logicalWidth = cssW;
++        this.logicalHeight = cssH;
+         this.vignetteGradient = null;
++        const shortSide = Math.min(cssW, cssH);
++        this.shipScale = shortSide < 430 ? 1.7 : shortSide < 700 ? 1.4 : shortSide < 1100 ? 1.15 : 1;
++        // Keep the global for direct Boid.draw callers while the main render
++        // path uses this cached value for every ship.
++        window.shipScale = this.shipScale;
++        this._buildGridCache();
++    }
++
++    _buildGridCache() {
++        this.gridCanvas = null;
++        this.gridContext = null;
++        if (typeof document === 'undefined') return;
++
++        let gridCanvas;
++        try {
++            gridCanvas = typeof OffscreenCanvas !== 'undefined'
++                ? new OffscreenCanvas(this.canvas.width, this.canvas.height)
++                : document.createElement('canvas');
++            gridCanvas.width = this.canvas.width;
++            gridCanvas.height = this.canvas.height;
++            const gridContext = gridCanvas.getContext('2d');
++            if (!gridContext) return;
++
++            const step = 80;
++            gridContext.strokeStyle = 'rgba(0, 247, 255, 0.035)';
++            gridContext.lineWidth = 1;
++            gridContext.beginPath();
++            for (let x = 0; x < this.canvas.width; x += step) {
++                gridContext.moveTo(x, 0);
++                gridContext.lineTo(x, this.canvas.height);
++            }
++            for (let y = 0; y < this.canvas.height; y += step) {
++                gridContext.moveTo(0, y);
++                gridContext.lineTo(this.canvas.width, y);
++            }
++            gridContext.stroke();
++            this.gridCanvas = gridCanvas;
++            this.gridContext = gridContext;
++        } catch {
++            // Older embedded browsers can lack a detached 2D canvas.
++        }
+     }
+ 
+     addFloatingText(text, x, y, color = '#00ffff', size = 14) {
+@@ -59,6 +117,11 @@ export class Renderer {
+         const ctx = this.ctx;
+         const w = this.canvas.width;
+         const h = this.canvas.height;
++
++        if (this.gridCanvas) {
++            ctx.drawImage(this.gridCanvas, 0, 0);
++            return;
++        }
+         
+         // Faint tactical grid
+         const step = 80;
+@@ -154,7 +217,7 @@ export class Renderer {
+         ctx.fill();
+ 
+         // Beacon state text with high visual clarity
+-        ctx.font = "bold 10px 'Orbitron', sans-serif";
++        ctx.font = `bold ${Math.round(14 * (window.shipScale || 1))}px 'Segoe UI', sans-serif`;
+         ctx.textAlign = 'center';
+         if (beaconActive) {
+             ctx.fillStyle = '#ffaa00';
+@@ -235,11 +298,12 @@ export class Renderer {
+             }
+             
+             // Prevent clipping at borders
+-            const drawX = Math.max(70, Math.min(w - 70, ft.x));
+-            const drawY = Math.max(40, Math.min(h - 30, ft.y));
++            const marginX = Math.min(70, w * 0.08);
++            const drawX = Math.max(marginX, Math.min(w - marginX, ft.x));
++            const drawY = Math.max(64, Math.min(h - Math.min(150, h * 0.24), ft.y));
+             
+             ctx.save();
+-            ctx.font = `bold ${ft.size}px 'Orbitron', sans-serif`;
++            ctx.font = `bold ${Math.round(ft.size * (window.shipScale || 1))}px 'Segoe UI', sans-serif`;
+             ctx.fillStyle = ft.color;
+             ctx.globalAlpha = ft.alpha;
+             ctx.textAlign = 'center';
+@@ -252,19 +316,31 @@ export class Renderer {
+     
+     drawBoids(boids, powerupManager, playerTeam) {
+         const hasShield = powerupManager && powerupManager.isShielded(playerTeam);
++        const denseFleet = boids.length > 120;
++        const veryDenseFleet = boids.length > 180;
++        const compactViewport = Math.min(this.logicalWidth || this.canvas.width, this.logicalHeight || this.canvas.height) < 700;
++        const options = this.boidDrawOptions;
++        options.scale = this.shipScale;
++        options.showTrail = !denseFleet;
++        options.showThruster = !veryDenseFleet;
++        options.showPanels = !denseFleet;
++        options.simpleDraw = denseFleet;
++        // Per-boid gradients are costly. A solid plume is clearer on compact
++        // screens and at fleet density while preserving the heading cue.
++        options.useThrusterGradient = !denseFleet && !compactViewport;
+         
+         for (let i = 0; i < boids.length; i++) {
+             const boid = boids[i];
+             
+             if (hasShield && boid.team === playerTeam) {
+                 this.ctx.beginPath();
+-                this.ctx.arc(boid.pos.x, boid.pos.y, 14, 0, Math.PI * 2);
++                this.ctx.arc(boid.pos.x, boid.pos.y, boid.size * this.shipScale * 1.65, 0, Math.PI * 2);
+                 this.ctx.strokeStyle = 'rgba(68, 136, 255, 0.4)';
+                 this.ctx.lineWidth = 1.5;
+                 this.ctx.stroke();
+             }
+             
+-            boid.draw(this.ctx);
++            boid.draw(this.ctx, options);
+         }
+     }
+     
