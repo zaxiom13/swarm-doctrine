@@ -317,76 +317,111 @@ globalThis.promoReady = document.fonts.ready.then(() => Promise.all(['400', '600
 globalThis.renderSoundtrack = async () => {
     const rate = 44100, ctx = new OfflineAudioContext(2, DURATION * rate, rate);
     const master = ctx.createDynamicsCompressor();
-    master.threshold.value = -14; master.ratio.value = 4;
-    const out = ctx.createGain(); out.gain.value = 0.9;
+    master.threshold.value = -16; master.ratio.value = 12; master.knee.value = 6; master.attack.value = 0.002;
+    const out = ctx.createGain(); out.gain.value = 0.7;
     master.connect(out).connect(ctx.destination);
     const noise = ctx.createBuffer(1, rate * 2, rate);
     const nd = noise.getChannelData(0), rnd = seeded(99);
     for (let i = 0; i < nd.length; i++) nd[i] = rnd() * 2 - 1;
 
-    // Pad: two detuned saws per note through a slowly opening filter; the chord follows the shots.
-    const chords = [[0, 4, [55, 82.4]], [4, 8, [55, 82.4, 110]], [8, 12, [49, 73.4, 98]], [12, 16, [43.65, 65.4, 87.3]],
-        [16, 19.5, [46.25, 69.3, 92.5]], [19.5, 23, [41.2, 61.7, 82.4]], [23, 27, [49, 73.4, 98]], [27, 31, [55, 82.4, 110, 164.8]]];
+    // A cinematic score: D minor strings, a driving low ostinato, war drums and brass hits.
+    const hz = n => 440 * Math.pow(2, (n - 69) / 12);          // MIDI note → frequency
+    // Shots follow i – VI – III – VII – iv – VI – VII – i.
+    const chords = [[0, 4, [50, 57, 62, 65]], [4, 8, [46, 53, 58, 62]], [8, 12, [41, 53, 57, 60]], [12, 16, [48, 55, 60, 64]],
+        [16, 19.5, [43, 55, 58, 62]], [19.5, 23, [46, 53, 58, 65]], [23, 27, [48, 55, 60, 67]], [27, 31, [38, 50, 57, 62, 65, 69]]];
+
+    // Strings: several detuned saws with slow bows and a gentle vibrato.
+    const vibrato = ctx.createOscillator(), depth = ctx.createGain();
+    vibrato.frequency.value = 5; depth.gain.value = 6; vibrato.connect(depth); vibrato.start(0);
     for (const [a, b, notes] of chords) {
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass'; filter.Q.value = 6;
-        filter.frequency.setValueAtTime(300, a);
-        filter.frequency.linearRampToValueAtTime(a >= 23 ? 2400 : 1200, b);
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0, a);
-        g.gain.linearRampToValueAtTime(a === 27 ? 0.16 : 0.11, a + 0.25);
-        g.gain.setValueAtTime(a === 27 ? 0.16 : 0.11, b - 0.2);
-        g.gain.linearRampToValueAtTime(0, b + (a === 27 ? 0 : 0.1));
+        const filter = ctx.createBiquadFilter(), g = ctx.createGain(), level = a >= 27 ? 0.075 : a >= 23 ? 0.065 : 0.05;
+        filter.type = 'lowpass'; filter.Q.value = 0.7;
+        filter.frequency.setValueAtTime(900, a); filter.frequency.linearRampToValueAtTime(a >= 23 ? 3200 : 2000, b);
+        g.gain.setValueAtTime(0, a); g.gain.linearRampToValueAtTime(level, a + (a === 0 ? 1.5 : 0.35));
+        g.gain.setValueAtTime(level, b - 0.15); g.gain.linearRampToValueAtTime(0, b + (a === 27 ? 0 : 0.25));
         filter.connect(g).connect(master);
-        for (const f of notes) for (const detune of [-9, 9]) {
+        for (const n of notes) for (const detune of [-7, 0, 7]) {
             const o = ctx.createOscillator();
-            o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = detune;
-            o.connect(filter); o.start(a); o.stop(b + 0.2);
+            o.type = 'sawtooth'; o.frequency.value = hz(n); o.detune.value = detune;
+            depth.connect(o.detune);
+            o.connect(filter); o.start(a); o.stop(b + 0.3);
         }
     }
 
-    const kick = (at, level = 0.9) => {
+    // Low ostinato: short bowed eighths on the root, from the Rally onwards (≈ 100 bpm, 0.3 s eighths).
+    const eighth = 0.3;
+    for (const [a, b, notes] of chords.slice(2, 7)) {
+        for (let at = a; at < b - 0.05; at += eighth) {
+            const beat = Math.round((at - a) / eighth) % 8, n = notes[0] - 12 + (beat === 6 ? 7 : beat === 7 ? 3 : 0);
+            const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+            o.type = 'sawtooth'; o.frequency.value = hz(n + 12);
+            f.type = 'lowpass'; f.frequency.setValueAtTime(1400, at); f.frequency.exponentialRampToValueAtTime(300, at + 0.22);
+            const accent = beat % 4 === 0 ? 0.2 : 0.12;
+            g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(accent, at + 0.015); g.gain.exponentialRampToValueAtTime(0.001, at + 0.26);
+            o.connect(f).connect(g).connect(master); o.start(at); o.stop(at + 0.3);
+        }
+    }
+
+    // War drums: a deep skin with a pitch drop, plus the thud of the stick.
+    const drum = (at, level = 0.9, pitch = 80) => {
         const o = ctx.createOscillator(), g = ctx.createGain();
-        o.frequency.setValueAtTime(140, at); o.frequency.exponentialRampToValueAtTime(42, at + 0.18);
-        g.gain.setValueAtTime(level, at); g.gain.exponentialRampToValueAtTime(0.001, at + 0.4);
-        o.connect(g).connect(master); o.start(at); o.stop(at + 0.45);
-    };
-    const hiss = (at, dur, level, type = 'highpass', freq = 7000) => {
-        const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-        s.buffer = noise; f.type = type; f.frequency.value = freq;
-        g.gain.setValueAtTime(level, at); g.gain.exponentialRampToValueAtTime(0.001, at + dur);
-        s.connect(f).connect(g).connect(master); s.start(at, (at * 0.37) % 1); s.stop(at + dur + 0.05);
+        o.frequency.setValueAtTime(pitch, at); o.frequency.exponentialRampToValueAtTime(pitch * 0.5, at + 0.35);
+        g.gain.setValueAtTime(level, at); g.gain.exponentialRampToValueAtTime(0.001, at + 0.7);
+        o.connect(g).connect(master); o.start(at); o.stop(at + 0.75);
+        const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), sg = ctx.createGain();
+        s.buffer = noise; f.type = 'lowpass'; f.frequency.value = 700;
+        sg.gain.setValueAtTime(level * 0.6, at); sg.gain.exponentialRampToValueAtTime(0.001, at + 0.12);
+        s.connect(f).connect(sg).connect(master); s.start(at, (at * 0.37) % 1); s.stop(at + 0.15);
     };
     const boom = (at, level = 1) => {
-        kick(at, level);
+        drum(at, level, 60);
         const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'sine'; o.frequency.setValueAtTime(55, at); o.frequency.exponentialRampToValueAtTime(30, at + 1.4);
-        g.gain.setValueAtTime(0.7 * level, at); g.gain.exponentialRampToValueAtTime(0.001, at + 1.6);
-        o.connect(g).connect(master); o.start(at); o.stop(at + 1.7);
-        hiss(at, 0.6, 0.35 * level, 'lowpass', 1800);
+        o.frequency.setValueAtTime(48, at); o.frequency.exponentialRampToValueAtTime(28, at + 1.8);
+        g.gain.setValueAtTime(0.6 * level, at); g.gain.exponentialRampToValueAtTime(0.001, at + 2);
+        o.connect(g).connect(master); o.start(at); o.stop(at + 2.1);
+    };
+    // Brass: a bright chord that swells open on every cut.
+    const brass = (at, notes, level = 0.07, dur = 0.9) => {
+        const f = ctx.createBiquadFilter(), g = ctx.createGain();
+        f.type = 'lowpass'; f.Q.value = 2;
+        f.frequency.setValueAtTime(400, at); f.frequency.exponentialRampToValueAtTime(3500, at + 0.12); f.frequency.exponentialRampToValueAtTime(900, at + dur);
+        g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(level, at + 0.04); g.gain.exponentialRampToValueAtTime(0.001, at + dur);
+        f.connect(g).connect(master);
+        for (const n of notes) for (const detune of [-5, 5]) {
+            const o = ctx.createOscillator();
+            o.type = 'sawtooth'; o.frequency.value = hz(n); o.detune.value = detune;
+            o.connect(f); o.start(at); o.stop(at + dur + 0.05);
+        }
     };
 
-    // A heartbeat for the lone ship, then a 120 bpm pulse that builds.
-    for (const at of [0.4, 0.62, 1.6, 1.82, 2.8, 3.02]) kick(at, 0.55);
-    for (let at = 4; at < 26.9; at += 0.5) {
-        kick(at, at >= 23 ? 0.95 : 0.8);
-        if (at >= 8) hiss(at + 0.25, 0.08, at >= 16 ? 0.12 : 0.08);
-        if (at >= 23) hiss(at + 0.125, 0.05, 0.08), hiss(at + 0.375, 0.05, 0.08);
+    // The lone ship: slow, heavy drum strokes like a heartbeat.
+    for (const at of [0.35, 1.55, 2.75, 3.35, 3.65]) drum(at, 0.6, 70);
+    // Then a marching pattern that grows: 1 . . 1 . 1 1 . per bar of eight eighths.
+    const pattern = [1, 0, 0, 1, 0, 1, 1, 0];
+    for (let at = 4, i = 0; at < 26.95; at += eighth, i++) {
+        const step = i % 8, full = at >= 16;
+        if (pattern[step] || (full && step === 2) || (at >= 23 && step % 2 === 0)) drum(at, step === 0 ? 0.95 : 0.7, step === 0 ? 72 : 95);
     }
-    // A hit on every cut, a crystalline ping for Freeze, a riser into the title.
-    for (const at of [4, 8, 12, 16, 19.5, 23]) boom(at, 0.7);
-    for (const f of [1760, 2637, 3520]) {
+    // Snare-like rolls into the last shots.
+    for (let at = 22.2; at < 23; at += 0.075) drum(at, 0.15 + (at - 22.2) * 0.6, 180);
+    for (let at = 26.1; at < 27; at += 0.075) drum(at, 0.15 + (at - 26.1) * 0.7, 190);
+
+    for (const [a, , notes] of chords.slice(1, 7)) { boom(a, 0.8); brass(a, notes.map(n => n + 12).slice(1)); }
+    // Freeze: a glassy shimmer.
+    for (const f of [1175, 1760, 2349]) {
         const o = ctx.createOscillator(), g = ctx.createGain();
-        o.type = 'triangle'; o.frequency.value = f;
-        g.gain.setValueAtTime(0.12, 16.55); g.gain.exponentialRampToValueAtTime(0.001, 18.2);
-        o.connect(g).connect(master); o.start(16.55); o.stop(18.3);
+        o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.08, 16.55); g.gain.exponentialRampToValueAtTime(0.001, 18.4);
+        o.connect(g).connect(master); o.start(16.55); o.stop(18.5);
     }
+    // A swelling riser into the title, then the final hit with a full brass chord.
     const riser = ctx.createBufferSource(), rf = ctx.createBiquadFilter(), rg = ctx.createGain();
-    riser.buffer = noise; riser.loop = true; rf.type = 'bandpass'; rf.Q.value = 3;
-    rf.frequency.setValueAtTime(300, 25); rf.frequency.exponentialRampToValueAtTime(6000, 27);
-    rg.gain.setValueAtTime(0.0001, 25); rg.gain.exponentialRampToValueAtTime(0.35, 26.95); rg.gain.linearRampToValueAtTime(0, 27);
+    riser.buffer = noise; riser.loop = true; rf.type = 'bandpass'; rf.Q.value = 2;
+    rf.frequency.setValueAtTime(200, 25); rf.frequency.exponentialRampToValueAtTime(3000, 27);
+    rg.gain.setValueAtTime(0.0001, 25); rg.gain.exponentialRampToValueAtTime(0.22, 26.95); rg.gain.linearRampToValueAtTime(0, 27);
     riser.connect(rf).connect(rg).connect(master); riser.start(25); riser.stop(27.05);
     boom(27, 1.2);
+    brass(27, [50, 57, 62, 65, 69, 74], 0.08, 3.6);
 
     const audio = await ctx.startRendering();
     const frames = audio.length, data = new DataView(new ArrayBuffer(44 + frames * 4));
