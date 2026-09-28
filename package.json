@@ -1,18 +1,36 @@
 {
     "name": "swarm-doctrine",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "private": true,
-    "description": "Move together, surround rivals, and turn them into allies. A dependency-free browser game with trainable opponents.",
+    "description": "Move together, surround rivals, and turn them into allies. A Svelte 5 + TypeScript browser game with trainable opponents.",
     "type": "module",
-    "engines": { "node": ">=22" },
+    "engines": {
+        "node": ">=22.18"
+    },
     "scripts": {
-        "start": "node server.mjs",
-        "test": "node --test \"tests/*.test.mjs\"",
-        "train": "node scripts/train-local.mjs",
-        "evaluate": "node scripts/evaluate.mjs",
-        "jev:cost": "node scripts/jev-cost.mjs",
-        "icons": "node scripts/make-icons.mjs",
-        "guide": "node scripts/make-guide.mjs",
-        "promo": "node scripts/make-promo.mjs"
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "start": "vite build && node server.ts",
+        "check": "svelte-check --tsconfig ./tsconfig.json",
+        "test": "vitest run",
+        "train": "node scripts/train-local.ts",
+        "evaluate": "node scripts/evaluate.ts",
+        "jev:cost": "node scripts/jev-cost.ts",
+        "icons": "node scripts/make-icons.ts",
+        "guide": "node scripts/make-guide.ts",
+        "promo": "node scripts/make-promo.ts"
+    },
+    "dependencies": {
+        "@trystero-p2p/firebase": "^0.25.4"
+    },
+    "devDependencies": {
+        "@sveltejs/vite-plugin-svelte": "^7.3.1",
+        "@types/node": "^26.6.3",
+        "svelte": "^5.57.1",
+        "svelte-check": "^4.7.6",
+        "typescript": "^6.0.3",
+        "vite": "^8.3.1",
+        "vitest": "^5.0.2"
     }
 }

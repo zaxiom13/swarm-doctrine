@@ -6,7 +6,6 @@
     <meta name="theme-color" content="#090f11">
     <title>Connect Jev · Swarm Doctrine</title>
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="app.css">
 </head>
 <body>
 <main class="screen screen-page">
@@ -28,32 +27,6 @@
         <p class="note">Cost: Jev bills input tokens only. A typical duel costs well under one cent; the server stops at its <code>JEV_BUDGET_USD</code> cap (default $2).</p>
     </div>
 </main>
-<script type="module">
-    import { configureOpponent, getOpponentStatus } from './js/ai/jev.js';
-    const form = document.querySelector('#connect-form');
-    const status = document.querySelector('#status');
-    const play = document.querySelector('#play');
-    const describe = current => `Ready · ${current.model || 'configured model'} · $${(current.spentUsd || 0).toFixed(4)} of $${(current.budgetUsd ?? 2).toFixed(2)} used`;
-    try {
-        const current = await getOpponentStatus();
-        if (current.configured) { status.textContent = describe(current); play.classList.remove('hidden'); }
-    } catch { status.textContent = 'The local server is offline. Start it with: node server.mjs'; }
-    form.addEventListener('submit', async event => {
-        event.preventDefault();
-        const button = form.querySelector('button');
-        button.disabled = true;
-        status.textContent = 'Connecting…';
-        try {
-            const result = await configureOpponent({ apiKey: form.key.value, model: form.model.value });
-            form.key.value = '';
-            status.textContent = describe(result);
-            play.classList.remove('hidden');
-        } catch (error) {
-            status.textContent = error.message || 'Unable to connect';
-        } finally {
-            button.disabled = false;
-        }
-    });
-</script>
+<script type="module" src="/src/connect.ts"></script>
 </body>
 </html>
