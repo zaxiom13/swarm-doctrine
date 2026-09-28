@@ -7,14 +7,10 @@ const lesson = data => ({ ...base, ...data });
 const s = seconds => `${Math.round(seconds * 10) / 10} seconds`;
 
 export const LESSONS = [
-    lesson({ id: 'gather', title: 'Move as one', duration: '30 sec', enemies: [], abilities: [], target: { x: 0.68, y: 0.44 },
+    lesson({ id: 'rally', title: 'Move as one', duration: '30 sec', enemies: [], abilities: [], target: { x: 0.68, y: 0.44 },
         description: 'One gesture moves your fleet.', instruction: 'Hold and drag to the circle. Release when 12 ships arrive.',
         hint: 'Hold near the circle until your ships catch up.', success: 'Hold to move. Release to recruit.',
         goals: [goal('Rally 12 ships into the circle', p => p.arrived >= 12), goal('Release your swarm', p => p.arrived >= 12 && p.released)] }),
-    lesson({ id: 'tap-rally', title: 'Tap to steer', duration: '30 sec', enemies: [], abilities: [], target: { x: 0.68, y: 0.44 },
-        description: 'Move your fleet without holding a finger down.', instruction: 'Tap Rally, then tap the circle. Tap Release when 12 ships arrive.',
-        hint: 'You can tap a new destination while Rally stays on.', success: 'Use taps or hold-and-drag. Both work on desktop and touch.',
-        goals: [goal('Steer with tap Rally', p => p.tapSteered), goal('Rally twelve, then release', p => p.arrived >= 12 && p.released)] }),
     lesson({ id: 'surround', title: 'Surround rivals', enemies: [enemy(8)], abilities: [],
         description: 'Outnumber rivals to recruit them.', instruction: 'Rally beside the coral ships. Release to recruit all eight.',
         hint: 'Your ships cannot recruit while Rally is held.', success: 'Rally, approach, release.',
@@ -83,7 +79,7 @@ export const LESSONS = [
 export function lessonText(value, rules) { return typeof value === 'function' ? value(rules) : value; }
 
 export function freshLessonProgress() {
-    return { held: false, released: false, tapSteered: false, neutralRecruits: 0, arrived: 0, recruited: 0, freezeHits: 0, freezeCasts: 0, frozenRecruits: 0,
+    return { held: false, released: false, neutralRecruits: 0, arrived: 0, recruited: 0, freezeHits: 0, freezeCasts: 0, frozenRecruits: 0,
         enemiesLeft: Infinity, waypoints: 0, nebulaSeen: false, shifts: 0, sectors: 0, waves: 1 };
 }
 

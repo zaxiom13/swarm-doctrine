@@ -22,8 +22,8 @@ export const GUIDE = [
         step('fleets', 'Who is who', 'Your fleet is the one marked YOU. Every other colour is a rival. Gray diamonds belong to nobody. You win when every ship flies your colour.',
             'Your cyan fleet labelled YOU, a red and an orange rival fleet, and a group of gray diamond ships.'),
         step('hud', 'Your screen', {
-            phone: 'Pause is top left, time and score in the middle, and your share of the arena top right. Rally and Freeze are the two big buttons at the bottom.',
-            desktop: 'Pause is top left (or Esc). Time and score sit in the middle; Details, top right, shows your share of the arena. You will mostly use the mouse and Space instead of the buttons at the bottom.',
+            phone: 'Pause is top left, time and score in the middle, and your share of the arena top right. Freeze is the big button at the bottom; Rally is just your finger.',
+            desktop: 'Pause is top left (or Esc). Time and score sit in the middle; Details, top right, shows your share of the arena. The mouse moves your fleet; Space casts Freeze.',
         }, 'A live match with its controls outlined and labelled.'),
     ] },
     { id: 'move', title: 'Move', icon: '◎', steps: [
@@ -31,8 +31,6 @@ export const GUIDE = [
             phone: r => `Put a finger on the arena and keep it down. Your ships within ${r.rallyRadius}px of it rally to it and follow as you drag.`,
             desktop: r => `Hold the left mouse button in the arena and drag. Your ships within ${r.rallyRadius}px of the pointer rally to it and follow.`,
         }, 'Cyan ships streaming along a dragged path toward an orange Rally ring.'),
-        step('tap-rally', 'Or tap to steer', 'Tired thumbs? Tap the Rally button once and it stays on. Now tap anywhere to send your fleet there, and tap again to change course. Tap Rally again to let go.',
-            'The Rally button highlighted, with numbered taps on the button and on the arena.', 'phone'),
         step('rally-disarmed', 'Moving means not attacking', 'While Rally is held your ships cannot recruit, and rivals nearby are pushed away. Use it to get into position.',
             'The fleet packed inside the orange Rally ring while a red group drifts away.'),
         step('release', 'Let go beside a group', {

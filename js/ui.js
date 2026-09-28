@@ -86,7 +86,6 @@ export class UIManager {
         on('btn-intro-secondary', () => (game.practice ? game.tutorial.showLessons() : game.quitToMenu()));
         on('btn-reset-settings', () => { resetSettings(); this.buildSettings(); this.toast('Settings restored to defaults.'); });
         on('btn-reset-progress', () => this.clearProgress());
-        $('slot-rally').addEventListener('click', () => game.input.toggleRally());
         $('slot-freeze').addEventListener('click', () => game.input.pressFreeze());
         $('btn-details').addEventListener('click', () => this.setDetailsOpen($('details-sheet').classList.contains('hidden')));
         $('btn-close-details').addEventListener('click', () => this.setDetailsOpen(false));
@@ -491,14 +490,7 @@ export class UIManager {
     }
 
     refreshAbilities(player) {
-        const input = this.game.input, rules = this.game.rules, rally = $('slot-rally'), freeze = $('slot-freeze');
-        const cooling = !player.rallying && player.coolOff > 0, wait = player.freezeWait;
-        rally.classList.toggle('active', player.rallying);
-        rally.classList.toggle('cooling', cooling);
-        rally.setAttribute('aria-pressed', String(player.rallying));
-        rally.querySelector('.ability-label').textContent = input.rallyLatched ? 'Release' : 'Rally';
-        $('rally-status').textContent = player.rallying ? (input.rallyLatched ? 'Tap to move' : 'Release to recruit') : cooling ? `Recruit in ${player.coolOff.toFixed(1)}s` : '';
-        $('rally-cooldown').style.height = cooling ? `${player.coolOff / rules.rallyCoolOff * 100}%` : '0%';
+        const input = this.game.input, rules = this.game.rules, freeze = $('slot-freeze'), wait = player.freezeWait;
         freeze.classList.toggle('hidden', this.game.gameTime < rules.freezeLockout);
         freeze.classList.toggle('cooling', wait > 0);
         freeze.classList.toggle('aiming', input.freezeAiming);
