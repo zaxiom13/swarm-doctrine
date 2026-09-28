@@ -1,17 +1,20 @@
 # Swarm Doctrine
 
-A browser game about moving together, surrounding rivals and turning them into allies. It has no dependencies and no build step, runs on desktop and phones, installs as an app, and works offline after the first visit.
+A browser game about moving together, surrounding rivals and turning them into allies. It is written in TypeScript and Svelte 5, built with Vite, runs on desktop and phones, installs as an app, and works offline after the first visit.
 
 ## Run
 
 ```sh
-npm start            # or: node server.mjs
+npm install
+npm start            # builds into dist/, then serves it with node server.ts
+npm run dev          # Vite dev server with hot reload (run npm start alongside for /api)
 ```
 
 Open http://127.0.0.1:4173. Set `OPPONENT_PORT` if that port is busy. On a phone, use your browser's "Add to Home Screen" to install it full-screen.
 
 ```sh
-npm test             # every test, no browser needed
+npm test             # every test (vitest), no browser needed
+npm run check        # svelte-check type check
 ```
 
 ## Play
@@ -24,7 +27,7 @@ The exact numbers (ranges, durations, cooldowns) appear in **How to play**, gene
 
 **Field guide** (on the home screen) walks through every mechanic one step at a time with annotated pictures: fleets, the screen, Rally, recruiting, Freeze and its timing, terrain, gray ships, duels and survival. Touch devices get the phone guide (portrait pictures, taps and the on-screen buttons); mouse devices get the computer guide (mouse and keyboard). Players can switch below the guide. The pictures in `guide/phone/` and `guide/desktop/` are rendered from the real simulation and renderer by `npm run guide` (needs Playwright with Chromium), so rerun it after a balance or look change. A 31-second vertical promo video (1080×1920 MP4, sized for WhatsApp and Stories) is rendered by `npm run promo` from `scripts/promo/`: real simulation footage, SVG titles and a synthesized soundtrack. It needs Playwright with Chromium and an ffmpeg with libx264 (set `FFMPEG=` or install `ffmpeg-static`).
 
-The interactive lessons are hidden for now; their code is still in `js/tutorial.js` and `js/lessons.js`.
+The interactive lessons are hidden for now; their code is still in `src/lib/tutorial.ts` and `src/lib/lessons.ts`.
 
 | Mode | What happens |
 |---|---|
@@ -40,7 +43,7 @@ The interactive lessons are hidden for now; their code is still in `js/tutorial.
 
 - Players are introduced through a Firebase Realtime Database using [Trystero](https://github.com/dmotz/trystero); the match itself runs over a direct WebRTC connection between the two browsers.
 - The challenger hosts: their browser runs the one real simulation, applies the other player's Rally and Freeze, and streams compact snapshots (about 20 a second). Leaving or disconnecting mid-match hands the win to the other player.
-- The card only appears once `FIREBASE_DATABASE_URL` in `js/net/config.js` is set. Add `?db=https://<your-db-url>` to the address to try a database before committing it, or `?net=local` to play two tabs against each other with no network at all.
+- The card only appears once `FIREBASE_DATABASE_URL` in `src/lib/net/config.ts` is set. Add `?db=https://<your-db-url>` to the address to try a database before committing it, or `?net=local` to play two tabs against each other with no network at all.
 - There is no TURN relay, so two players behind very strict networks may not connect.
 
 #### Setting up the free Firebase database
@@ -48,9 +51,9 @@ The interactive lessons are hidden for now; their code is still in `js/tutorial.
 1. At [console.firebase.google.com](https://console.firebase.google.com), create a project. Leave it on the **Spark (free)** plan and never add a billing account: with no billing account, going over the free limits only stops matchmaking and can never cost anything.
 2. **Build → Realtime Database → Create database**, pick a location near your players, start in **locked mode**.
 3. On the database's **Rules** tab, paste `database.rules.json` from this repo and **Publish**. It only allows matchmaking data under `__trystero__`.
-4. Copy the database URL shown at the top of the **Data** tab into `FIREBASE_DATABASE_URL` in `js/net/config.js`.
+4. Copy the database URL shown at the top of the **Data** tab into `FIREBASE_DATABASE_URL` in `src/lib/net/config.ts`.
 
-`js/vendor/trystero-firebase.js` is Trystero's Firebase strategy with the Firebase SDK bundled in, so the game still has no build step. See `js/vendor/README.md` to rebuild it.
+Online play uses the `@trystero-p2p/firebase` npm package, bundled by Vite.
 
 ### Duel rivals
 
@@ -64,40 +67,43 @@ The interactive lessons are hidden for now; their code is still in `js/tutorial.
 ## How the code fits together
 
 ```
-js/rules.js          every gameplay number, plain-language rule text, rules fingerprint
-js/settings.js       player preferences (only these keys are ever saved)
-js/catalog.js        teams, liveries, difficulty, modes, upgrades
-js/simulation.js     the DOM-free world: ships, terrain, commanders, recruitment, snapshots
-js/commander.js      Rally and Freeze for one team, used by the player and every AI
-js/boid.js           one ship's steering and motion
-js/terrain.js        black holes, nebulae, asteroids
-js/arena.js          duel setup shared by play, training, evaluation and the Tactician
-js/worlds.js         seeded maps and Levels difficulty
-js/game.js           app controller: match lifecycle, fixed-step loop, events to effects
-js/modes.js          per-mode setup, waves, milestones, Zen shifts, checkpoints
-js/duel.js           duel lifecycle and the once-per-second rival clock
-js/tutorial.js       lesson runner (hidden for now);  js/lessons.js  lesson data
-js/guide.js          field-guide chapters; scripts/make-guide.mjs + scripts/guide/ render guide/*.webp
-js/renderer.js       canvas drawing;  js/ui.js  menus, HUD, dialogs;  js/input.js  pointer, touch, keys
-js/ai/actions.js     the shared 34-move vocabulary and target points
-js/ai/hard-bot.js    js/ai/search-bot.js (+ search-worker.js)    js/ai/local-policy.js    js/ai/jev.js
-js/ai/rivals.js      one interface over all four rivals
-js/net/*.js          online lobby (lobby.js), match flow (online.js), snapshots (sync.js), Trystero/local transport
-server.mjs           static server and Jev proxy (key stays server-side)
+src/lib/rules.ts          every gameplay number, plain-language rule text, rules fingerprint
+src/lib/settings.ts       player preferences (only these keys are ever saved)
+src/lib/catalog.ts        teams, liveries, difficulty, modes, upgrades
+src/lib/simulation.ts     the DOM-free world: ships, terrain, commanders, recruitment, snapshots
+src/lib/commander.ts      Rally and Freeze for one team, used by the player and every AI
+src/lib/boid.ts           one ship's steering and motion
+src/lib/terrain.ts        black holes, nebulae, asteroids
+src/lib/arena.ts          duel setup shared by play, training, evaluation and the Tactician
+src/lib/worlds.ts         seeded maps and Levels difficulty
+src/lib/game.ts           app controller: match lifecycle, fixed-step loop, events to effects
+src/lib/modes.ts          per-mode setup, waves, milestones, Zen shifts, checkpoints
+src/lib/duel.ts           duel lifecycle and the once-per-second rival clock
+src/lib/tutorial.ts       lesson runner (hidden for now);  src/lib/lessons.ts  lesson data
+src/lib/guide.ts          field-guide chapters; scripts/make-guide.ts + scripts/guide/ render public/guide/*.webp
+src/lib/renderer.ts  canvas drawing;  src/lib/input.ts  pointer, touch, keys
+src/lib/ui.svelte.ts reactive UI state the engine drives (menus, HUD, dialogs)
+src/components/      Svelte 5 screens and overlays;  src/App.svelte mounts them
+src/main.ts          entry point;  src/connect.ts  Jev connect page
+src/lib/ai/actions.ts     the shared 34-move vocabulary and target points
+src/lib/ai/hard-bot.ts    src/lib/ai/search-bot.ts (+ search-worker.js)    src/lib/ai/local-policy.ts    src/lib/ai/jev.ts
+src/lib/ai/rivals.ts      one interface over all four rivals
+src/lib/net/*.ts          online lobby (lobby.js), match flow (online.js), snapshots (sync.js), Trystero/local transport
+server.ts           static server and Jev proxy (key stays server-side)
 ```
 
 The player and every AI drive the same `Commander`, and the game, the tests, training and the Tactician all step the same `Simulation`. There is one implementation of the rules.
 
 ## Changing the balance
 
-1. Edit `js/rules.js` (for example `freezeRadius`, `freezeCooldown`, `conversionRadius`). Lessons, How to play, the Jev prompt, bot distances and the policy inputs all follow automatically.
-2. Run `npm run evaluate` to see a round-robin between the easy bot, the hard bot and the local rival. The first run with `--save-baseline` records a reference; later runs flag any rival whose strength moved by more than `--threshold` (default 0.25). You can try rules without editing the file: `node scripts/evaluate.mjs --rule freezeRadius=350 --rule freezeCooldown=8`.
+1. Edit `src/lib/rules.ts` (for example `freezeRadius`, `freezeCooldown`, `conversionRadius`). Lessons, How to play, the Jev prompt, bot distances and the policy inputs all follow automatically.
+2. Run `npm run evaluate` to see a round-robin between the easy bot, the hard bot and the local rival. The first run with `--save-baseline` records a reference; later runs flag any rival whose strength moved by more than `--threshold` (default 0.25). You can try rules without editing the file: `node scripts/evaluate.ts --rule freezeRadius=350 --rule freezeCooldown=8`.
 3. Retrain the local rival if needed (below). Every model stores a fingerprint of the rules it was trained on; if the rules change, the duel status says so.
 
 ## Training the local rival
 
 ```sh
-node scripts/train-local.mjs --seconds 1200 --opponent league --randomize \
+node scripts/train-local.ts --seconds 1200 --opponent league --randomize \
     --directory training/my-run --init models/offline-policy.json --export build/candidate.json
 ```
 
@@ -112,7 +118,7 @@ Training runs the real simulation at 60 ticks per simulated second with no brows
 
 Run the server, open `/connect.html` and paste an OpenRouter key. It is stored in the git-ignored `.env` file, never in the browser, and the server refuses to serve it. The server also caps spending per run (`JEV_BUDGET_USD`, default $2) and reports calls and spend at `/api/opponent/status`.
 
-Jev charges $0.042 per million input tokens; output is free. Measured on the live API with `scripts/jev-cost.mjs`:
+Jev charges $0.042 per million input tokens; output is free. Measured on the live API with `scripts/jev-cost.ts`:
 
 | | Tokens per request | Calls per match minute | Cost per match minute |
 |---|---|---|---|
@@ -124,8 +130,8 @@ The controller asks when Freeze becomes ready, when a Rally ends, when fleets sh
 To make Jev free to train and play against, copy it:
 
 ```sh
-node scripts/distill-jev.mjs --collect 1000 --teacher jev --live    # capped by --budget (default $0.05)
-node scripts/distill-jev.mjs --train                                # writes models/league/jev-clone.json
+node scripts/distill-jev.ts --collect 1000 --teacher jev --live    # capped by --budget (default $0.05)
+node scripts/distill-jev.ts --train                                # writes public/models/league/jev-clone.json
 ```
 
 Labels keep Jev's full probability spread over every legal move. The copy then joins the training league at no cost. `--teacher local` exercises the whole pipeline for free.
@@ -137,7 +143,7 @@ Labels keep Jev's full probability spread over every legal move. The copy then j
 | `npm run evaluate` | Balance round-robin, with baseline comparison |
 | `npm run train` | Train the local rival |
 | `npm run jev:cost` | Offline Jev cost model; add `--live --calls 3` or `--live --match` to measure (stops at $0.10) |
-| `node scripts/distill-jev.mjs` | Collect Jev labels and train an offline copy |
-| `npm run icons` | Regenerate the PNG app icons from the shapes in `scripts/make-icons.mjs` |
+| `node scripts/distill-jev.ts` | Collect Jev labels and train an offline copy |
+| `npm run icons` | Regenerate the PNG app icons from the shapes in `scripts/make-icons.ts` |
 
 Reports go to `build/`; training runs go to `training/`. Both are git-ignored.
