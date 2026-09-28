@@ -1,9 +1,0 @@
-# Deployed by .github/workflows/deploy.yml after tests pass.
-[build]
-  command = "npm run build"
-  publish = "dist"
-
-[[headers]]
-  for = "/models/*"
-  [headers.values]
-    Cache-Control = "no-cache"

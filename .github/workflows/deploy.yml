@@ -23,9 +23,9 @@ jobs:
       - run: npm run check
       - run: npm test
       - run: npm run build
-      - name: Deploy to Netlify
-        if: github.event_name != 'pull_request'
-        run: npx -y netlify-cli@latest deploy --prod --dir dist --no-build --message "${{ github.sha }}"
+      - name: Deploy to Cloudflare Workers
+        if: github.event_name != 'pull_request' && env.CLOUDFLARE_API_TOKEN != ''
+        run: npx wrangler deploy --message "${{ github.sha }}"
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
