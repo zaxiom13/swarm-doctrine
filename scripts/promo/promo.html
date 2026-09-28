@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Swarm Doctrine promo</title>
+<style>
+@font-face { font-family: 'Chakra Petch'; font-weight: 400; src: url(fonts/chakra-petch-latin-400-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Chakra Petch'; font-weight: 600; src: url(fonts/chakra-petch-latin-600-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Chakra Petch'; font-weight: 700; src: url(fonts/chakra-petch-latin-700-normal.woff2) format('woff2'); }
+html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #07041a; }
+#film { position: relative; width: 1080px; height: 1920px; overflow: hidden; background: radial-gradient(ellipse at 50% 55%, #22185a, #07041a 75%); }
+#stage { position: absolute; inset: 0; width: 1080px; height: 1920px; transform-origin: 50% 50%; }
+#overlay { position: absolute; inset: 0; }
+</style>
+</head>
+<body>
+<div id="film">
+    <canvas id="stage"></canvas>
+    <svg id="overlay" viewBox="0 0 1080 1920" width="1080" height="1920"></svg>
+</div>
+<script type="module" src="promo.js"></script>
+</body>
+</html>

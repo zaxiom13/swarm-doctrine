@@ -9,3 +9,4 @@ build/
 
 # Local resumable RL runs (keep on disk; export models/ for the game).
 training/
+*.mp4
