@@ -28,13 +28,13 @@ export const GUIDE = [
     ] },
     { id: 'move', title: 'Move', icon: '◎', steps: [
         step('rally-hold', 'Hold and drag to move', {
-            phone: r => `Put a finger on the arena and keep it down. Your ships within ${r.rallyRadius}px of it gather and follow as you drag.`,
-            desktop: r => `Hold the left mouse button in the arena and drag. Your ships within ${r.rallyRadius}px of the pointer gather and follow it.`,
+            phone: r => `Put a finger on the arena and keep it down. Your ships within ${r.rallyRadius}px of it rally to it and follow as you drag.`,
+            desktop: r => `Hold the left mouse button in the arena and drag. Your ships within ${r.rallyRadius}px of the pointer rally to it and follow.`,
         }, 'Cyan ships streaming along a dragged path toward an orange Rally ring.'),
         step('tap-rally', 'Or tap to steer', 'Tired thumbs? Tap the Rally button once and it stays on. Now tap anywhere to send your fleet there, and tap again to change course. Tap Rally again to let go.',
             'The Rally button highlighted, with numbered taps on the button and on the arena.', 'phone'),
         step('rally-disarmed', 'Moving means not attacking', 'While Rally is held your ships cannot recruit, and rivals nearby are pushed away. Use it to get into position.',
-            'The fleet packed inside an orange Gathering ring while a red group drifts away.'),
+            'The fleet packed inside the orange Rally ring while a red group drifts away.'),
         step('release', 'Let go beside a group', {
             phone: r => `Lift your finger next to a smaller group. Your fleet spreads out around it and, after a ${secs(r.rallyCoolOff)} pause, starts recruiting.`,
             desktop: r => `Release the mouse button next to a smaller group. Your fleet spreads out around it and, after a ${secs(r.rallyCoolOff)} pause, starts recruiting.`,

@@ -171,7 +171,7 @@ export class Renderer {
         for (let i = 0; i < 4; i++) { ctx.rotate(Math.PI / 2); ctx.beginPath(); ctx.moveTo(16, -4); ctx.lineTo(16, 4); ctx.stroke(); }
         ctx.restore();
         circle(ctx, x, y, active ? 6 : 3); ctx.fillStyle = solid; ctx.fill();
-        if (active || cooling) this.label(active ? 'Gathering' : `Spreading · ${commander.coolOff.toFixed(1)}s`, x, y + 26, active ? '#ffaa00' : '#ff5555', `bold ${Math.round(14 * this.textScale)}px`);
+        if (active || cooling) this.label(active ? 'Rallying' : `Spreading · ${commander.coolOff.toFixed(1)}s`, x, y + 26, active ? '#ffaa00' : '#ff5555', `bold ${Math.round(14 * this.textScale)}px`);
     }
 
     label(text, x, y, color, font = `${Math.round(11 * this.textScale)}px`) {
