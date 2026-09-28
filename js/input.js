@@ -9,7 +9,6 @@ export class InputHandler {
         this.game = game;
         this.pointer = new Vector(window.innerWidth / 2, window.innerHeight / 2);
         this.pointerId = null;
-        this.rallyLatched = false;
         this.freezeAiming = false;
         this.isTouch = Boolean(window.matchMedia?.('(pointer: coarse)').matches);
         const playing = () => game.gameState === 'playing';
@@ -36,16 +35,13 @@ export class InputHandler {
             game.setRally(true);
         });
         canvas.addEventListener('pointermove', event => {
-            // A latched (tap) Rally moves only on deliberate taps, not on hover.
-            if (this.rallyLatched && this.pointerId === null && !this.freezeAiming) return;
             if (this.pointerId !== null && event.pointerId !== this.pointerId) return;
             locate(event);
         });
         const release = event => {
             if (event.pointerId !== this.pointerId) return;
             this.pointerId = null;
-            if (event.type !== 'pointerup') this.rallyLatched = false;
-            if (playing() && !this.rallyLatched) game.setRally(false);
+            if (playing()) game.setRally(false);
         };
         for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, release);
         canvas.addEventListener('contextmenu', event => event.preventDefault());
@@ -65,18 +61,11 @@ export class InputHandler {
 
     reset() {
         this.pointerId = null;
-        this.rallyLatched = false;
         this.freezeAiming = false;
     }
 
     /** Ends the current drag without releasing Rally twice (Freeze already released it). */
     endGesture() { this.pointerId = null; }
-
-    toggleRally() {
-        if (this.game.gameState !== 'playing') return;
-        this.rallyLatched = !this.game.player.rallying;
-        this.game.setRally(this.rallyLatched);
-    }
 
     /** Touch aims Freeze with a second tap; mouse and keyboard cast at the pointer. */
     pressFreeze() {
@@ -84,7 +73,6 @@ export class InputHandler {
         if (game.gameState !== 'playing' || game.player.freezeWait > 0) return;
         if (!this.isTouch) { game.castFreeze(); return; }
         game.setRally(false);
-        this.rallyLatched = false;
         this.pointerId = null;
         this.freezeAiming = !this.freezeAiming;
     }

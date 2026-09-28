@@ -16,7 +16,7 @@ npm test             # every test, no browser needed
 
 ## Play
 
-- **Rally**: hold and drag in the arena; release beside a smaller group to recruit it. On touch you can also tap **Rally**, then tap destinations.
+- **Rally**: hold and drag anywhere in the arena; release beside a smaller group to recruit it.
 - **Freeze**: Space or right-click (Q, E, 1 and 2 also work). On touch, tap **Freeze**, then tap the arena. It stops half the rivals in range; frozen ships cannot recruit or defend.
 - **Pause**: Escape, P, the Pause button or your phone's back gesture. **R** restarts.
 

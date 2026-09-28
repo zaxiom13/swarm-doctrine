@@ -258,29 +258,24 @@ function mouse(x, y, button = 'left') {
 }
 
 /**
- * The phone's Rally and Freeze buttons, drawn where the real ability bar sits
- * (104 CSS px circles, 22px apart, 16px from the bottom of a 390px screen).
+ * The phone's Freeze button, drawn where the real ability bar puts it
+ * (a 92 CSS px circle, 14px in from the bottom-right corner of a 390px screen).
  */
-function phoneButtons(sim, { lit = null, freezeReady = true } = {}) {
-    const u = 720 / 390, r = 52 * u, gap = 22 * u, y = sim.height - 16 * u - r;
-    const spots = { rally: sim.width / 2 - gap / 2 - r, freeze: sim.width / 2 + gap / 2 + r };
-    const draw = (id, x, colors, glyph, label, keyLabel) => {
-        ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 20;
-        const g = ctx.createRadialGradient(x, y - r * 0.4, 0, x, y, r);
-        g.addColorStop(0, colors[0]); g.addColorStop(1, colors[1]);
-        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
-        ctx.shadowBlur = 0;
-        if (id === lit) { ctx.lineWidth = 8; ctx.strokeStyle = '#ffffff'; ctx.stroke(); ring(x, y, r + 18, { color: '#ffffff', dash: [8, 8], width: 3 }); }
-        ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.font = `800 ${10 * u}px system-ui, sans-serif`; ctx.globalAlpha = 0.85; ctx.fillText(keyLabel, x, y - r * 0.62); ctx.globalAlpha = 1;
-        ctx.font = `${30 * u}px system-ui, sans-serif`; ctx.fillText(glyph, x, y - r * 0.08);
-        ctx.font = `700 ${15 * u}px Fredoka, system-ui, sans-serif`; ctx.fillText(label, x, y + r * 0.45);
-        ctx.restore();
-    };
-    draw('rally', spots.rally, ['#ffb347', '#e0700a'], '◎', 'Rally', 'HOLD');
-    if (freezeReady) draw('freeze', spots.freeze, ['#8ff5ee', '#1fb3c0'], '❄', 'Freeze', 'TAP');
-    return { rally: { x: spots.rally, y, r }, freeze: { x: spots.freeze, y, r } };
+function phoneButtons(sim, { lit = null } = {}) {
+    const u = 720 / 390, r = 46 * u, x = sim.width - 14 * u - r, y = sim.height - 14 * u - r;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 20;
+    const g = ctx.createRadialGradient(x, y - r * 0.4, 0, x, y, r);
+    g.addColorStop(0, '#8ff5ee'); g.addColorStop(1, '#1fb3c0');
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+    ctx.shadowBlur = 0;
+    if (lit === 'freeze') { ctx.lineWidth = 8; ctx.strokeStyle = '#ffffff'; ctx.stroke(); ring(x, y, r + 18, { color: '#ffffff', dash: [8, 8], width: 3 }); }
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `800 ${10 * u}px system-ui, sans-serif`; ctx.globalAlpha = 0.85; ctx.fillText('TAP', x, y - r * 0.62); ctx.globalAlpha = 1;
+    ctx.font = `${30 * u}px system-ui, sans-serif`; ctx.fillText('❄', x, y - r * 0.08);
+    ctx.font = `700 ${15 * u}px Fredoka, system-ui, sans-serif`; ctx.fillText('Freeze', x, y + r * 0.45);
+    ctx.restore();
+    return { freeze: { x, y, r } };
 }
 
 /** Counts in a corner: "You 30 · Coral 8". */
@@ -326,23 +321,6 @@ const SCENES = {
         tag(pick('Hold the left mouse button and drag', 'Hold a finger down and drag'), sim.width / 2, pick(60, 70), { color: '#ffaa00', maxWidth: pick(9999, 660) });
         note('Ships inside the orange ring follow', { x: to.x - 120, y: to.y + 110 }, [[-40, 170], [-60, 250]], { color: '#ffaa00' });
         if (!PHONE) { mouse(sim.width * 0.1, sim.height * 0.86, 'left'); tag('Left button', sim.width * 0.1 + 40, sim.height * 0.86, { color: DARK, ink: '#fff', size: 16, align: 'left' }); }
-        end();
-    },
-
-    // Phones only: the latched Rally button.
-    'tap-rally'(game = world({ seed: 7 })) {
-        const { sim } = game, player = sim.commander('dragon');
-        cluster(sim, 'dragon', 30, at(sim, [0.3, 0.6], [0.3, 0.5]), 90);
-        const to = at(sim, [0.7, 0.4], [0.62, 0.26]);
-        game.input.pointer = to;
-        run(game, 1.1, () => player.rally(to.x, to.y));
-        begin();
-        const buttons = phoneButtons(sim, { lit: 'rally', freezeReady: false });
-        badge(1, buttons.rally.x - buttons.rally.r - 40, buttons.rally.y - buttons.rally.r);
-        note('Tap Rally: it stays on until you tap it again', { x: buttons.rally.x, y: buttons.rally.y - buttons.rally.r }, [[0, -160], [60, -170]], { color: '#ffaa00' });
-        pointer(to.x + 6, to.y + 6);
-        badge(2, to.x - 70, to.y - 70);
-        tag('Tap where to go. Tap again to steer', sim.width / 2, 60, { color: '#ffaa00', maxWidth: 660 });
         end();
     },
 
@@ -429,7 +407,7 @@ const SCENES = {
         span(c.x, c.y, sim.commander('dragon').freezeRadius, pick(0.35, 0.6), `${sim.rules.freezeRadius}px`, '#b6edff');
         if (PHONE) {
             const buttons = phoneButtons(sim, { lit: 'freeze' });
-            badge(1, buttons.freeze.x + buttons.freeze.r + 34, buttons.freeze.y - buttons.freeze.r);
+            badge(1, buttons.freeze.x - buttons.freeze.r - 30, buttons.freeze.y - buttons.freeze.r);
             tag('Tap ❄ Freeze', buttons.freeze.x, buttons.freeze.y - buttons.freeze.r - 60, { color: '#b6edff' });
             pointer(c.x + 4, c.y + 4);
             badge(2, c.x - 60, c.y - 60);
@@ -607,7 +585,7 @@ function freezeSetup(game) {
 }
 
 /** Scenes that only make sense on one kind of device. */
-const ONLY = { 'tap-rally': 'phone' };
+const ONLY = {};
 const IDS = Object.keys(SCENES).filter(id => !ONLY[id] || ONLY[id] === DEVICE);
 
 /** Annotates a screenshot of the real HUD with the rectangles of its controls. */
@@ -627,14 +605,12 @@ globalThis.annotateHud = async (url, rects, scale, type = 'image/webp', quality 
         ['pause', 'Pause', 0, 150, 'left'],
         ['timer', 'Time & score', 0, 100],
         ['details', 'Arena share', -10, 150, 'right'],
-        ['rally', 'Tap Rally, then tap where to go', 60, -110],
-        ['freeze', 'Tap Freeze, then tap rivals', -60, -190],
+        ['freeze', 'Tap Freeze, then tap rivals', -150, -190, 'right'],
     ] : [
         ['pause', 'Pause · Esc or P', 0, 110, 'left'],
         ['timer', 'Match time & score', 0, 120],
         ['guide', 'Hints', -170, 100],
         ['details', 'Share of the arena & fleet sizes', 10, 190, 'right'],
-        ['rally', 'Rally (mainly for touch)', -40, -120, 'right'],
         ['freeze', 'Freeze · Space counts down until ready', 40, -120, 'left'],
     ];
     const W = image.width / scale;

@@ -58,9 +58,9 @@ const index = id => LESSONS.findIndex(lesson => lesson.id === id);
 const begin = i => { tutorial.start(i); get('btn-intro-start').click(); if (LESSONS[i].abilities.includes('freeze')) game.gameTime = 15; };
 const aim = (x, y) => { game.input.pointer.x = x; game.input.pointer.y = y; };
 
-test('all sixteen lessons set up, gate Freeze and never auto-complete', () => {
-    assert.equal(LESSONS.length, 16);
-    assert.deepEqual(LESSONS.slice(0, 2).map(l => l.id), ['gather', 'tap-rally'], 'tap steering follows the first movement lesson');
+test('all fifteen lessons set up, gate Freeze and never auto-complete', () => {
+    assert.equal(LESSONS.length, 15);
+    assert.equal(LESSONS[0].id, 'rally', 'hold-to-Rally comes first');
     assert.equal(LESSONS.at(-1).id, 'finale');
     LESSONS.forEach((lesson, i) => {
         tutorial.start(i);
@@ -201,7 +201,7 @@ test('Zen shifts terrain and replenishes; resizing scales the existing world', (
 });
 
 test('control lessons are winnable through real simulation and progress persists', () => {
-    for (const id of ['gather', 'surround', 'wide-freeze', 'freeze', 'freeze-rhythm', 'recruits']) {
+    for (const id of ['rally', 'surround', 'wide-freeze', 'freeze', 'freeze-rhythm', 'recruits']) {
         const i = index(id);
         begin(i);
         for (let attempt = 0; attempt < 12 && game.gameState === 'playing'; attempt++) {
@@ -323,21 +323,15 @@ test('duels: shared rules, bounded gray ships, symmetric Freeze and pause handli
     game.quitToMenu();
 });
 
-test('tap Rally keeps its target after lifting a finger, on touch and mouse', () => {
+test('Rally only lasts while the pointer is held', () => {
     for (const pointerType of ['touch', 'mouse']) {
         game.showTeamSelect('conquest'); game.selectTeam('dragon');
-        game.input.toggleRally();
         const canvas = get('game-canvas');
         canvas.emit('pointerdown', { pointerType, pointerId: 41, button: 0, clientX: 400, clientY: 300 });
-        canvas.emit('pointerup', { pointerId: 41 });
         assert.equal(game.player.rallying, true);
-        canvas.emit('pointermove', { pointerId: 41, clientX: 700, clientY: 500 });
-        assert.equal(game.input.pointer.x, 400, 'a latched Rally moves only on taps');
-        game.input.toggleRally();
-        assert.equal(game.player.rallying, false);
-        game.input.toggleRally();
-        game.pause();
-        assert.equal(game.input.rallyLatched, false);
+        canvas.emit('pointerup', { pointerId: 41 });
+        assert.equal(game.player.rallying, false, 'lifting releases Rally');
+        assert.equal(game.input.toggleRally, undefined, 'there is no latched Rally');
     }
 });
 
@@ -362,12 +356,7 @@ test('Jev entry starts a two-fleet duel and the HUD excludes gray ships from sha
     } finally { globalThis.fetch = realFetch; }
 });
 
-test('tap steering and duel basics lessons can be completed', () => {
-    begin(index('tap-rally'));
-    aim(game.renderer.width * 0.68, game.renderer.height * 0.44);
-    game.input.toggleRally(); advance(6);
-    game.input.toggleRally(); advance(2);
-    assert.equal(game.gameState, 'victory', 'tap steering lesson');
+test('the duel basics lesson can be completed', () => {
     begin(index('duel-basics'));
     for (let attempt = 0; attempt < 25 && game.gameState === 'playing'; attempt++) {
         const target = game.boids.find(b => b.team === 'neutral' && tutorial.progress.neutralRecruits < 6) || game.boids.find(b => b.team !== 'dragon' && b.team !== 'neutral');

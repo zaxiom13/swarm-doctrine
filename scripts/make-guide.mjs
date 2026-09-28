@@ -45,7 +45,7 @@ async function captureHud(device, capturePage) {
     await page.waitForTimeout(1500);
     await page.evaluate(() => game.ui.hideOverlays());
     await page.waitForTimeout(300);
-    const rects = await page.evaluate(() => Object.fromEntries(Object.entries({ pause: 'btn-pause', timer: 'hud-timer', guide: 'btn-guide', details: 'btn-details', rally: 'slot-rally', freeze: 'slot-freeze' })
+    const rects = await page.evaluate(() => Object.fromEntries(Object.entries({ pause: 'btn-pause', timer: 'hud-timer', guide: 'btn-guide', details: 'btn-details', freeze: 'slot-freeze' })
         .map(([key, id]) => { const r = document.getElementById(id).getBoundingClientRect(); return [key, { x: r.x, y: r.y, width: r.width, height: r.height }]; })));
     const shot = `data:image/png;base64,${(await page.screenshot()).toString('base64')}`;
     await context.close();

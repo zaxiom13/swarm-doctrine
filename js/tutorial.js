@@ -20,7 +20,7 @@ export class TutorialMode {
         this.progress = freshLessonProgress();
         try {
             const current = localStorage.getItem(PROGRESS_KEY);
-            const saved = current ? JSON.parse(current) : JSON.parse(localStorage.getItem('swarm-lessons-v1') || '[]').filter(id => ['gather', 'surround', 'freeze'].includes(id));
+            const saved = current ? JSON.parse(current) : JSON.parse(localStorage.getItem('swarm-lessons-v1') || '[]').filter(id => ['surround', 'freeze'].includes(id));
             if (Array.isArray(saved)) this.completed = new Set(saved.filter(id => LESSONS.some(l => l.id === id)));
         } catch { /* Lessons also work without storage. */ }
     }
@@ -102,7 +102,6 @@ export class TutorialMode {
 
     update() {
         const game = this.game, sim = game.sim, p = this.progress, lesson = this.lesson, player = game.playerTeam;
-        if (game.input.rallyLatched) p.tapSteered = true;
         if (game.player.rallying) { p.held = true; p.released = false; }
         else if (p.held) p.released = true;
         const target = lesson.route?.[p.waypoints] || lesson.target;
