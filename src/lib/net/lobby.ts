@@ -6,6 +6,8 @@ import { openRoom } from './transport.ts';
 import { PROTOCOL } from './config.ts';
 
 const INVITE_SECONDS = 20;
+/** How long a player can be listed in Firebase without a direct connection before we say it failed. */
+export const CONNECT_SECONDS = 20;
 const clean = name => String(name ?? '').replace(/[^\p{L}\p{N} ._-]/gu, '').trim().slice(0, 16) || 'Pilot';
 
 export class Lobby {
@@ -19,6 +21,9 @@ export class Lobby {
     declare incoming: any;
     declare status: string;
     declare channels: any;
+    declare seen: Map<string, { name: string; since: number }>;
+    declare health: string;
+    declare ticker: any;
     constructor(handlers) {
         this.handlers = handlers;   // onChange, onInvite, onAnswer, onCancel, onStart, onInput, onState, onFx, onEnd, onBye, onPeerLeave
         this.room = null;
@@ -29,6 +34,9 @@ export class Lobby {
         this.outgoing = null;       // { peerId, timer }
         this.incoming = null;       // { peerId, timer }
         this.status = 'offline';
+        this.seen = new Map();      // players Firebase lists in this lobby, connected or not
+        this.health = 'connecting'; // Firebase link: connecting | online | offline | denied
+        this.ticker = null;
     }
 
     get selfId() { return this.room?.selfId; }
@@ -43,6 +51,15 @@ export class Lobby {
         const room = await openRoom(`swarm-doctrine-${region}`);
         if (this.region !== region) { room.leave(); return; }
         this.room = room;
+        this.health = room.health;
+        room.onHealth = state => { this.health = state; this.changed(); };
+        room.onPresence = list => {
+            const now = Date.now();
+            this.seen = new Map([...list].map(([id, name]) => [id, { name, since: this.seen.get(id)?.since ?? now }]));
+            this.changed();
+        };
+        // Re-render while someone is listed but not connected, so "connecting" can turn into "can't connect".
+        this.ticker = setInterval(() => { if ([...this.seen.keys()].some(id => !this.peers.has(id))) this.changed(); }, 2000);
         const channels = this.channels = Object.fromEntries(['hello', 'invite', 'answer', 'cancel', 'start', 'input', 'state', 'fx', 'end', 'bye'].map(name => [name, room.channel(name)]));
         room.onJoin = id => { this.announce(id); };
         room.onLeave = id => {
@@ -93,12 +110,25 @@ export class Lobby {
         this.clearIncoming();
         this.room?.leave();
         this.room = null;
+        clearInterval(this.ticker);
         this.peers.clear();
+        this.seen.clear();
+        this.health = 'connecting';
         this.status = 'offline';
         this.region = null;
     }
 
-    announce(target?) { this.channels?.hello.send({ name: this.name, busy: this.busy, v: PROTOCOL }, target); }
+    announce(target?) {
+        this.channels?.hello.send({ name: this.name, busy: this.busy, v: PROTOCOL }, target);
+        if (!target) this.room?.announce(this.name);
+    }
+
+    /** Players Firebase lists in this lobby that have no direct connection yet. */
+    pending() {
+        const now = Date.now();
+        return [...this.seen].filter(([id]) => !this.peers.has(id))
+            .map(([id, { name, since }]) => ({ id, name, failed: now - since > CONNECT_SECONDS * 1000 }));
+    }
     setName(name) { this.name = clean(name); this.announce(); }
     setBusy(busy) { this.busy = busy; this.announce(); this.changed(); }
 

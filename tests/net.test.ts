@@ -57,3 +57,16 @@ test('malformed snapshots and guest input are rejected', () => {
     assert.deepEqual(validInput({ type: 'release', x: 1 }, sim), { type: 'release' });
     assert.equal(packEvent({ type: 'secret' }), null);
 });
+
+test('a snapshot delivered as a Uint8Array view (as Trystero does) still applies', () => {
+    const host = playedArena();
+    const bytes = new Uint8Array(encodeSnapshot(host));
+    // Put the bytes at an offset inside a bigger buffer, like a received network frame.
+    const frame = new Uint8Array(bytes.length + 16);
+    frame.set(bytes, 16);
+    const guest = new Simulation({ width: host.width, height: host.height });
+    guest.setTeams(['dragon', 'salamander']);
+    assert.ok(applySnapshot(guest, frame.subarray(16)));
+    assert.equal(guest.boids.length, host.boids.length);
+    assert.equal(applySnapshot(guest, 'not binary'), false);
+});

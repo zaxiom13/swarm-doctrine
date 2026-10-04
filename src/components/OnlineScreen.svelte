@@ -35,14 +35,14 @@
             {#each lobby.peers as peer (peer.id)}
                 <li class="online-player" class:busy={peer.busy}>
                     <span class="online-dot" aria-hidden="true"></span>
-                    <strong>{peer.name}</strong>
-                    <button type="button" class="btn" class:btn-primary={!peer.waiting} disabled={peer.disabled} onclick={() => ui.challenge(peer)}>
-                        {peer.waiting ? 'Cancel' : peer.busy ? 'In a match' : 'Challenge'}
+                    <strong>{peer.name}{#if peer.note}<small class="online-note"> · {peer.note}</small>{/if}</strong>
+                    <button type="button" class="btn" class:btn-primary={!peer.waiting && !peer.disabled} disabled={peer.disabled} onclick={() => ui.challenge(peer)}>
+                        {peer.label}
                     </button>
                 </li>
             {/each}
         </ul>
-        <p class="note">Tap <b>Challenge</b> on an idle player. Whoever challenges hosts the match. Games connect directly between your browsers, so a strict office or school network can block them.</p>
+        <p class="note">Tap <b>Challenge</b> on an idle player. Whoever challenges hosts the match. Games connect directly between your browsers, with a relay as a fallback; very strict office or school networks can still block them.</p>
     </div>
     <Overlay open={ui.invite !== null} id="invite-overlay" labelledby="invite-title">
         <div class="dialog">

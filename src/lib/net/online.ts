@@ -101,7 +101,7 @@ export const OnlineMethods = {
 
     onlineState(this: Game, buffer, peerId) {
         const online = this.online;
-        if (!online || online.role !== 'guest' || peerId !== online.peerId || !(buffer instanceof ArrayBuffer)) return;
+        if (!online || online.role !== 'guest' || peerId !== online.peerId || !(buffer instanceof ArrayBuffer || ArrayBuffer.isView(buffer))) return;
         // Keep the guest's own Rally feeling immediate: the host's copy of it lags a little.
         const mine = this.player, holding = online.holding, target = { x: mine.target.x, y: mine.target.y };
         if (!applySnapshot(this.sim, buffer)) return;

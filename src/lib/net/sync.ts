@@ -39,7 +39,10 @@ export function encodeSnapshot(sim) {
 
 /** Rebuilds the guest's world from a snapshot, reusing ships by id so trails stay smooth. */
 export function applySnapshot(sim, buffer) {
-    const view = new DataView(buffer);
+    // Trystero can deliver binary as a Uint8Array view rather than the ArrayBuffer that was sent.
+    const view = ArrayBuffer.isView(buffer) ? new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength)
+        : buffer instanceof ArrayBuffer ? new DataView(buffer) : null;
+    if (!view) return false;
     if (view.byteLength < HEADER || view.getUint8(0) !== 1) return false;
     const count = view.getUint16(6, true);
     if (view.byteLength < HEADER + count * SHIP) return false;

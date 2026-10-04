@@ -22,7 +22,8 @@
         "promo": "node scripts/make-promo.ts"
     },
     "dependencies": {
-        "@trystero-p2p/firebase": "^0.25.4"
+        "@trystero-p2p/firebase": "^0.25.4",
+        "firebase": "^12.19.0"
     },
     "devDependencies": {
         "@sveltejs/vite-plugin-svelte": "^7.3.1",
