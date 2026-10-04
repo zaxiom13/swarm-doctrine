@@ -7,13 +7,52 @@ export async function openRoom(roomId) {
     return LOCAL_NET ? localRoom(roomId) : trysteroRoom(roomId);
 }
 
+// A free public TURN relay, used only when two browsers cannot reach each other
+// directly (mobile data, strict routers). If it is ever down, direct connections still work.
+const TURN = [{
+    urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turns:openrelay.metered.ca:443?transport=tcp'],
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+}];
+const OFFLINE_AFTER_MS = 8000;
+
 async function trysteroRoom(roomId) {
-    const { joinRoom, selfId } = await import('@trystero-p2p/firebase');
-    const room = joinRoom({ appId: databaseUrl(), relayConfig: { firebasePath: '__trystero__' } }, roomId);
+    const [{ joinRoom, selfId }, { initializeApp, getApps }, db] = await Promise.all([
+        import('@trystero-p2p/firebase'), import('firebase/app'), import('firebase/database'),
+    ]);
+    // One Firebase app shared with Trystero, so the lobby can also watch the connection itself.
+    const app = getApps().find(a => a.name === 'swarm') ?? initializeApp({ databaseURL: databaseUrl() }, 'swarm');
+    const database = db.getDatabase(app);
+    const room = joinRoom({ appId: databaseUrl(), turnConfig: TURN, relayConfig: { firebaseApp: app, firebasePath: '__trystero__' } }, roomId);
+
+    // Who is in the lobby according to Firebase, before any direct connection exists.
+    const presenceList = db.ref(database, `__trystero__/presence-${roomId}`);
+    const mine = db.child(presenceList, selfId);
+    let health = 'connecting', connected = false;
+    const setHealth = state => { if (health !== state) { health = state; wrapper.onHealth?.(state); } };
+    // Only report "offline" if Firebase has stayed disconnected for a while, not on a brief blip.
+    let healthTimer = setTimeout(() => { if (!connected && health !== 'denied') setHealth('offline'); }, OFFLINE_AFTER_MS);
+    const unsubscribers = [
+        db.onValue(db.ref(database, '.info/connected'), snap => {
+            connected = snap.val() === true;
+            clearTimeout(healthTimer);
+            if (connected) { if (health !== 'denied') setHealth('online'); }
+            else healthTimer = setTimeout(() => { if (!connected && health !== 'denied') setHealth('offline'); }, OFFLINE_AFTER_MS);
+        }),
+        db.onValue(presenceList, snap => {
+            const list = new Map();
+            snap.forEach(entry => { if (entry.key !== selfId) list.set(entry.key, String(entry.val()?.name ?? 'Pilot')); });
+            wrapper.onPresence?.(list);
+        }, () => setHealth('denied')),
+    ];
+
     const wrapper = {
         selfId,
         onJoin: null,
         onLeave: null,
+        onPresence: null,
+        onHealth: null,
+        get health() { return health; },
         channel(name) {
             const action = room.makeAction(name);
             return {
@@ -21,7 +60,17 @@ async function trysteroRoom(roomId) {
                 on: handler => { action.onMessage = (data, { peerId }) => handler(data, peerId); },
             };
         },
-        leave: () => room.leave(),
+        /** Lists this player in Firebase's view of the lobby until they leave or disconnect. */
+        announce(name) {
+            db.onDisconnect(mine).remove();
+            db.set(mine, { name, at: db.serverTimestamp() }).catch(() => setHealth('denied'));
+        },
+        leave: () => {
+            clearTimeout(healthTimer);
+            unsubscribers.forEach(stop => stop());
+            db.remove(mine).catch(() => {});
+            return room.leave();
+        },
     };
     room.onPeerJoin = id => wrapper.onJoin?.(id);
     room.onPeerLeave = id => wrapper.onLeave?.(id);
@@ -43,6 +92,10 @@ function localRoom(roomId) {
                 on: handler => { handlers[name] = handler; },
             };
         },
+        onPresence: null,
+        onHealth: null,
+        health: 'online',
+        announce() {},
         leave: () => { bus.postMessage({ from: selfId, bye: true }); clearInterval(timer); bus.close(); },
     };
     const beat = () => bus.postMessage({ from: selfId, beat: true });

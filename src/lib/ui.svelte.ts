@@ -17,7 +17,7 @@ export interface LessonCard { index: number; title: string; description: string;
 export interface IntroContent { eyebrow: string; title: string; description: string; instruction: string; secondary: string }
 export interface CoachContent { step: string; title: string; detail: string; checklist: { done: boolean; label: string }[] }
 export interface FleetBar { team: string; name: string; color: string; count: number; pct: number }
-export interface PeerRow { id: string; name: string; busy: boolean; waiting: boolean; disabled: boolean }
+export interface PeerRow { id: string; name: string; busy: boolean; waiting: boolean; disabled: boolean; label: string; note?: string }
 export interface RivalStatus { state?: string; label?: string; message?: string; code?: string }
 export interface UpgradeChoice { id: string; icon: string; category: string; name: string; description: string; apply: (...args: any[]) => void }
 
@@ -256,15 +256,24 @@ export class UIManager {
         }
         const region = REGIONS.find(r => r.id === lobby?.region)?.name ?? '';
         const found = [...(lobby?.peers.values() ?? [])].sort((a, b) => Number(a.busy) - Number(b.busy) || a.name.localeCompare(b.name));
+        const pending = lobby?.pending() ?? [];
+        const stuck = pending.filter(p => p.failed);
         const text = lobby?.status === 'connecting' ? `Joining the ${region} lobby…`
             : lobby?.status === 'error' ? 'The lobby is unreachable right now. Try again later.'
+            : lobby?.health === 'denied' ? 'The matchmaking server refused this game. Its database rules need publishing in the Firebase console.'
+            : lobby?.health === 'offline' ? 'Can\'t reach the matchmaking server. Check your internet connection, or try another network.'
             : lobby?.outgoing ? `Waiting for ${lobby.peers.get(lobby.outgoing.peerId)?.name ?? 'them'} to answer…`
             : found.length ? `${found.length} other pilot${found.length === 1 ? '' : 's'} in the ${region} lobby`
+            : stuck.length ? `Found ${stuck.map(p => p.name).join(', ')}, but your networks won't connect. Try both on Wi-Fi, or the same network.`
+            : pending.length ? `Found ${pending.length} pilot${pending.length === 1 ? '' : 's'}, connecting…`
+            : lobby?.health === 'connecting' ? `Joining the ${region} lobby…`
             : `You are the only pilot in the ${region} lobby. Share the game with a friend, or try another region.`;
-        const peers = found.map(peer => {
+        const peers: PeerRow[] = found.map(peer => {
             const waiting = lobby!.outgoing?.peerId === peer.id;
-            return { id: peer.id, name: peer.name, busy: peer.busy, waiting, disabled: Boolean(peer.busy || (lobby!.outgoing && !waiting) || lobby!.busy) };
-        });
+            return { id: peer.id, name: peer.name, busy: peer.busy, waiting, label: waiting ? 'Cancel' : peer.busy ? 'In a match' : 'Challenge',
+                disabled: Boolean(peer.busy || (lobby!.outgoing && !waiting) || lobby!.busy) };
+        }).concat(pending.map(p => ({ id: p.id, name: p.name, busy: true, waiting: false, disabled: true,
+            label: p.failed ? "Can't connect" : 'Connecting…', note: p.failed ? 'blocked by network' : undefined })));
         this.lobbyView = { available: true, state: lobby?.status ?? 'offline', text, name: lobby?.name ?? profile.name, region: profile.region, peers };
     }
 
