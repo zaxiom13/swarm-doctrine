@@ -17,6 +17,10 @@ npm test             # every test (vitest), no browser needed
 npm run check        # svelte-check type check
 ```
 
+## Android
+
+The packaged WebView app and debug build instructions are in [android/README.md](android/README.md). Native device validation is still required.
+
 ## Play
 
 - **Rally**: hold and drag anywhere in the arena; release beside a smaller group to recruit it.

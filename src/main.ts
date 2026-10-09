@@ -22,6 +22,7 @@ function start(canvas: HTMLCanvasElement) {
 
 mount(App, { target: document.body, props: { ui, ready: start } });
 
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+// Packaged Android assets are versioned with the APK, not a browser cache.
+if ('serviceWorker' in navigator && location.protocol.startsWith('http') && location.hostname !== 'appassets.androidplatform.net') {
     navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => { /* The game works without offline caching. */ });
 }
