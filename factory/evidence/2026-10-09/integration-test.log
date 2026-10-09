@@ -1,0 +1,13 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> swarm-doctrine@3.0.0 test
+> vitest run
+
+
+ RUN  v5.0.2 /workspace/scratch/6fe2efb9ab7e/swarm-integration
+
+
+ Test Files  11 passed (11)
+      Tests  77 passed (77)
+   Start at  14:11:22
+   Duration  8.14s (tests 80%, transform 16%, import 3%)
