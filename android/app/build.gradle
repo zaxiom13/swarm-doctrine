@@ -1,0 +1,33 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.zaxiom.swarmdoctrine'
+    compileSdk 35
+    buildFeatures { buildConfig true }
+    defaultConfig {
+        applicationId 'com.zaxiom.swarmdoctrine'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '0.1.0'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    sourceSets.main.assets.srcDir layout.buildDirectory.dir('generated/webAssets')
+}
+dependencies {
+    implementation 'androidx.activity:activity:1.9.3'
+    implementation 'androidx.webkit:webkit:1.12.1'
+}
+// Build from the same source as the website. Do not commit generated bundles.
+tasks.register('buildWebAssets', Exec) {
+    workingDir rootProject.projectDir.parentFile
+    commandLine 'npm', 'run', 'build', '--', '--base=/game/',
+        '--outDir=android/app/build/generated/webAssets', '--emptyOutDir'
+    inputs.dir '../../src'
+    inputs.dir '../../public'
+    inputs.files '../../index.html', '../../connect.html', '../../package-lock.json', '../../vite.config.ts'
+    outputs.dir layout.buildDirectory.dir('generated/webAssets')
+}
+tasks.named('preBuild').configure { dependsOn 'buildWebAssets' }
