@@ -368,3 +368,24 @@ details summary { cursor: pointer; min-height: var(--tap); display: flex; align-
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Short landscape windows need height-aware home layout, not only width breakpoints. */
+@media (orientation: landscape) and (max-height: 500px) {
+    .screen-home { overflow-y: auto; place-items: start center; }
+    .home-hero { width: min(760px, 100%); padding: calc(12px + var(--safe-top)) calc(20px + var(--safe-right)) calc(12px + var(--safe-bottom)) calc(20px + var(--safe-left)); gap: 12px; }
+    .home-mark { display: none; }
+    .home-title span { font-size: 44px; }
+    .home-title em { font-size: 22px; margin-top: 6px; }
+    .home-tagline { margin: 0; white-space: normal; font-size: 11px; letter-spacing: .12em; }
+    .home-actions { gap: 8px; }
+    .screen-home .btn-big { min-height: 48px; font-size: 15px; }
+    .home-links { margin-top: 0; gap: 10px; }
+    .home-link { letter-spacing: .12em; }
+}
+@media (orientation: landscape) and (max-height: 500px) and (min-width: 640px) {
+    .home-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-content: center; min-height: 100dvh; column-gap: 28px; }
+    .home-title { grid-column: 1; grid-row: 1; align-self: end; }
+    .home-tagline { grid-column: 1; grid-row: 2; align-self: start; }
+    .home-actions { grid-column: 2; grid-row: 1 / 3; }
+    .home-links { grid-column: 1 / -1; }
+}

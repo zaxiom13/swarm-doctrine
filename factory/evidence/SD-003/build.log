@@ -1,0 +1,25 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> swarm-doctrine@3.0.0 build
+> vite build
+
+vite v8.3.1 building client environment for production...
+transforming...
+✓ 189 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                          1.52 kB │ gzip:  0.70 kB
+dist/connect.html                        2.06 kB │ gzip:  0.97 kB
+dist/assets/search-worker-B8XQ4Ujq.js   22.59 kB
+dist/assets/jev-nYdUGRNa.css            29.84 kB │ gzip:  7.49 kB
+dist/assets/index.esm-DjvdTYWy.js        0.07 kB │ gzip:  0.09 kB
+dist/assets/index.esm-Beo_5XjP.js        0.69 kB │ gzip:  0.38 kB
+dist/assets/connect-R4x_wV-E.js          0.79 kB │ gzip:  0.46 kB
+dist/assets/index.esm-CDg2XpU-.js        1.38 kB │ gzip:  0.71 kB
+dist/assets/jev-iC41C1u0.js              7.78 kB │ gzip:  3.32 kB
+dist/assets/index.esm-BeGpjAbq.js       33.15 kB │ gzip: 11.10 kB
+dist/assets/dist-DQJbmggL.js            49.72 kB │ gzip: 17.11 kB
+dist/assets/index.esm-Y1lPQSip.js      141.40 kB │ gzip: 41.35 kB
+dist/assets/main-EM5JI2Fn.js           190.41 kB │ gzip: 66.49 kB
+
+✓ built in 587ms

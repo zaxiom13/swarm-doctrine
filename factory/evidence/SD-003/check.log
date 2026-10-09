@@ -1,0 +1,9 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> swarm-doctrine@3.0.0 check
+> svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: /workspace/scratch/6fe2efb9ab7e/swarm-layout
+Getting Svelte diagnostics...
+
+svelte-check found 0 errors and 0 warnings
