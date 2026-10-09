@@ -1,0 +1,291 @@
+{
+  "browser": "Chromium 153.0.8010.0",
+  "viewports": {
+    "390x844": [
+      {
+        "screen": "main-menu",
+        "contentHeight": 844,
+        "viewportHeight": 844,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "mode-screen",
+        "contentHeight": 844,
+        "viewportHeight": 844,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "settings-screen",
+        "contentHeight": 1399,
+        "viewportHeight": 844,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "team-select-screen",
+        "contentHeight": 844,
+        "viewportHeight": 844,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "game HUD",
+        "contentHeight": 844,
+        "viewportHeight": 844,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "coach",
+        "contentHeight": 49,
+        "viewportHeight": 49,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "details",
+        "contentHeight": 474,
+        "viewportHeight": 474,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "pause",
+        "contentHeight": 844,
+        "viewportHeight": 844,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "result",
+        "contentHeight": 844,
+        "viewportHeight": 844,
+        "scrollsVertically": false
+      }
+    ],
+    "844x390": [
+      {
+        "screen": "main-menu",
+        "contentHeight": 390,
+        "viewportHeight": 390,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "mode-screen",
+        "contentHeight": 460,
+        "viewportHeight": 390,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "settings-screen",
+        "contentHeight": 1111,
+        "viewportHeight": 390,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "team-select-screen",
+        "contentHeight": 550,
+        "viewportHeight": 390,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "game HUD",
+        "contentHeight": 390,
+        "viewportHeight": 390,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "coach",
+        "contentHeight": 49,
+        "viewportHeight": 49,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "details",
+        "contentHeight": 474,
+        "viewportHeight": 281,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "pause",
+        "contentHeight": 390,
+        "viewportHeight": 390,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "result",
+        "contentHeight": 390,
+        "viewportHeight": 390,
+        "scrollsVertically": false
+      }
+    ],
+    "640x360": [
+      {
+        "screen": "main-menu",
+        "contentHeight": 360,
+        "viewportHeight": 360,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "mode-screen",
+        "contentHeight": 686,
+        "viewportHeight": 360,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "settings-screen",
+        "contentHeight": 1399,
+        "viewportHeight": 360,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "team-select-screen",
+        "contentHeight": 766,
+        "viewportHeight": 360,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "game HUD",
+        "contentHeight": 360,
+        "viewportHeight": 360,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "coach",
+        "contentHeight": 49,
+        "viewportHeight": 49,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "details",
+        "contentHeight": 474,
+        "viewportHeight": 259,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "pause",
+        "contentHeight": 360,
+        "viewportHeight": 360,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "result",
+        "contentHeight": 360,
+        "viewportHeight": 360,
+        "scrollsVertically": false
+      }
+    ],
+    "568x320": [
+      {
+        "screen": "main-menu",
+        "contentHeight": 320,
+        "viewportHeight": 320,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "mode-screen",
+        "contentHeight": 686,
+        "viewportHeight": 320,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "settings-screen",
+        "contentHeight": 1399,
+        "viewportHeight": 320,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "team-select-screen",
+        "contentHeight": 766,
+        "viewportHeight": 320,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "game HUD",
+        "contentHeight": 320,
+        "viewportHeight": 320,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "coach",
+        "contentHeight": 49,
+        "viewportHeight": 49,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "details",
+        "contentHeight": 474,
+        "viewportHeight": 230,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "pause",
+        "contentHeight": 320,
+        "viewportHeight": 320,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "result",
+        "contentHeight": 320,
+        "viewportHeight": 320,
+        "scrollsVertically": false
+      }
+    ],
+    "1280x720": [
+      {
+        "screen": "main-menu",
+        "contentHeight": 720,
+        "viewportHeight": 720,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "mode-screen",
+        "contentHeight": 720,
+        "viewportHeight": 720,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "settings-screen",
+        "contentHeight": 1113,
+        "viewportHeight": 720,
+        "scrollsVertically": true
+      },
+      {
+        "screen": "team-select-screen",
+        "contentHeight": 720,
+        "viewportHeight": 720,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "game HUD",
+        "contentHeight": 720,
+        "viewportHeight": 720,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "coach",
+        "contentHeight": 49,
+        "viewportHeight": 49,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "details",
+        "contentHeight": 720,
+        "viewportHeight": 720,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "pause",
+        "contentHeight": 720,
+        "viewportHeight": 720,
+        "scrollsVertically": false
+      },
+      {
+        "screen": "result",
+        "contentHeight": 720,
+        "viewportHeight": 720,
+        "scrollsVertically": false
+      }
+    ]
+  },
+  "assertions": {
+    "states": 45,
+    "horizontalOverflow": 0,
+    "outOfBoundsInteractiveElements": 0,
+    "hudCollisions": 0
+  }
+}
