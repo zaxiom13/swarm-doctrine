@@ -24,7 +24,8 @@ env.document = { getElementById: () => element(), addEventListener() {}, createE
 env.window = globalThis;
 env.innerWidth = 1280;
 env.innerHeight = 720;
-env.addEventListener = () => {};
+const windowListeners: Record<string, Function[]> = {};
+env.addEventListener = (kind: string, fn: Function) => { (windowListeners[kind] ||= []).push(fn); };
 env.requestAnimationFrame = () => {};
 env.matchMedia = () => ({ matches: false });
 
@@ -353,4 +354,46 @@ test('the duel basics lesson can be completed', () => {
         game.setRally(false); game.castFreeze(); advance(4);
     }
     assert.equal(game.gameState, 'victory', `duel lesson: ${JSON.stringify(tutorial.progress)}`);
+});
+
+
+test('rotating a fixed online arena cancels Freeze aim and releases guest Rally', () => {
+    begin(index('wide-freeze'));
+    game.renderer.fixArena({ width: 1280, height: 720 });
+    const sent: any[] = [];
+    game.online = { role: 'guest', peerId: 'host', holding: true } as any;
+    game.lobby = { send: (...args: any[]) => sent.push(args) } as any;
+    game.input.freezeAiming = true;
+    game.input.pointerId = 17;
+    game.player.rally(500, 300);
+    env.innerWidth = 390; env.innerHeight = 844;
+    game.resizeWorld();
+    assert.equal(game.input.freezeAiming, false);
+    assert.equal(game.input.pointerId, null);
+    assert.equal(game.online.holding, false);
+    assert.equal(game.player.rallying, false);
+    assert.ok(sent.some(([kind, action]) => kind === 'input' && action.type === 'release'));
+    assert.equal(game.renderer.width, 1280);
+    assert.equal(game.renderer.height, 720);
+    game.online = null; game.lobby = null;
+    game.renderer.fixArena(null);
+    env.innerWidth = 1280; env.innerHeight = 720; game.resizeWorld();
+});
+
+
+test('backgrounding an online guest releases controls even though the match cannot pause', () => {
+    begin(index('wide-freeze'));
+    const sent: any[] = [];
+    game.online = { role: 'guest', peerId: 'host', holding: true } as any;
+    game.lobby = { send: (...args: any[]) => sent.push(args) } as any;
+    game.player.rally(250, 100);
+    game.input.pointerId = 7;
+    game.input.freezeAiming = true;
+    windowListeners.blur.forEach(fn => fn());
+    assert.equal(game.gameState, 'playing');
+    assert.equal(game.online.holding, false);
+    assert.equal(game.input.pointerId, null);
+    assert.equal(game.input.freezeAiming, false);
+    assert.ok(sent.some(([kind, action]) => kind === 'input' && action.type === 'release'));
+    game.online = null; game.lobby = null;
 });

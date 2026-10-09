@@ -51,8 +51,9 @@ export class InputHandler {
         };
         for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(type, release);
         canvas.addEventListener('contextmenu', event => event.preventDefault());
-        window.addEventListener('blur', () => game.pause());
-        document.addEventListener('visibilitychange', () => { if (document.hidden) game.pause(); });
+        const background = () => { game.resetHeldInput(); game.pause(); };
+        window.addEventListener('blur', background);
+        document.addEventListener('visibilitychange', () => { if (document.hidden) background(); });
         document.addEventListener('keydown', event => {
             // Buttons own Space/Enter; do not also cast Freeze through the global handler.
             if (event.repeat || ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes((event.target as HTMLElement | null)?.tagName)) return;
