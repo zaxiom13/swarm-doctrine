@@ -175,7 +175,7 @@ export const ModeMethods = {
     },
 
     saveCheckpoint(this: Game) {
-        try { localStorage.setItem(CHECKPOINT_KEY, JSON.stringify({ level: this.level, seed: this.mapSeed, team: this.playerTeam })); } catch { /* Optional. */ }
+        try { localStorage.setItem(CHECKPOINT_KEY, JSON.stringify({ level: this.level, seed: this.mapSeed, team: this.playerTeam, enemies: this.levelEnemies })); } catch { /* Optional. */ }
     },
 
     /** The saved Levels checkpoint, or null when there is none or it is invalid. */
@@ -186,7 +186,8 @@ export const ModeMethods = {
     resumeExpedition(this: Game) {
         const saved = this.loadCheckpoint();
         if (!saved) return false;
-        Object.assign(this, { practice: false, gameMode: 'levels', level: saved.level, mapSeed: saved.seed, playerTeam: saved.team });
+        Object.assign(this, { practice: false, gameMode: 'levels', level: saved.level, mapSeed: saved.seed,
+            playerTeam: saved.team, levelEnemies: saved.enemies ?? 'ai' });
         this.startGame();
         return true;
     },
