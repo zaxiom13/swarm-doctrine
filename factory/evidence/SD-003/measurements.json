@@ -1,0 +1,187 @@
+[
+  {
+    "kind": "home-layout",
+    "viewport": [
+      390,
+      844
+    ],
+    "boxes": [
+      {
+        "text": "Play",
+        "top": 424.546875,
+        "bottom": 484.546875,
+        "left": 24,
+        "right": 366
+      },
+      {
+        "text": "Field guide",
+        "top": 496.546875,
+        "bottom": 556.546875,
+        "left": 24,
+        "right": 366
+      },
+      {
+        "text": "How to play",
+        "top": 582.546875,
+        "bottom": 630.546875,
+        "left": 55.640625,
+        "right": 197.53125
+      },
+      {
+        "text": "Settings",
+        "top": 582.546875,
+        "bottom": 630.546875,
+        "left": 229.53125,
+        "right": 334.359375
+      }
+    ]
+  },
+  {
+    "kind": "home-layout",
+    "viewport": [
+      844,
+      390
+    ],
+    "boxes": [
+      {
+        "text": "Play",
+        "top": 113,
+        "bottom": 161,
+        "left": 436,
+        "right": 782
+      },
+      {
+        "text": "Field guide",
+        "top": 169,
+        "bottom": 217,
+        "left": 436,
+        "right": 782
+      },
+      {
+        "text": "How to play",
+        "top": 229,
+        "bottom": 277,
+        "left": 296.515625,
+        "right": 426.96875
+      },
+      {
+        "text": "Settings",
+        "top": 229,
+        "bottom": 277,
+        "left": 450.96875,
+        "right": 547.484375
+      }
+    ]
+  },
+  {
+    "kind": "home-layout",
+    "viewport": [
+      640,
+      360
+    ],
+    "boxes": [
+      {
+        "text": "Play",
+        "top": 98,
+        "bottom": 146,
+        "left": 334,
+        "right": 620
+      },
+      {
+        "text": "Field guide",
+        "top": 154,
+        "bottom": 202,
+        "left": 334,
+        "right": 620
+      },
+      {
+        "text": "How to play",
+        "top": 214,
+        "bottom": 262,
+        "left": 194.515625,
+        "right": 324.96875
+      },
+      {
+        "text": "Settings",
+        "top": 214,
+        "bottom": 262,
+        "left": 348.96875,
+        "right": 445.484375
+      }
+    ]
+  },
+  {
+    "kind": "home-layout",
+    "viewport": [
+      568,
+      320
+    ],
+    "boxes": [
+      {
+        "text": "Play",
+        "top": 114.390625,
+        "bottom": 162.390625,
+        "left": 20,
+        "right": 548
+      },
+      {
+        "text": "Field guide",
+        "top": 170.390625,
+        "bottom": 218.390625,
+        "left": 20,
+        "right": 548
+      },
+      {
+        "text": "How to play",
+        "top": 230.390625,
+        "bottom": 278.390625,
+        "left": 158.515625,
+        "right": 288.96875
+      },
+      {
+        "text": "Settings",
+        "top": 230.390625,
+        "bottom": 278.390625,
+        "left": 312.96875,
+        "right": 409.484375
+      }
+    ]
+  },
+  {
+    "kind": "home-layout",
+    "viewport": [
+      1280,
+      720
+    ],
+    "boxes": [
+      {
+        "text": "Play",
+        "top": 377.984375,
+        "bottom": 437.984375,
+        "left": 464,
+        "right": 882.328125
+      },
+      {
+        "text": "Field guide",
+        "top": 449.984375,
+        "bottom": 509.984375,
+        "left": 464,
+        "right": 882.328125
+      },
+      {
+        "text": "How to play",
+        "top": 535.984375,
+        "bottom": 583.984375,
+        "left": 533.796875,
+        "right": 675.6875
+      },
+      {
+        "text": "Settings",
+        "top": 535.984375,
+        "bottom": 583.984375,
+        "left": 707.6875,
+        "right": 812.515625
+      }
+    ]
+  }
+]
