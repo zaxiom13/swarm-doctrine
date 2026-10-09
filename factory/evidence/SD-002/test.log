@@ -1,0 +1,18 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> swarm-doctrine@3.0.0 test
+> vitest run
+
+
+ RUN  v5.0.2 /workspace/scratch/6fe2efb9ab7e/swarm-input
+
+
+ Test Files  9 passed (9)
+      Tests  68 passed (68)
+   Start at  13:59:05
+   Duration  14.13s (tests 71%, transform 26%, import 3%, worker 1%)
+
+  Transform  transforming modules took 8.39s · 26% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

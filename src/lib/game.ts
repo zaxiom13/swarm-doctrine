@@ -171,7 +171,8 @@ export class Game {
 
     resetHeldInput() {
         this.input.reset();
-        if (this.sim.commanders[this.playerTeam]) this.player.release();
+        if (this.online?.role === 'guest') this.onlineControl('release', this.input.pointer.x, this.input.pointer.y);
+        else if (this.sim.commanders[this.playerTeam]) this.player.release();
     }
 
     pause() {
@@ -240,11 +241,12 @@ export class Game {
     resizeWorld() {
         const oldWidth = this.renderer.width, oldHeight = this.renderer.height;
         this.renderer.resize();
+        // Viewport rotation also changes input coordinates for fixed online arenas.
+        this.resetHeldInput();
         if (!oldWidth || !oldHeight || (oldWidth === this.renderer.width && oldHeight === this.renderer.height)) return;
         const { sx, sy } = this.sim.resize(this.renderer.width, this.renderer.height);
         this.input.pointer.x *= sx;
         this.input.pointer.y *= sy;
-        this.resetHeldInput();
     }
 
     // Simulation -----------------------------------------------------------
