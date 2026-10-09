@@ -36,6 +36,7 @@ const { TutorialMode } = await import('../src/lib/tutorial.ts');
 const { LESSONS } = await import('../src/lib/lessons.ts');
 const { UPGRADES } = await import('../src/lib/catalog.ts');
 const { levelRules, buildWorld, validCheckpoint } = await import('../src/lib/worlds.ts');
+const { FLEET_SPAWN_POINTS, FLEET_SPAWN_SPREAD } = await import('../src/lib/arena.ts');
 const { UIManager } = await import('../src/lib/ui.svelte.ts');
 const ui = new UIManager();
 const game = new Game({ canvas, ui });
@@ -166,6 +167,25 @@ test('Levels: bounded difficulty, seeded maps, advancement, retry and resume', (
     assert.equal(game.resumeExpedition(), true);
     assert.deepEqual([game.level, game.world.seed, game.playerTeam], [2, sectorTwo, 'phoenix']);
     assert.equal(validCheckpoint({ level: -3, seed: 1, team: 'dragon' }), false);
+});
+
+test('seeded hazards leave fleet spawn rectangles clear in portrait and landscape', () => {
+    const sizes = [[320, 720], [390, 844], [412, 915], [720, 320], [844, 390], [915, 412], [1280, 720], [2560, 1080]];
+    let minimum = Infinity;
+    for (const [width, height] of sizes) {
+        for (let seed = 0; seed < 2048; seed++) {
+            const world = buildWorld(seed, 10, width, height);
+            for (const point of FLEET_SPAWN_POINTS) {
+                for (const field of world.terrain) {
+                    const reach = field.type === 'blackHole' ? field.radius * 2.8 : field.radius;
+                    const dx = Math.max(Math.abs(field.x - point.x * width) - FLEET_SPAWN_SPREAD * width / 2, 0);
+                    const dy = Math.max(Math.abs(field.y - point.y * height) - FLEET_SPAWN_SPREAD * height / 2, 0);
+                    minimum = Math.min(minimum, Math.hypot(dx, dy) - reach);
+                }
+            }
+        }
+    }
+    assert.ok(minimum > 12, `fleet spawn safety margin fell to ${minimum.toFixed(2)}px`);
 });
 
 test('Zen shifts terrain and replenishes; resizing scales the existing world', () => {
