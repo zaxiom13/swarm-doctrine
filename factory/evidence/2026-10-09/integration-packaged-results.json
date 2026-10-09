@@ -1,0 +1,24 @@
+{
+  "kind": "packaged-assets-browser",
+  "nativeAndroid": false,
+  "modes": [
+    "conquest",
+    "levels",
+    "zen",
+    "survival"
+  ],
+  "offlineLocalRival": true,
+  "orientation": true,
+  "persistence": {
+    "record": "123",
+    "checkpoint": {
+      "level": 1,
+      "seed": 1393192948,
+      "team": "dragon"
+    },
+    "workers": true
+  },
+  "serviceWorkerRegistrations": 0,
+  "blockedRemoteRequests": 2,
+  "pageErrors": []
+}
