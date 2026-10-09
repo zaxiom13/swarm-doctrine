@@ -45,8 +45,20 @@ export function applySnapshot(sim, buffer) {
     if (!view) return false;
     if (view.byteLength < HEADER || view.getUint8(0) !== 1) return false;
     const count = view.getUint16(6, true);
-    if (view.byteLength < HEADER + count * SHIP) return false;
-    sim.time = view.getFloat32(2, true);
+    if (count > sim.rules.duelShipCap || view.byteLength !== HEADER + count * SHIP) return false;
+    const time = view.getFloat32(2, true);
+    if (!Number.isFinite(time) || time < 0) return false;
+    // Validate the whole frame before touching commanders or existing ship objects.
+    const seen = new Set<number>();
+    for (let i = 0; i < count; i++) {
+        const at = HEADER + i * SHIP, id = view.getUint16(at, true);
+        const flags = view.getUint8(at + 8);
+        const x = view.getInt16(at + 2, true), y = view.getInt16(at + 4, true);
+        if (seen.has(id) || (flags & 3) >= TEAM_NAME.length || (flags & ~15) ||
+            x < 0 || y < 0 || x > 30000 || y > 30000) return false;
+        seen.add(id);
+    }
+    sim.time = time;
     COMMANDERS.forEach((team, i) => {
         const c = sim.commander(team), at = 8 + i * 8;
         c.rallying = Boolean(view.getUint8(at) & 1);
