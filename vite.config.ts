@@ -1,11 +1,12 @@
 import { defineConfig } from 'vitest/config';
+import { offlineBuild } from './scripts/offline-build.ts';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { fileURLToPath } from 'node:url';
 
 const root = (file: string) => fileURLToPath(new URL(file, import.meta.url));
 
 export default defineConfig({
-    plugins: [svelte()],
+    plugins: [svelte(), offlineBuild()],
     build: {
         target: 'es2022',
         rollupOptions: { input: { main: root('index.html'), connect: root('connect.html') } },
