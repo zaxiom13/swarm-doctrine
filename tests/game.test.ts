@@ -131,6 +131,27 @@ test('touch: two-step Freeze aim, no accidental Rally, multi-touch isolation, ca
     game.input.isTouch = false;
 });
 
+test('Back closes transient UI in order and resumes a paused match', () => {
+    game.quitToMenu();
+    Object.assign(game, { practice: false, gameMode: 'conquest', playerTeam: 'dragon' });
+    game.startGame();
+    ui.setDetailsOpen(true);
+    assert.equal(ui.handleBack(), true);
+    assert.equal(ui.detailsOpen, false);
+    game.input.freezeAiming = true;
+    assert.equal(ui.handleBack(), true);
+    assert.equal(game.input.freezeAiming, false);
+    assert.equal(game.gameState, 'playing');
+    assert.equal(ui.handleBack(), true);
+    assert.equal(game.gameState, 'paused');
+    assert.equal(ui.overlays['pause-overlay'], true);
+    assert.equal(ui.handleBack(), true);
+    assert.equal(game.gameState, 'playing');
+    assert.equal(ui.overlays['pause-overlay'], false);
+    game.quitToMenu();
+    assert.equal(ui.handleBack(), false, 'Home lets the native Activity finish');
+});
+
 test('Conquest maps stay fixed and restart keeps the seed', () => {
     game.showTeamSelect('conquest'); game.selectTeam('dragon');
     const terrain = () => game.sim.terrain.map(f => f.toJSON());

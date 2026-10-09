@@ -19,7 +19,8 @@ also builds and uploads an APK; it does not publish or deploy.
 The shell fits within system bars/cutouts and allows both orientations. Rotation
 keeps the same WebView; offline matches pause in the background and require an
 explicit Resume. Back cancels targeting/details, pauses offline matches, confirms
-leaving online matches, navigates menus, then exits from Home. A killed process
+leaving online matches, resumes an already-paused match, dismisses dialogs through
+their visible secondary action, navigates menus, then exits from Home. A killed process
 starts at Home; stored settings, records and Levels checkpoints survive. A live
 match is not restored by WebView navigation state.
 
