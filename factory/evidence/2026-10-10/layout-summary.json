@@ -1,0 +1,30 @@
+{
+  "browser": "Chromium 153.0.8010.0",
+  "stateCount": 45,
+  "viewports": [
+    [
+      390,
+      844
+    ],
+    [
+      844,
+      390
+    ],
+    [
+      640,
+      360
+    ],
+    [
+      568,
+      320
+    ],
+    [
+      1280,
+      720
+    ]
+  ],
+  "horizontalOverflow": 0,
+  "hudCollisions": 0,
+  "horizontalOutOfBoundsControls": 0,
+  "verticalBounds": "Home actions checked at all five sizes; visible game buttons checked in three control-sequence viewports. Other long pages/dialog content may scroll vertically."
+}
