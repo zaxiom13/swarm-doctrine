@@ -18,3 +18,9 @@ web asset with its APK entry byte for byte, rejecting omissions and stale conten
 This is additional archive coverage, not a reproduced installed-app failure.
 Native verification is delegated to the existing `lintDebug verifyDebugApk` CI;
 local Gradle/SDK/device execution remains unavailable.
+
+Expanded verifier passed [Android CI 38091872069](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38091872069)
+on code commit `1b55b1d6e972d290e4704263bc44ed6322afd003`: `lintDebug verifyDebugApk`.
+[Debug APK artifact](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38091872069/artifacts/11684382210)
+is 3,669,082 bytes zipped; SHA-256 `50dde33cb270b35aae8ba53881fecc1371489722a73b101379df03386bc50ea7`;
+expires 2027-01-08. Web CI 38091872070 also passed.
