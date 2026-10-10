@@ -24,7 +24,7 @@
     $effect(() => { document.body.classList.toggle('details-open', ui.detailsOpen); });
 </script>
 
-<svelte:document onkeydown={event => { if (event.key === 'Escape') ui.escape(); }} />
+<svelte:document onkeydown={event => { if (event.key === 'Escape' && ui.escape()) event.preventDefault(); }} />
 <svelte:window onpopstate={() => ui.popstate()} />
 
 <Home />

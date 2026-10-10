@@ -25,7 +25,7 @@ The packaged WebView app and debug build instructions are in [android/README.md]
 
 - **Rally**: hold and drag anywhere in the arena; release beside a smaller group to recruit it.
 - **Freeze**: Space or right-click (Q, E, 1 and 2 also work). On touch, tap **Freeze**, then tap the arena. It stops half the rivals in range; frozen ships cannot recruit or defend.
-- **Pause**: Escape, P, the Pause button or your phone's back gesture. **R** restarts.
+- **Pause**: Escape closes match details first; otherwise it pauses/resumes, including when a dialog button has focus. P, the Pause button or your phone's back gesture. **R** restarts.
 
 The exact numbers (ranges, durations, cooldowns) appear in **How to play**, generated from the rules, so they are always current.
 
