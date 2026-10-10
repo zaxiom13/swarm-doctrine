@@ -1,3 +1,6 @@
+import groovy.json.JsonSlurper
+import java.util.zip.ZipFile
+
 plugins { id 'com.android.application' }
 android {
     namespace 'com.zaxiom.swarmdoctrine'
@@ -33,3 +36,47 @@ tasks.register('buildWebAssets', Exec) {
     outputs.dir layout.buildDirectory.dir('generated/webAssets')
 }
 tasks.named('preBuild').configure { dependsOn 'buildWebAssets' }
+
+// Fail CI if the installable archive loses an offline-critical file or an
+// index/manifest reference points at an asset that was not packaged.
+tasks.register('verifyDebugApk') {
+    dependsOn 'assembleDebug'
+    doLast {
+        def apk = layout.buildDirectory.file('outputs/apk/debug/app-debug.apk').get().asFile
+        if (!apk.isFile()) throw new GradleException("Debug APK was not produced: ${apk}")
+        new ZipFile(apk).withCloseable { zip ->
+            def entry = { path -> zip.getEntry("assets/${path}") }
+            // Index references alone miss lazy imports, workers, guides and model files.
+            // Compare the entire generated tree with the installable archive, byte for byte.
+            def generated = layout.buildDirectory.dir('generated/webAssets').get().asFile
+            fileTree(generated).files.each { file ->
+                def path = generated.toPath().relativize(file.toPath()).toString().replace('\\', '/')
+                if (!entry(path)) throw new GradleException("Debug APK is missing generated assets/${path}")
+                def packaged = zip.getInputStream(entry(path)).withCloseable { it.bytes }
+                if (!Arrays.equals(file.bytes, packaged))
+                    throw new GradleException("Debug APK has stale or altered assets/${path}")
+            }
+
+            ['index.html', 'manifest.webmanifest', 'models/offline-policy.json',
+             'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'].each { path ->
+                if (!entry(path)) throw new GradleException("Debug APK is missing assets/${path}")
+            }
+
+            def index = zip.getInputStream(entry('index.html')).getText('UTF-8')
+            def localRefs = (index =~ /(?:src|href)="([^"]+)"/).collect { it[1] as String }
+                .findAll { !it.contains('://') && !it.startsWith('#') }
+                .collect { it.startsWith('/game/') ? it.substring('/game/'.length()) : it.replaceFirst('^\\./', '') }
+            localRefs.each { path ->
+                if (!entry(path)) throw new GradleException("index.html references missing assets/${path}")
+            }
+            if (!localRefs.any { it.endsWith('.js') } || !localRefs.any { it.endsWith('.css') })
+                throw new GradleException('index.html must reference packaged JavaScript and CSS')
+
+            def manifest = new JsonSlurper().parse(zip.getInputStream(entry('manifest.webmanifest')))
+            manifest.icons.each { icon ->
+                def path = String.valueOf(icon.src).replaceFirst('^/game/', '').replaceFirst('^\\./', '')
+                if (!entry(path)) throw new GradleException("manifest references missing assets/${path}")
+            }
+        }
+    }
+}
