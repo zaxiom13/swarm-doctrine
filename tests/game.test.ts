@@ -131,24 +131,6 @@ test('touch: two-step Freeze aim, no accidental Rally, multi-touch isolation, ca
     game.input.isTouch = false;
 });
 
-test('consumed Escape closes details without also pausing the match', () => {
-    game.quitToMenu();
-    game.showTeamSelect('conquest'); game.selectTeam('dragon');
-    ui.setDetailsOpen(true);
-    assert.equal(ui.escape(), true);
-    env.document.emit('keydown', { code: 'Escape', defaultPrevented: true });
-    assert.equal(ui.detailsOpen, false);
-    assert.equal(game.gameState, 'playing');
-    assert.equal(ui.escape(), false);
-    env.document.emit('keydown', { code: 'Escape', defaultPrevented: false });
-    assert.equal(game.gameState, 'paused');
-    env.document.emit('keydown', { code: 'Space', target: { tagName: 'BUTTON' } });
-    assert.equal(game.gameState, 'paused', 'button shortcuts remain owned by the button');
-    env.document.emit('keydown', { code: 'Escape', target: { tagName: 'BUTTON' } });
-    assert.equal(game.gameState, 'playing', 'Escape works while Resume has focus');
-    game.quitToMenu();
-});
-
 test('Conquest maps stay fixed and restart keeps the seed', () => {
     game.showTeamSelect('conquest'); game.selectTeam('dragon');
     const terrain = () => game.sim.terrain.map(f => f.toJSON());
@@ -418,4 +400,22 @@ test('backgrounding an online guest releases controls even though the match cann
     assert.equal(game.input.freezeAiming, false);
     assert.ok(sent.some(([kind, action]) => kind === 'input' && action.type === 'release'));
     game.online = null; game.lobby = null;
+});
+
+test('consumed Escape closes details without also pausing the match', () => {
+    game.quitToMenu();
+    game.showTeamSelect('conquest'); game.selectTeam('dragon');
+    ui.setDetailsOpen(true);
+    assert.equal(ui.escape(), true);
+    env.document.emit('keydown', { code: 'Escape', defaultPrevented: true });
+    assert.equal(ui.detailsOpen, false);
+    assert.equal(game.gameState, 'playing');
+    assert.equal(ui.escape(), false);
+    env.document.emit('keydown', { code: 'Escape', defaultPrevented: false });
+    assert.equal(game.gameState, 'paused');
+    env.document.emit('keydown', { code: 'Space', target: { tagName: 'BUTTON' } });
+    assert.equal(game.gameState, 'paused', 'button shortcuts remain owned by the button');
+    env.document.emit('keydown', { code: 'Escape', target: { tagName: 'BUTTON' } });
+    assert.equal(game.gameState, 'playing', 'Escape works while Resume has focus');
+    game.quitToMenu();
 });
