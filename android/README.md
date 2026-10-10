@@ -20,7 +20,8 @@ The shell fits within system bars/cutouts and allows both orientations. Rotation
 keeps the same WebView; offline matches pause in the background and require an
 explicit Resume. Back cancels targeting/details, pauses offline matches, confirms
 leaving online matches, resumes an already-paused match, dismisses dialogs through
-their visible secondary action, navigates menus, then exits from Home. A killed process
+their visible secondary action, returns from Pause Settings to the still-paused
+arena before resuming, navigates menus, then exits from Home. A killed process
 starts at Home; stored settings, records and Levels checkpoints survive. A live
 match is not restored by WebView navigation state.
 

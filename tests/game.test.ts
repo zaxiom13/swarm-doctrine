@@ -152,6 +152,21 @@ test('Back closes transient UI in order and resumes a paused match', () => {
     assert.equal(ui.handleBack(), false, 'Home lets the native Activity finish');
 });
 
+test('Back from Pause Settings returns to the paused arena before resuming', () => {
+    game.quitToMenu();
+    game.showTeamSelect('conquest'); game.selectTeam('dragon');
+    game.pause();
+    ui.pauseSettings();
+    assert.equal(ui.screen, 'settings-screen');
+    assert.equal(ui.handleBack(), true);
+    assert.equal(ui.screen, 'game-screen');
+    assert.equal(game.gameState, 'paused');
+    assert.equal(ui.overlays['pause-overlay'], true);
+    assert.equal(ui.handleBack(), true);
+    assert.equal(game.gameState, 'playing');
+    game.quitToMenu();
+});
+
 test('Conquest maps stay fixed and restart keeps the seed', () => {
     game.showTeamSelect('conquest'); game.selectTeam('dragon');
     const terrain = () => game.sim.terrain.map(f => f.toJSON());
