@@ -11,6 +11,8 @@ https://developer.android.com/develop/ui/views/layout/webapps/load-local-content
 Use JDK 17, Gradle 8.9, Android SDK platform 35/build tools 35.0.0, Node >=22.18.
 Run `npm ci` in the repository root, then `gradle -p android verifyDebugApk`.
 The preBuild task regenerates web assets at base `/game/` and packages them.
+`verifyDebugApk` also compares every generated file with its packaged bytes,
+including lazy chunks, the search worker, field guides and offline policies.
 The verification task also opens the APK and checks its offline-critical files,
 generated JavaScript/CSS and local index/manifest references.
 APK: `android/app/build/outputs/apk/debug/app-debug.apk`.

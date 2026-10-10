@@ -9,3 +9,12 @@ The Android workflow built and uploaded an APK but did not inspect the archive. 
 Web validation: `npm run check && npm test && npm run build` (77 tests), plus a `/game/` production build whose index references resolve in the generated asset directory. [Android CI run 38001763485](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38001763485) passed `gradle -p android lintDebug verifyDebugApk` and uploaded [artifact 11649252408](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38001763485/artifacts/11649252408) (3,668,868-byte zip; SHA-256 `1853d2e82e955a683c7511a6e7871b93ccf786a7ac4451d91b318ed4beac0c42`; expires 2027-01-07).
 
 This authoring environment has JDK 17 but no Gradle or Android SDK. Passing archive inspection proves packaging, not installation or offline launch on a device.
+
+## 2026-10-10 strengthening
+
+The initial verifier followed only index and manifest references. It could miss a
+lazy import or search worker dropped from the APK. It now compares every generated
+web asset with its APK entry byte for byte, rejecting omissions and stale content.
+This is additional archive coverage, not a reproduced installed-app failure.
+Native verification is delegated to the existing `lintDebug verifyDebugApk` CI;
+local Gradle/SDK/device execution remains unavailable.
