@@ -145,6 +145,25 @@ export class UIManager {
         else if (this.screen !== 'game-screen' && this.screen !== 'main-menu') this.back();
     }
 
+    /** One ordered Back policy shared by the Android shell and unit tests. */
+    handleBack() {
+        if (this.invite) { this.answerInvite(false); return true; }
+        if (this.detailsOpen) { this.setDetailsOpen(false); return true; }
+        if (this.coachOpen) { this.setCoachOpen(false); return true; }
+        if (this.game.input.freezeAiming) { this.game.input.freezeAiming = false; return true; }
+        // Match overlays can stay mounted while Settings is the visible screen.
+        if (this.screen !== 'game-screen') {
+            if (this.screen === 'main-menu') return false;
+            this.back(); return true;
+        }
+        if (this.overlays['pause-overlay']) { this.resume(); return true; }
+        if (this.overlays['intro-overlay']) { this.introSecondary(); return true; }
+        if (this.overlays['upgrade-overlay']) { this.quitFromUpgrade(); return true; }
+        if (this.overlays['result-overlay']) { this.quit(); return true; }
+        if (this.game.gameState === 'playing') { this.pausePressed(); return true; }
+        return false;
+    }
+
     /** The browser Back button pauses a running match instead of leaving it. */
     popstate() {
         if (this.game.gameState === 'playing') { this.game.pause(); globalThis.history?.pushState({ screen: this.screen }, ''); }
