@@ -1,7 +1,7 @@
 # Swarm Doctrine board
 
-Updated 2026-10-10. Android remains a committed priority. Five improvement slots
-are occupied: four retained PRs and one new PR. Maintain these before adding
+Updated 2026-10-11. Android remains a committed priority. Five improvement slots
+remain occupied. Maintain these before adding
 another batch. Merged code and archive/browser checks do not establish native
 installed-device readiness.
 
@@ -10,15 +10,17 @@ installed-device readiness.
 | Card | Outcome | PR | Actual state and evidence |
 | --- | --- | --- | --- |
 | SD-011 | One Android Back policy; Pause Settings returns to the paused arena before resuming | [#19](https://github.com/zaxiom13/swarm-doctrine/pull/19) | Open, clean, mergeable. Web and Android CI pass at `30767cd`. Check/79 tests/build and portrait/landscape/desktop Back sequence. Card/report in its branch. |
-| SD-012 | Verify every generated web asset byte for byte inside the debug APK | [#20](https://github.com/zaxiom13/swarm-doctrine/pull/20) | Open, clean, mergeable. Final web/Android CI pass at `9ebb6c7`; [expanded verifier and APK](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38091872069/artifacts/11684382210). Card/report in its branch. |
-| SD-015 | Guard fleet spawn clearance over seeded aspect ratios | [#22](https://github.com/zaxiom13/swarm-doctrine/pull/22) | Open, clean, mergeable; existing web/Android CI pass, invariant passes in current integration. No overlap bug was found. [Card](cards/SD-015.md). |
-| SD-014 | Clear stale conversion flashes on reused online guest ships | [#23](https://github.com/zaxiom13/swarm-doctrine/pull/23) | Open, clean, mergeable; existing web/Android CI pass, regression passes in current integration. [Card](cards/SD-014.md). Real transport remains untested. |
+| SD-012 | Verify the generated web tree exactly matches debug APK assets | [#20](https://github.com/zaxiom13/swarm-doctrine/pull/20) | Open, clean, mergeable. Exact-set `lintDebug verifyDebugApk` passes at `c4ea3de`; [verified APK](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38180354394/artifacts/11717785558). Final evidence head `3e91270` also has green web/Android CI. Card/report in its branch. |
+| SD-015 | Guard fleet spawn clearance over seeded aspect ratios | [#22](https://github.com/zaxiom13/swarm-doctrine/pull/22) | Open, clean, mergeable at `9046fce`; web/Android CI pass. The invariant now reads runtime `TerrainField.reach`, avoiding a duplicated black-hole constant. No overlap bug was found. [Card](cards/SD-015.md). |
+| SD-014 | Clear stale conversion flashes on reused online guest ships | [#23](https://github.com/zaxiom13/swarm-doctrine/pull/23) | Open, clean, mergeable at `1908944`; web/Android CI pass. Regression now keeps the reused ship frozen across both frames. [Card](cards/SD-014.md). Real transport remains untested. |
 | SD-016 | Escape closes one UI state at a time and works on focused dialog buttons | [#25](https://github.com/zaxiom13/swarm-doctrine/pull/25) | New, open, clean, mergeable. Final web/Android CI pass at `5366865`. Check/78 tests/build, browser document-event regression at 390×844, 844×390 and 1280×720. Card/report/repro script in its branch. |
 
-No stack dependencies. All target main, now `cb7758e`. Combined local integration
-merges automatically and passes check/82 tests/build, touch cancellation/Freeze,
-fixed-arena rotation, pause/resume, 45 layout states, cold offline reload and both
-Local/Tactician offline rivals. [Current evidence](evidence/2026-10-10/report.md).
+No stack dependencies. All target main, still `cb7758e`. Combined local integration
+merges automatically and passes check/82 tests/build. The committed #25 browser
+exercise passes portrait/landscape/desktop dismissal, pause/resume and visible
+control bounds. Prior touch, rotation, 45-state layout and cold-offline evidence
+remains applicable because tonight changed only archive/test fidelity.
+[Current evidence](evidence/2026-10-11/report.md).
 No GitHub PR was merged, auto-merged or deployed by this run.
 
 ## Merged
@@ -47,11 +49,12 @@ this table reconciles their latest actual states.
 2. Exercise real two-device Firebase/WebRTC lifecycle for both roles, including
    rotation, background, disconnect and rematch. Local/protocol tests cannot prove this.
 3. Finish Cloudflare Worker/PR previews when authenticated Cloudflare access and
-   repository deployment secrets are available. The last inspected main workflow
+   repository deployment secrets are available. Main run
+   [38035800992](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38035800992)
    skipped deployment; this run did not deploy or modify credentials. Keep free configuration.
 4. Test service-worker version A → B and APK update recovery, corrupted-checkpoint UX,
    and larger-font adaptive layouts in WebView.
 5. Measure matched 160/320-ship workloads against `08438a4` before selecting speed work.
 
 Interactive lessons remain hidden. Rules, shared Simulation/Commander and trained
-policy remain unchanged. [Latest journal](journal/2026-10-10.md).
+policy remain unchanged. [Latest journal](journal/2026-10-11.md).
