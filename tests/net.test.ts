@@ -54,14 +54,18 @@ test('a reused guest ship clears a conversion flash when the host clears it', ()
     host.setTeams(['dragon', 'salamander']);
     guest.setTeams(['dragon', 'salamander']);
     const ship = host.addBoid(120, 80, 'dragon');
+    ship.frozen = true;
+    ship.freezeRemaining = 5;
     ship.justConverted = true;
     applySnapshot(guest, encodeSnapshot(host));
     const reused = guest.boids[0];
     assert.equal(reused.justConverted, true);
+    assert.equal(reused.frozen, true, 'exercise the frozen early-return path from the trigger');
 
     ship.justConverted = false;
     applySnapshot(guest, encodeSnapshot(host));
     assert.equal(guest.boids[0], reused);
+    assert.equal(reused.frozen, true);
     assert.equal(reused.justConverted, false);
 });
 
