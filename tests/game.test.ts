@@ -37,6 +37,7 @@ const { LESSONS } = await import('../src/lib/lessons.ts');
 const { UPGRADES } = await import('../src/lib/catalog.ts');
 const { levelRules, buildWorld, validCheckpoint } = await import('../src/lib/worlds.ts');
 const { FLEET_SPAWN_POINTS, FLEET_SPAWN_SPREAD } = await import('../src/lib/arena.ts');
+const { TerrainField } = await import('../src/lib/terrain.ts');
 const { UIManager } = await import('../src/lib/ui.svelte.ts');
 const ui = new UIManager();
 const game = new Game({ canvas, ui });
@@ -177,7 +178,9 @@ test('seeded hazards leave fleet spawn rectangles clear in portrait and landscap
             const world = buildWorld(seed, 10, width, height);
             for (const point of FLEET_SPAWN_POINTS) {
                 for (const field of world.terrain) {
-                    const reach = field.type === 'blackHole' ? field.radius * 2.8 : field.radius;
+                    // Use the same derived reach as gameplay so terrain tuning cannot
+                    // silently make this safety check stale.
+                    const reach = new TerrainField(field).reach;
                     const dx = Math.max(Math.abs(field.x - point.x * width) - FLEET_SPAWN_SPREAD * width / 2, 0);
                     const dy = Math.max(Math.abs(field.y - point.y * height) - FLEET_SPAWN_SPREAD * height / 2, 0);
                     minimum = Math.min(minimum, Math.hypot(dx, dy) - reach);
