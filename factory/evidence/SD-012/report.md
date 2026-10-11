@@ -32,3 +32,10 @@ APK must exist in the freshly generated web tree. This prevents an incremental
 or misconfigured package from retaining an obsolete hashed chunk even when all
 current files are present and byte-identical. CI evidence is recorded after the
 expanded task runs; this remains archive evidence, not an installed update test.
+
+The exact-set verifier passed [Android CI 38180354394](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38180354394)
+on code commit `c4ea3de40b099b75083d6677e1dec7bf02214c02`. The
+[debug APK artifact](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38180354394/artifacts/11717785558)
+is 3,669,086 bytes zipped with SHA-256
+`b0245701ec43d664c5d707a8f6fa974c19ca765756e20b20cda98fc801408c1d`
+and expires 2027-01-09. Web CI 38180354390 also passed.
