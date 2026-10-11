@@ -49,13 +49,18 @@ tasks.register('verifyDebugApk') {
             // Index references alone miss lazy imports, workers, guides and model files.
             // Compare the entire generated tree with the installable archive, byte for byte.
             def generated = layout.buildDirectory.dir('generated/webAssets').get().asFile
-            fileTree(generated).files.each { file ->
+            def generatedPaths = fileTree(generated).files.collect { file ->
                 def path = generated.toPath().relativize(file.toPath()).toString().replace('\\', '/')
                 if (!entry(path)) throw new GradleException("Debug APK is missing generated assets/${path}")
                 def packaged = zip.getInputStream(entry(path)).withCloseable { it.bytes }
                 if (!Arrays.equals(file.bytes, packaged))
                     throw new GradleException("Debug APK has stale or altered assets/${path}")
+                path
             }
+            def packagedPaths = zip.entries().findAll { !it.directory && it.name.startsWith('assets/') }
+                .collect { it.name.substring('assets/'.length()) }
+            def extras = packagedPaths - generatedPaths
+            if (extras) throw new GradleException("Debug APK has stale generated assets: ${extras.sort().join(', ')}")
 
             ['index.html', 'manifest.webmanifest', 'models/offline-policy.json',
              'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png'].each { path ->

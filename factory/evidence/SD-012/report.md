@@ -24,3 +24,11 @@ on code commit `1b55b1d6e972d290e4704263bc44ed6322afd003`: `lintDebug verifyDebu
 [Debug APK artifact](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38091872069/artifacts/11684382210)
 is 3,669,082 bytes zipped; SHA-256 `50dde33cb270b35aae8ba53881fecc1371489722a73b101379df03386bc50ea7`;
 expires 2027-01-08. Web CI 38091872070 also passed.
+
+## 2026-10-11 strengthening
+
+The verifier now checks the reverse direction too: every `assets/` file in the
+APK must exist in the freshly generated web tree. This prevents an incremental
+or misconfigured package from retaining an obsolete hashed chunk even when all
+current files are present and byte-identical. CI evidence is recorded after the
+expanded task runs; this remains archive evidence, not an installed update test.
