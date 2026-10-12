@@ -14,3 +14,10 @@ The two-frame regression now keeps the reused ship frozen across both snapshots.
 That exercises the exact trigger called out above: a ship whose normal update
 returns early must still clear the previous frame's conversion flag. The object
 identity, frozen state and authoritative true → false transition are asserted.
+
+## 2026-10-12 main synchronization
+
+Merged main `aefd7fe` (including merged #25) into this working branch without
+conflicts. Independent `npm run check`, `npm test` (79 tests) and
+`npm run build` pass. This preserves the original PR outcome while refreshing
+its merge base and evidence; no new gameplay change was made.
