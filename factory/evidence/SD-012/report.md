@@ -39,3 +39,10 @@ on code commit `c4ea3de40b099b75083d6677e1dec7bf02214c02`. The
 is 3,669,086 bytes zipped with SHA-256
 `b0245701ec43d664c5d707a8f6fa974c19ca765756e20b20cda98fc801408c1d`
 and expires 2027-01-09. Web CI 38180354390 also passed.
+
+## 2026-10-12 main synchronization
+
+Merged main `aefd7fe` (including merged #25) into this working branch without
+conflicts. Independent `npm run check`, `npm test` (78 tests) and
+`npm run build` pass. This preserves the original PR outcome while refreshing
+its merge base and evidence; no new gameplay change was made.
