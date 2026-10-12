@@ -1,0 +1,70 @@
+{
+  "browser": "153.0.8010.0",
+  "controls": [
+    {
+      "width": 390,
+      "height": 844,
+      "backSettings": true,
+      "escape": true,
+      "rotationRelease": true,
+      "freezeTap": true,
+      "restart": true,
+      "overflow": []
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "backSettings": true,
+      "escape": true,
+      "rotationRelease": true,
+      "freezeTap": true,
+      "restart": true,
+      "overflow": []
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "backSettings": true,
+      "escape": true,
+      "rotationRelease": true,
+      "freezeTap": true,
+      "restart": true,
+      "overflow": []
+    }
+  ],
+  "offline": {
+    "coldReload": true,
+    "context": "after-controls",
+    "controlledOnlineWarmup": true,
+    "rivals": [
+      "duel-local",
+      "duel-tactician"
+    ],
+    "missingAsset": {
+      "status": 503,
+      "type": "text/plain"
+    }
+  },
+  "localDuels": [
+    {
+      "hostTab": 0,
+      "guestSnapshot": true,
+      "rotationRelease": true,
+      "freezeInput": true,
+      "finite": true,
+      "disconnectVictory": true,
+      "rematchCleanup": true
+    },
+    {
+      "hostTab": 1,
+      "guestSnapshot": true,
+      "rotationRelease": true,
+      "freezeInput": true,
+      "finite": true,
+      "disconnectVictory": true,
+      "rematchCleanup": true
+    }
+  ],
+  "pageErrors": [],
+  "limitation": "Two same-partition tabs; BroadcastChannel only, no Firebase/WebRTC or Android WebView."
+}

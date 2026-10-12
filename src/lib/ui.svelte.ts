@@ -141,8 +141,9 @@ export class UIManager {
 
     /** Escape closes the details sheet first, then steps back out of a menu. */
     escape() {
-        if (this.detailsOpen) this.setDetailsOpen(false);
-        else if (this.screen !== 'game-screen' && this.screen !== 'main-menu') this.back();
+        if (this.detailsOpen) { this.setDetailsOpen(false); return true; }
+        if (this.screen !== 'game-screen' && this.screen !== 'main-menu') { this.back(); return true; }
+        return false;
     }
 
     /** The browser Back button pauses a running match instead of leaving it. */

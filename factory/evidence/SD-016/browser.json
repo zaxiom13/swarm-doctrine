@@ -1,0 +1,39 @@
+{
+  "browser": "153.0.8010.0",
+  "results": [
+    {
+      "width": 390,
+      "height": 844,
+      "after": {
+        "details": false,
+        "state": "playing",
+        "pause": false
+      },
+      "secondEscapePaused": true,
+      "thirdEscapeResumed": true
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "after": {
+        "details": false,
+        "state": "playing",
+        "pause": false
+      },
+      "secondEscapePaused": true,
+      "thirdEscapeResumed": true
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "after": {
+        "details": false,
+        "state": "playing",
+        "pause": false
+      },
+      "secondEscapePaused": true,
+      "thirdEscapeResumed": true
+    }
+  ],
+  "pageErrors": []
+}
