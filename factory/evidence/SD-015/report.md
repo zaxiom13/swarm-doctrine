@@ -14,3 +14,10 @@ The regression now constructs the runtime `TerrainField` and reads its derived
 `reach` instead of copying the black-hole pull multiplier into the test. A later
 terrain-tuning change therefore cannot leave the spawn assertion checking an old
 number. This changes test fidelity only; the audit still found no overlap bug.
+
+## 2026-10-12 main synchronization
+
+Merged main `aefd7fe` (including merged #25) into this working branch without
+conflicts. Independent `npm run check`, `npm test` (79 tests) and
+`npm run build` pass. This preserves the original PR outcome while refreshing
+its merge base and evidence; no new gameplay change was made.

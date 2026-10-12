@@ -1,5 +1,5 @@
 // Seeded worlds are data: retries replay the map, while new sectors get a new seed.
-import { TEAM_IDS } from './catalog.ts';
+import { LEVEL_ENEMY_IDS, TEAM_IDS } from './catalog.ts';
 
 export const DIFFICULTY_CAP = 10;
 export function randomFrom(seed) {
@@ -34,5 +34,6 @@ export function buildWorld(seed, level = 4, width = 1280, height = 720) {
 export function validCheckpoint(value) {
     return value && Number.isSafeInteger(value.level) && value.level >= 1 && value.level <= 100000 &&
         Number.isInteger(value.seed) && value.seed >= 0 && value.seed <= 0xffffffff &&
-        TEAM_IDS.includes(value.team);
+        TEAM_IDS.includes(value.team) &&
+        (value.enemies === undefined || LEVEL_ENEMY_IDS.includes(value.enemies));
 }

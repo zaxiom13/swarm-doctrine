@@ -51,6 +51,7 @@ export const LEVEL_ENEMIES = [
     { id: 'ai', name: 'AI rivals', icon: '🔥', color: '#ff5d7a', summary: 'Rival fleets rally, recruit and freeze like you.' },
     { id: 'passive', name: 'Passive rivals', icon: '😴', color: '#6aa8ff', summary: 'Rival fleets drift and only fight back up close.' },
 ];
+export const LEVEL_ENEMY_IDS = LEVEL_ENEMIES.map(option => option.id);
 
 /**
  * Upgrades offered between Conquest milestones and Survival waves. Each applies
