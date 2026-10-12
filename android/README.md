@@ -44,8 +44,8 @@ This follows https://developer.android.com/develop/ui/views/layout/webapps/handl
 
 `gradle -p android testDebugUnitTest` exercises the inherited unhandled callback,
 crash and memory-kill recovery, explicit retry, secure settings and null-renderer
-lifecycle/Back on Robolectric API 26 and 35 shadows. CI runs those tests before
-lint and APK assembly. These are native callback tests, not a real renderer kill.
+lifecycle/Back on Robolectric API 26 and 35 shadows. The Android CI job also runs
+these tests. These are native callback tests, not a real renderer kill.
 On a debug device, use the inspected WebView's `chrome://crash` in DevTools (not
 as an app link), then check recovery, Home, saved Continue and audio. Also kill
 the renderer under background memory pressure and check foreground recovery.
