@@ -1,6 +1,7 @@
 # Android renderer recovery
 
-Base: `aefd7fe22af379a86d44d0f2458b9d03566d5cab`. Date: 2026-10-12.
+Base: #19 (main `aefd7fe` plus its Back policy). Date: 2026-10-12.
+PR: [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26). Merge #19 first.
 
 The shipped shell has no `onRenderProcessGone` override. Its inherited callback
 returns false for both crash and memory-kill cases, which Android documents as
@@ -14,11 +15,16 @@ that action creates a new securely configured packaged WebView; the live match
 is lost, while DOM storage is never cleared. Pause/resume/Back are safe without
 a renderer and stale asynchronous Back results cannot finish a replacement.
 
-`npm run check`, 78 web tests, production build and `git diff --check` pass.
+`npm run check`, 78 web tests on the initial independent head, production build
+and `git diff --check` pass. The stacked head is revalidated below.
 `gradle -p android testDebugUnitTest lintDebug assembleDebug` is the CI gate.
 Robolectric API 26/35 tests cover the inherited callback, crash cleanup/retry,
 background memory-kill recovery, secure replacement settings and Back/lifecycle
-with a missing WebView. Native results are pending until CI finishes.
+with a missing WebView. Initial Android
+[38319050261](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38319050261)
+passed `testDebugUnitTest lintDebug assembleDebug` at `0bbaf63`; web
+[38319050252](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38319050252)
+also passed. This proves the callbacks on shadow WebViews, not installed rendering.
 
 Robolectric uses shadow WebViews; no real Chromium renderer, installed APK,
 native system-bar/orientation/audio/persistence or online transport behavior was
