@@ -20,7 +20,7 @@ function element() {
 const store = new Map<string, string>();
 const env = globalThis as any;
 env.localStorage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => store.set(k, String(v)), removeItem: (k: string) => store.delete(k) };
-env.document = { getElementById: () => element(), addEventListener() {}, createElement: () => element(), documentElement: element(), body: element(), hidden: false };
+env.document = { ...element(), getElementById: () => element(), createElement: () => element(), documentElement: element(), body: element(), hidden: false };
 env.window = globalThis;
 env.innerWidth = 1280;
 env.innerHeight = 720;
@@ -400,4 +400,22 @@ test('backgrounding an online guest releases controls even though the match cann
     assert.equal(game.input.freezeAiming, false);
     assert.ok(sent.some(([kind, action]) => kind === 'input' && action.type === 'release'));
     game.online = null; game.lobby = null;
+});
+
+test('consumed Escape closes details without also pausing the match', () => {
+    game.quitToMenu();
+    game.showTeamSelect('conquest'); game.selectTeam('dragon');
+    ui.setDetailsOpen(true);
+    assert.equal(ui.escape(), true);
+    env.document.emit('keydown', { code: 'Escape', defaultPrevented: true });
+    assert.equal(ui.detailsOpen, false);
+    assert.equal(game.gameState, 'playing');
+    assert.equal(ui.escape(), false);
+    env.document.emit('keydown', { code: 'Escape', defaultPrevented: false });
+    assert.equal(game.gameState, 'paused');
+    env.document.emit('keydown', { code: 'Space', target: { tagName: 'BUTTON' } });
+    assert.equal(game.gameState, 'paused', 'button shortcuts remain owned by the button');
+    env.document.emit('keydown', { code: 'Escape', target: { tagName: 'BUTTON' } });
+    assert.equal(game.gameState, 'playing', 'Escape works while Resume has focus');
+    game.quitToMenu();
 });
