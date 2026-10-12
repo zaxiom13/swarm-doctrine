@@ -19,3 +19,10 @@ arena; second Back resumes.
 at 390×844, 844×390 and 1280×720 verifies this sequence, rotation during the
 match, visible game-button bounds and zero page errors. Results: [browser.json](browser.json).
 Native Back/system bars/device lifecycle remain unperformed.
+
+## 2026-10-12 main synchronization
+
+Merged main `aefd7fe` (including merged #25) into this working branch without
+conflicts. Independent `npm run check`, `npm test` (80 tests) and
+`npm run build` pass. This preserves the original PR outcome while refreshing
+its merge base and evidence; no new gameplay change was made.

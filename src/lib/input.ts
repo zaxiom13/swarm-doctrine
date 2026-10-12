@@ -55,8 +55,9 @@ export class InputHandler {
         window.addEventListener('blur', background);
         document.addEventListener('visibilitychange', () => { if (document.hidden) background(); });
         document.addEventListener('keydown', event => {
-            // Buttons own Space/Enter; do not also cast Freeze through the global handler.
-            if (event.repeat || ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes((event.target as HTMLElement | null)?.tagName)) return;
+            // Text fields own keys; buttons own gameplay shortcuts but still allow Escape.
+            const tag = (event.target as HTMLElement | null)?.tagName;
+            if (event.defaultPrevented || event.repeat || ['INPUT', 'SELECT', 'TEXTAREA'].includes(tag) || (tag === 'BUTTON' && event.code !== 'Escape')) return;
             if (playing() && FREEZE_KEYS.includes(event.code)) { event.preventDefault(); game.castFreeze(); }
             else if (event.code === 'Escape' || event.code === 'KeyP') {
                 if (this.freezeAiming) this.freezeAiming = false;
