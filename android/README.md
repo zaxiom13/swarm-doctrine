@@ -33,6 +33,21 @@ versionCode; it does not silently fetch new game code from the website.
 
 ## Device verification still required
 
+If Android reclaims or crashes the WebView renderer, the shell removes and destroys
+that instance, then offers **Return to Home**. It creates a fresh packaged WebView
+only after that tap, avoiding automatic crash/reload loops. Stored progress stays
+in DOM storage; the lost live match cannot be recovered. Back exits from this
+recovery screen, and background/foreground remains safe while no WebView exists.
+This follows https://developer.android.com/develop/ui/views/layout/webapps/handle-termination.
+
+`gradle -p android testDebugUnitTest` exercises the inherited unhandled callback,
+crash and memory-kill recovery, explicit retry, secure settings and null-renderer
+lifecycle/Back on Robolectric API 26 and 35 shadows. CI runs those tests before
+lint and APK assembly. These are native callback tests, not a real renderer kill.
+On a debug device, use the inspected WebView's `chrome://crash` in DevTools (not
+as an app link), then check recovery, Home, saved Continue and audio. Also kill
+the renderer under background memory pressure and check foreground recovery.
+
 This milestone is not a claim of Play Store readiness. On API 26 and 35+ with
 current WebView, verify first launch in airplane mode, all offline modes/rivals,
 portrait/landscape rotation during Rally/Freeze, cutouts/gesture navigation,

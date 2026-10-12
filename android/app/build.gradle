@@ -3,6 +3,7 @@ android {
     namespace 'com.zaxiom.swarmdoctrine'
     compileSdk 35
     buildFeatures { buildConfig true }
+    testOptions { unitTests.includeAndroidResources = true }
     defaultConfig {
         applicationId 'com.zaxiom.swarmdoctrine'
         minSdk 26
@@ -21,6 +22,8 @@ dependencies {
     implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.22')
     implementation 'androidx.activity:activity:1.9.3'
     implementation 'androidx.webkit:webkit:1.12.1'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.robolectric:robolectric:4.17'
 }
 // Build from the same source as the website. Do not commit generated bundles.
 tasks.register('buildWebAssets', Exec) {

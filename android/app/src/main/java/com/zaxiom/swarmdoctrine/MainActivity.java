@@ -6,13 +6,20 @@ import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.view.WindowInsets;
+import android.view.Gravity;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import androidx.activity.ComponentActivity;
 import androidx.activity.OnBackPressedCallback;
 import androidx.webkit.WebViewAssetLoader;
@@ -23,6 +30,7 @@ public final class MainActivity extends ComponentActivity {
     private static final String HOST = "appassets.androidplatform.net";
     private static final String HOME = "https://" + HOST + "/game/index.html";
     private WebView web;
+    private FrameLayout frame;
 
     private static boolean isGame(Uri uri) {
         return "https".equals(uri.getScheme()) && HOST.equals(uri.getHost())
@@ -31,10 +39,8 @@ public final class MainActivity extends ComponentActivity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
-        web = new WebView(this);
-        web.setBackgroundColor(0xff0b0624);
-        FrameLayout frame = new FrameLayout(this);
-        frame.addView(web, new FrameLayout.LayoutParams(-1, -1));
+        frame = new FrameLayout(this);
+        frame.setBackgroundColor(0xff0b0624);
         setContentView(frame);
         // Keep native bars/cutouts outside the WebView; the CSS viewport is usable space.
         frame.setOnApplyWindowInsetsListener((view, insets) -> {
@@ -48,6 +54,26 @@ public final class MainActivity extends ComponentActivity {
             return insets;
         });
         frame.requestApplyInsets();
+        createWebView();
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() {
+                if (web == null) { finish(); return; }
+                if (!isGame(Uri.parse(web.getUrl() == null ? "" : web.getUrl()))) { finish(); return; }
+                WebView requestedWeb = web;
+                web.evaluateJavascript("(() => { const g=window.game; if(!g) return false; const ui=g.ui;"
+                    + "if(ui.detailsOpen){ui.setDetailsOpen(false);return true;}"
+                    + "if(g.input.freezeAiming){g.input.freezeAiming=false;return true;}"
+                    + "if(g.gameState==='playing'){ui.pausePressed();return true;}"
+                    + "if(ui.screen!=='main-menu'){ui.back();return true;}return false;})()",
+                    handled -> { if (web == requestedWeb && !"true".equals(handled)) finish(); });
+            }
+        });
+    }
+
+    private void createWebView() {
+        web = new WebView(this);
+        web.setBackgroundColor(0xff0b0624);
+        frame.addView(web, new FrameLayout.LayoutParams(-1, -1));
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
@@ -59,6 +85,16 @@ public final class MainActivity extends ComponentActivity {
         WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
             .addPathHandler("/game/", new WebViewAssetLoader.AssetsPathHandler(this)).build();
         web.setWebViewClient(new WebViewClientCompat() {
+            @Override public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                // Never call into a WebView whose renderer has gone. A fresh instance
+                // is created only after the player chooses Home, preventing restart loops.
+                boolean current = view == web;
+                if (current) web = null;
+                if (view.getParent() instanceof ViewGroup) ((ViewGroup) view.getParent()).removeView(view);
+                view.destroy();
+                if (current && !isFinishing() && !isDestroyed()) showRecovery();
+                return true;
+            }
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 return loader.shouldInterceptRequest(request.getUrl());
             }
@@ -74,20 +110,35 @@ public final class MainActivity extends ComponentActivity {
         });
         // Supports the game's existing confirmation dialog; no permission grants or bridges.
         web.setWebChromeClient(new WebChromeClient());
-        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-            @Override public void handleOnBackPressed() {
-                if (!isGame(Uri.parse(web.getUrl() == null ? "" : web.getUrl()))) { finish(); return; }
-                web.evaluateJavascript("(() => { const g=window.game; if(!g) return false; const ui=g.ui;"
-                    + "if(ui.detailsOpen){ui.setDetailsOpen(false);return true;}"
-                    + "if(g.input.freezeAiming){g.input.freezeAiming=false;return true;}"
-                    + "if(g.gameState==='playing'){ui.pausePressed();return true;}"
-                    + "if(ui.screen!=='main-menu'){ui.back();return true;}return false;})()",
-                    handled -> { if (!"true".equals(handled)) finish(); });
-            }
-        });
         // A recreated process starts safely at Home; persistent records/Levels survive in DOM storage.
         // WebView.saveState only saves navigation, not the live JS simulation.
         web.loadUrl(HOME);
+    }
+
+    private void showRecovery() {
+        ScrollView recovery = new ScrollView(this);
+        recovery.setFillViewport(true);
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setGravity(Gravity.CENTER);
+        int padding = (int) (24 * getResources().getDisplayMetrics().density);
+        panel.setPadding(padding, padding, padding, padding);
+        TextView message = new TextView(this);
+        message.setText("The game display stopped. Return to Home to play again. Saved progress is kept; the current match cannot be restored.");
+        message.setTextColor(0xffffffff);
+        message.setGravity(Gravity.CENTER);
+        panel.addView(message);
+        Button retry = new Button(this);
+        retry.setText("Return to Home");
+        retry.setOnClickListener(view -> {
+            if (web == null && !isFinishing() && !isDestroyed()) {
+                frame.removeView(recovery);
+                createWebView();
+            }
+        });
+        panel.addView(retry);
+        recovery.addView(panel, new ScrollView.LayoutParams(-1, -2));
+        frame.addView(recovery, new FrameLayout.LayoutParams(-1, -1));
     }
 
     private void runInGame(String script) {
@@ -96,7 +147,7 @@ public final class MainActivity extends ComponentActivity {
     }
     @Override protected void onPause() {
         runInGame("window.game?.resetHeldInput();window.game?.pause();window.game?.audio.suspend();");
-        web.onPause();
+        if (web != null) web.onPause();
         super.onPause();
     }
     @Override protected void onResume() {
@@ -108,7 +159,7 @@ public final class MainActivity extends ComponentActivity {
         }
     }
     @Override protected void onDestroy() {
-        if (web != null) { web.stopLoading(); web.destroy(); web = null; }
+        if (web != null) { frame.removeView(web); web.stopLoading(); web.destroy(); web = null; }
         super.onDestroy();
     }
 }
