@@ -33,3 +33,39 @@ test('only navigation falls back to the current scoped shell', async () => {
         assert.equal(await response.text(), 'Unavailable offline');
     }
 });
+
+test('public precache accepts only an Origin-only variant mismatch', async () => {
+    const listeners: Record<string, Function> = {};
+    let source = readFileSync('public/sw.js', 'utf8');
+    source = source.replace(/^const SHELL = .*;$/m, "const SHELL = ['/game/assets/main.js', '/game/assets/style.css'];");
+    const entries = new Map([
+        ['/game/assets/main.js', new Response('game script', { headers: { Vary: 'Origin', 'Content-Type': 'text/javascript' } })],
+        ['/game/assets/style.css', new Response('body{}', { headers: { Vary: 'origin', 'Content-Type': 'text/css' } })],
+        ['/game/assets/private.js', new Response('private', { headers: { Vary: 'Origin' } })],
+    ]);
+    let vary = 'Origin';
+    const cache = { match: async (request: any, options?: any) => {
+        if (!options?.ignoreVary) return undefined;
+        const response = entries.get(new URL(request.url).pathname);
+        if (!response) return undefined;
+        const headers = new Headers(response.headers);
+        if (request.url.endsWith('/main.js')) headers.set('Vary', vary);
+        return new Response(await response.clone().text(), { headers });
+    } };
+    vm.runInNewContext(source, {
+        self: { registration: { scope: 'https://game.test/game/' }, addEventListener: (kind: string, fn: Function) => listeners[kind] = fn },
+        location: { origin: 'https://game.test' }, URL, Response,
+        fetch: async () => { throw new Error('offline'); }, caches: { open: async () => cache },
+    });
+    const read = (path: string) => {
+        let response: Promise<Response>;
+        listeners.fetch({ request: { url: `https://game.test${path}`, method: 'GET', mode: 'cors' },
+            respondWith: (value: Promise<Response>) => response = value, waitUntil() {} });
+        return response!;
+    };
+    assert.equal(await (await read('/game/assets/main.js')).text(), 'game script');
+    assert.equal(await (await read('/game/assets/style.css')).text(), 'body{}');
+    assert.equal((await read('/game/assets/private.js')).status, 503);
+    assert.equal((await read('/game/assets/main.js?variant=1')).status, 503);
+    for (vary of ['Cookie', 'Origin, Cookie', '*']) assert.equal((await read('/game/assets/main.js')).status, 503);
+});
