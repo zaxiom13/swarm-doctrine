@@ -35,6 +35,27 @@ versionCode; it does not silently fetch new game code from the website.
 
 ## Device verification still required
 
+### Installed renderer smoke
+
+The debug workflow additionally attempts one API 35 x86_64 Pixel 2 emulator run
+on its existing Ubuntu runner (20-minute job bound, no larger/paid runner).
+`gradle -p android connectedDebugAndroidTest` launches the packaged app after
+airplane mode and Wi-Fi/mobile data have been disabled, records API/WebView
+versions, and exercises native Back dispatch, background/foreground, an edge
+touch held through portrait/landscape rotation, real `chrome://crash` renderer
+termination, explicit retry, saved Levels Continue and Activity recreation.
+The crash URL is used only by this debug instrumentation test, never exposed in
+the app's navigation. The workflow collects test reports, native screenshots and
+filtered logs before terminating the emulator. This is one finite emulator
+configuration; successful results do not prove physical devices, API 26, audible
+output, system process death, update persistence or real Firebase/WebRTC.
+
+Run locally with the documented SDK/build tools and a booted API 35 emulator:
+`gradle -p android assembleDebugAndroidTest`, then
+`bash android/scripts/installed-smoke.sh` from the repo root. The script enables
+airplane mode and leaves it enabled on that test emulator. No signing credentials
+or production account is needed. Native CI results are pending until observed.
+
 If Android reclaims or crashes the WebView renderer, the shell removes and destroys
 that instance, then offers **Return to Home**. It creates a fresh packaged WebView
 only after that tap, avoiding automatic crash/reload loops. Stored progress stays

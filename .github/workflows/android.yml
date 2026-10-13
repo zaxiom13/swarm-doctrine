@@ -8,6 +8,7 @@ permissions:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,3 +35,26 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
       - name: Verify renderer recovery callbacks
         run: gradle -p android testDebugUnitTest
+      - name: Build installed smoke tests
+        run: gradle -p android assembleDebugAndroidTest
+      - name: Enable runner KVM
+        run: sudo chmod a+rw /dev/kvm
+      - name: Installed offline WebView smoke (API 35)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect -camera-back none
+          script: |
+            bash android/scripts/installed-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swarm-doctrine-installed-smoke-api35
+          path: |
+            android/app/build/smoke-evidence/
+            android/app/build/outputs/androidTest-results/
+            android/app/build/reports/androidTests/
+          retention-days: 30

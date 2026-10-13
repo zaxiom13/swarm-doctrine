@@ -16,7 +16,8 @@ is lost, while DOM storage is never cleared. Pause/resume/Back are safe without
 a renderer and stale asynchronous Back results cannot finish a replacement.
 
 `npm run check`, 78 web tests on the initial independent head, production build
-and `git diff --check` pass. The stacked head is revalidated below.
+and `git diff --check` pass. The stacked head passes 80 web tests; final code CI
+and artifact reconciliation is in closing #24.
 `gradle -p android testDebugUnitTest lintDebug assembleDebug` is the CI gate.
 Robolectric API 26/35 tests cover the inherited callback, crash cleanup/retry,
 background memory-kill recovery, secure replacement settings and Back/lifecycle
@@ -32,3 +33,18 @@ measured. Local SDK/Gradle/adb/emulator/KVM remain absent. A manual debug-device
 renderer kill and saved Continue round-trip are still required; instructions
 are in android/README.md. No paid service, bridge, permission grant, signing key,
 deployment or Play Store publication.
+
+## 2026-10-13 installed smoke attempt
+
+Added an AndroidX instrumentation test and a bounded API 35 x86_64 Pixel 2
+emulator step to the existing free Ubuntu job. It checks packaged launch under
+airplane mode, native Back dispatch, background/foreground, actual edge touch
+and both orientations, real renderer crash and fresh retry, saved Levels Continue
+and Activity recreation. Test reports, screenshots and API/WebView logs are
+collected while the emulator is alive, including on test failure. No new PR slot,
+paid runner, new app permission, native bridge or signing credential is used.
+
+Compilation/installed results are pending; do not treat the test's assertions as
+executed evidence. Activity recreation is not system process death, and the
+headless emulator disables audible output. API 26 and physical-device checks
+remain required. The 2026-10-13 closing journal will record the observed outcome.
