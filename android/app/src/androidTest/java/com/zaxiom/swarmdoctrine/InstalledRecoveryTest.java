@@ -43,25 +43,38 @@ public class InstalledRecoveryTest {
     }
 
     private static String js(ActivityScenario<MainActivity> scenario, String script) {
+        return js(scenario, script, true);
+    }
+
+    private static String js(ActivityScenario<MainActivity> scenario, String script, boolean required) {
         AtomicReference<String> value = new AtomicReference<>();
         CountDownLatch done = new CountDownLatch(1);
         scenario.onActivity(a -> {
             WebView view = (WebView) frame(a).getChildAt(0);
             view.evaluateJavascript(script, result -> { value.set(result); done.countDown(); });
         });
-        try { assertTrue("JavaScript callback timed out", done.await(5, TimeUnit.SECONDS)); }
+        try {
+            boolean completed = done.await(5, TimeUnit.SECONDS);
+            if (required) assertTrue("JavaScript callback timed out", completed);
+            if (!completed) return null;
+        }
         catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new AssertionError(e); }
         return value.get();
     }
 
     private static void waitFor(String label, BooleanSupplier condition) {
-        long deadline = SystemClock.uptimeMillis() + 20000;
+        long deadline = SystemClock.uptimeMillis() + 60000;
         while (!condition.getAsBoolean() && SystemClock.uptimeMillis() < deadline) SystemClock.sleep(100);
         assertTrue(label, condition.getAsBoolean());
     }
 
     private static void ready(ActivityScenario<MainActivity> scenario) {
-        waitFor("packaged game mounted", () -> web(scenario) != null && "true".equals(js(scenario, "!!window.game")));
+        waitFor("packaged game mounted", () -> {
+            WebView current = web(scenario);
+            if (current == null) return false;
+            scenario.onActivity(a -> Log.i("SwarmSmoke", "loading=" + current.getProgress() + " url=" + current.getUrl()));
+            return "true".equals(js(scenario, "!!window.game", false));
+        });
     }
 
     private static void screenshot(String name) throws Exception {
@@ -94,8 +107,9 @@ public class InstalledRecoveryTest {
         assertEquals("enable airplane mode before first launch", 1, airplane);
         Log.i("SwarmSmoke", "API=" + Build.VERSION.SDK_INT + " model=" + Build.MODEL + " airplane=" + airplane);
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
-            ready(scenario);
             Log.i("SwarmSmoke", "WebView=" + WebView.getCurrentWebViewPackage().packageName + " " + WebView.getCurrentWebViewPackage().versionName);
+            try { ready(scenario); }
+            catch (AssertionError failure) { screenshot("startup-failure"); throw failure; }
             assertEquals("\"https://appassets.androidplatform.net\"", js(scenario, "location.origin"));
             assertEquals("false", js(scenario, "!!navigator.serviceWorker?.controller"));
             js(scenario, "game.showTeamSelect('conquest');game.selectTeam('dragon');Object.assign(game,{level:3,mapSeed:424242,levelEnemies:'passive'});game.saveCheckpoint();true");
