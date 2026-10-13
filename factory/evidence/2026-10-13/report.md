@@ -55,9 +55,28 @@ mounted the game under airplane=1 on API 35 / com.google.android.webview
 124.0.6367.219, then its next callback exceeded five seconds; no later orientation
 or recovery assertion executed. [Second artifact](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38477541400/artifacts/11855640547).
 Compilation, lint, APK assembly and Robolectric callback tests passed in both.
-The final attempt at `78c151f` permits bounded bootstrap polling and a 30-second
-functional callback wait while keeping the overall 20-minute job bound.
-Its installed outcome is pending until the final CI sweep.
+Bounded bootstrap polling and a 30-second functional callback wait, within the
+20-minute job bound, passed at `78c151f` (Android run 38478243992). Its assertion
+report passed but screenshots were lost when AGP uninstalled the tested APK.
+Test-only screenshot collection now uses app-owned MediaStore images on API 29+;
+no app permission was added. Final head `24caeb6` passes web
+[38479187774](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38479187774)
+and Android [38479187864](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38479187864).
+
+[Installed evidence](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38479187864/artifacts/11856512746)
+contains XML, logs, connectivity and portrait/landscape/recovery screenshots.
+ZIP: 2,159,149 bytes, SHA-256
+`4533635bedfec45e6892089cd3e855932928a906cf8cd42e335fa9714557d283`;
+retained until 2026-11-12. XML: one test, zero failures/errors/skips, testcase
+47.381 seconds. Logs record API 35, WebView 124.0.6367.219, airplane=1, actual
+renderer crash (code 11) and PASS for all listed checks. Before launch the active
+default network was none. The saved level-3/seed-424242 checkpoint survives
+renderer retry and Activity recreation. Screenshots were downloaded and visually
+inspected: portrait 1080x1920, landscape 1920x1080, readable recovery message/button,
+HUD and recovery controls clear of the visible system bars in this configuration.
+Debug APK [11856857168](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38479187864/artifacts/11856857168)
+is available. This run still logs a tile-memory warning in software rendering;
+functional success is not a claim of smooth device frame rate.
 
 This is not a performance SLA. Activity recreation is not system process death.
 The headless emulator disables audible output. Installed API 26, physical devices,
@@ -69,7 +88,7 @@ large font/cutout matrices and real two-device networking remain outstanding.
 All six improvements merge automatically; combined check/83 tests/build pass.
 No rules/guide/model/balance change. The four unchanged PRs retain their previous
 green CI at #19 `fcb353a`, #20 `cd85a08`, #22 `bc06487`, #23 `c1efc12`.
-Fresh #26 web check/80 tests/build is green; installed status is separate above.
+Fresh #26 web check/80 tests/build and installed API 35 smoke are green above.
 
 Existing `tests/performance.test.ts` comparison with actual commit `08438a4`:
 same seeded positions/velocities, 1280x720, median of three 90-tick batches after
