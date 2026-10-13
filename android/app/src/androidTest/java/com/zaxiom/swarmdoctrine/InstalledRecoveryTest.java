@@ -3,10 +3,14 @@ package com.zaxiom.swarmdoctrine;
 import static org.junit.Assert.*;
 
 import android.content.pm.ActivityInfo;
+import android.content.ContentValues;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.SystemClock;
 import android.provider.Settings;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.webkit.WebView;
@@ -20,6 +24,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -82,6 +87,22 @@ public class InstalledRecoveryTest {
     private static void screenshot(String name) throws Exception {
         Bitmap bitmap = InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();
         assertNotNull(bitmap);
+        if (Build.VERSION.SDK_INT >= 29) {
+            // AGP uninstalls the tested APK and deletes its external-files tree.
+            // Owned MediaStore images survive that cleanup without storage permission.
+            var resolver = InstrumentationRegistry.getInstrumentation().getTargetContext().getContentResolver();
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, name + ".png");
+            values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+            values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/SwarmSmoke");
+            Uri uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            assertNotNull(uri);
+            try (OutputStream output = resolver.openOutputStream(uri)) {
+                assertNotNull(output);
+                assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output));
+            } finally { bitmap.recycle(); }
+            return;
+        }
         File directory = new File(InstrumentationRegistry.getInstrumentation().getTargetContext().getExternalFilesDir(null), "smoke");
         assertTrue(directory.exists() || directory.mkdirs());
         try (FileOutputStream output = new FileOutputStream(new File(directory, name + ".png"))) {
