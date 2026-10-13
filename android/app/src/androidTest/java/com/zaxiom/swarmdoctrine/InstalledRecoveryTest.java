@@ -54,7 +54,9 @@ public class InstalledRecoveryTest {
             view.evaluateJavascript(script, result -> { value.set(result); done.countDown(); });
         });
         try {
-            boolean completed = done.await(5, TimeUnit.SECONDS);
+            // Cold software-rendered CI can stall callbacks while Android starts
+            // its bundled services; this is a functional test, not a latency SLA.
+            boolean completed = done.await(required ? 30 : 5, TimeUnit.SECONDS);
             if (required) assertTrue("JavaScript callback timed out", completed);
             if (!completed) return null;
         }
@@ -110,6 +112,7 @@ public class InstalledRecoveryTest {
             Log.i("SwarmSmoke", "WebView=" + WebView.getCurrentWebViewPackage().packageName + " " + WebView.getCurrentWebViewPackage().versionName);
             try { ready(scenario); }
             catch (AssertionError failure) { screenshot("startup-failure"); throw failure; }
+            try {
             assertEquals("\"https://appassets.androidplatform.net\"", js(scenario, "location.origin"));
             assertEquals("false", js(scenario, "!!navigator.serviceWorker?.controller"));
             js(scenario, "game.showTeamSelect('conquest');game.selectTeam('dragon');Object.assign(game,{level:3,mapSeed:424242,levelEnemies:'passive'});game.saveCheckpoint();true");
@@ -154,6 +157,10 @@ public class InstalledRecoveryTest {
             ready(scenario);
             assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()?.seed===424242"));
             Log.i("SwarmSmoke", "PASS offline/Back/background/touch/rotation/renderer-crash/Continue/Activity-recreation");
+            } catch (AssertionError failure) {
+                screenshot("test-failure");
+                throw failure;
+            }
         }
     }
 }
