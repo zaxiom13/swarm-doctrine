@@ -68,3 +68,10 @@ the shared rules; production balance is unchanged. Script sets and records 1.3
 font scale; assertions check visible HUD bounds in both orientations. No app
 permission, native bridge, credentials or paid runner is added. Fresh native
 outcomes are pending until CI completes, recorded in the closing dated journal.
+
+First expanded attempt 38646295810 failed the Back/Freeze playing-state check.
+Its actual capture shows a normal Conquest defeat after 16 simulated seconds,
+not a paused match or proven Back defect. The longer functional fixture now uses
+Zen's intentional no-game-over behavior and a test-only rival away from HUD
+buttons for native aim. No gameplay implementation or rules were changed to make
+the assertion pass. Failure artifact 11933107110 is retained; new outcome pending.

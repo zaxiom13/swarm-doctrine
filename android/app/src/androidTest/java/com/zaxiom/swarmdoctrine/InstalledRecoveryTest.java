@@ -171,7 +171,9 @@ public class InstalledRecoveryTest {
             try {
             assertEquals("\"https://appassets.androidplatform.net\"", js(scenario, "location.origin"));
             assertEquals("false", js(scenario, "!!navigator.serviceWorker?.controller"));
-            js(scenario, "game.showTeamSelect('conquest');game.selectTeam('dragon');Object.assign(game,{level:3,mapSeed:424242,levelEnemies:'passive'});game.saveCheckpoint();true");
+            // Zen has no game-over: a slow CI callback must not let a live
+            // Conquest match end between input-policy assertions.
+            js(scenario, "game.showTeamSelect('zen');game.selectTeam('dragon');Object.assign(game,{level:3,mapSeed:424242,levelEnemies:'passive'});game.saveCheckpoint();true");
             WebView initial = web(scenario);
             scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
             waitFor("native Back pauses", () -> "\"paused\"".equals(js(scenario, "game.gameState")));
@@ -205,7 +207,9 @@ public class InstalledRecoveryTest {
             scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));
             waitFor("landscape clears Freeze aim", () -> "true".equals(js(scenario, "innerWidth>innerHeight&&!game.input.freezeAiming&&game.player.freezeCooldown===0")));
             armFreeze(scenario);
-            tapCss(scenario, "(()=>{const b=game.sim.boids.find(b=>b.team!==game.player.team&&b.team!=='neutral'),r=game.renderer,c=game.canvas.getBoundingClientRect();return [c.x+(b.pos.x*r.viewScale+r.offsetX)*c.width/game.canvas.width,c.y+(b.pos.y*r.viewScale+r.offsetY)*c.height/game.canvas.height,innerWidth,innerHeight]})()");
+            // Put a test-only rival away from HUD buttons; aim is still cast by
+            // the real native arena tap, not a direct Commander call.
+            tapCss(scenario, "(()=>{const b=game.sim.addBoid(game.sim.width*.5,game.sim.height*.6,game.teamOrder()[1]);b.vel.set(0,0);const r=game.renderer,c=game.canvas.getBoundingClientRect();return [c.x+(b.pos.x*r.viewScale+r.offsetX)*c.width/game.canvas.width,c.y+(b.pos.y*r.viewScale+r.offsetY)*c.height/game.canvas.height,innerWidth,innerHeight]})()");
             waitFor("native arena tap casts Freeze", () -> "true".equals(js(scenario, "!game.input.freezeAiming&&game.player.freezeCooldown>0&&game.player.freezeField!==null")));
             long backgroundDown = pointer(scenario, MotionEvent.ACTION_DOWN, 0);
             waitFor("Rally before background", () -> "true".equals(js(scenario, "game.player.rallying")));
