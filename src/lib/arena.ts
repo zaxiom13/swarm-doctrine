@@ -6,12 +6,14 @@ import { createRules } from './rules.ts';
 import { baseModifiers } from './catalog.ts';
 
 const DUEL_TEAMS = ['dragon', 'salamander'];
-const SPAWN_POINTS = [{ x: 0.18, y: 0.18 }, { x: 0.82, y: 0.18 }, { x: 0.18, y: 0.82 }, { x: 0.82, y: 0.82 }];
+export const FLEET_SPAWN_POINTS = [{ x: 0.18, y: 0.18 }, { x: 0.82, y: 0.18 }, { x: 0.18, y: 0.82 }, { x: 0.82, y: 0.82 }];
+export const FLEET_SPAWN_SPREAD = 0.1;
 
 /** Spawns a fleet around one of the four corner spawn points. */
 export function spawnFleet(sim, team, count, index) {
-    const point = SPAWN_POINTS[index % SPAWN_POINTS.length];
-    sim.spawnBlob(team, count, point.x * sim.width, point.y * sim.height, 0.1 * sim.width, 0.1 * sim.height);
+    const point = FLEET_SPAWN_POINTS[index % FLEET_SPAWN_POINTS.length];
+    sim.spawnBlob(team, count, point.x * sim.width, point.y * sim.height,
+        FLEET_SPAWN_SPREAD * sim.width, FLEET_SPAWN_SPREAD * sim.height);
 }
 
 /** Fills an empty simulation with the duel map, both fleets and the opening gray ships. */

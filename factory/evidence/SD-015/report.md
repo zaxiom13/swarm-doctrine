@@ -1,0 +1,23 @@
+# Guard fleet spawn clearance across aspect ratios: evidence
+
+Base: `8024139186972632f153826cd89097990402dc52`. Date: 2026-10-09.
+
+The world generator says corner spawns are reserved, but the prior test checked only that one seed's terrain centers were in bounds. The spawn points and spread were private constants, so a world or arena edit could invalidate that promise without failing tests.
+
+The fleet spawn geometry is now exported from its single runtime definition. A deterministic test checks tier-10 hazards against the entire rectangular fleet spread for 2,048 seeds at eight phone, desktop and ultrawide portrait/landscape sizes. It includes black-hole pull reach rather than only the visible radius and enforces a 12px minimum buffer.
+
+The wider audit used 100,000 seeds at ten sizes and found no existing overlap; the worst conservative margin was 17.87px at 320×720. This PR records a verified invariant rather than claiming a reproduced bug. Validation: `npm run check && npm test && npm run build` (78 tests).
+
+## 2026-10-11 strengthening
+
+The regression now constructs the runtime `TerrainField` and reads its derived
+`reach` instead of copying the black-hole pull multiplier into the test. A later
+terrain-tuning change therefore cannot leave the spawn assertion checking an old
+number. This changes test fidelity only; the audit still found no overlap bug.
+
+## 2026-10-12 main synchronization
+
+Merged main `aefd7fe` (including merged #25) into this working branch without
+conflicts. Independent `npm run check`, `npm test` (79 tests) and
+`npm run build` pass. This preserves the original PR outcome while refreshing
+its merge base and evidence; no new gameplay change was made.
