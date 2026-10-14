@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.json.JSONArray;
 
 /** Runs the packaged app and its real WebView renderer on an installed debug APK. */
 @RunWith(AndroidJUnit4.class)
@@ -125,10 +126,44 @@ public class InstalledRecoveryTest {
         return down == 0 ? now : down;
     }
 
+    /** Real Android touch injection, with CSS-to-native viewport scaling after rotation. */
+    private static void tapCss(ActivityScenario<MainActivity> scenario, String point) throws Exception {
+        JSONArray css = new JSONArray(js(scenario, point));
+        int[] position = new int[2];
+        scenario.onActivity(a -> {
+            WebView view = (WebView) frame(a).getChildAt(0);
+            view.getLocationOnScreen(position);
+            position[0] += Math.round((float) (css.optDouble(0) * view.getWidth() / css.optDouble(2)));
+            position[1] += Math.round((float) (css.optDouble(1) * view.getHeight() / css.optDouble(3)));
+        });
+        long down = SystemClock.uptimeMillis();
+        for (int action : new int[] {MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP}) {
+            MotionEvent event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, position[0], position[1], 0);
+            try { InstrumentationRegistry.getInstrumentation().sendPointerSync(event); }
+            finally { event.recycle(); }
+        }
+    }
+
+    private static void armFreeze(ActivityScenario<MainActivity> scenario) throws Exception {
+        // A ready-charge fixture avoids waiting for lockout; production rules are unchanged.
+        js(scenario, "game.sim.time=Math.max(game.sim.time,game.rules.freezeLockout+1);game.player.freezeCooldown=0;true");
+        waitFor("Freeze control visible", () -> "true".equals(js(scenario, "!document.querySelector('#slot-freeze').classList.contains('hidden')")));
+        tapCss(scenario, "(()=>{const r=document.querySelector('#slot-freeze').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()");
+        waitFor("native Freeze button arms", () -> "true".equals(js(scenario, "game.input.freezeAiming&&!game.player.rallying")));
+    }
+
+    private static void hudFits(ActivityScenario<MainActivity> scenario) {
+        assertEquals("HUD controls within usable WebView", "true", js(scenario,
+            "[...document.querySelectorAll('#game-screen button')].filter(b=>b.getClientRects().length&&!b.classList.contains('hidden')).every(b=>{const r=b.getBoundingClientRect();return r.x>=-1&&r.y>=-1&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1})"));
+    }
+
     @Test public void offlineRotationBackgroundCrashAndContinue() throws Exception {
         int airplane = Settings.Global.getInt(InstrumentationRegistry.getInstrumentation().getTargetContext().getContentResolver(), Settings.Global.AIRPLANE_MODE_ON, 0);
         assertEquals("enable airplane mode before first launch", 1, airplane);
         Log.i("SwarmSmoke", "API=" + Build.VERSION.SDK_INT + " model=" + Build.MODEL + " airplane=" + airplane);
+        Log.i("SwarmSmoke", "fontScale=" + InstrumentationRegistry.getInstrumentation().getTargetContext().getResources().getConfiguration().fontScale);
+        assertEquals("larger-font fixture enabled", 1.3f,
+            InstrumentationRegistry.getInstrumentation().getTargetContext().getResources().getConfiguration().fontScale, 0.01f);
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             Log.i("SwarmSmoke", "WebView=" + WebView.getCurrentWebViewPackage().packageName + " " + WebView.getCurrentWebViewPackage().versionName);
             try { ready(scenario); }
@@ -157,10 +192,30 @@ public class InstalledRecoveryTest {
             waitFor("rotation clears held input", () -> "true".equals(js(scenario, "!game.player.rallying&&game.input.pointerId===null")));
             pointer(scenario, MotionEvent.ACTION_UP, down);
             assertEquals("true", js(scenario, "game.sim.boids.every(b=>Number.isFinite(b.pos.x)&&Number.isFinite(b.pos.y))"));
+            hudFits(scenario);
             screenshot("landscape");
             scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
             waitFor("portrait viewport", () -> "true".equals(js(scenario, "innerHeight>innerWidth")));
+            hudFits(scenario);
             screenshot("portrait");
+            armFreeze(scenario);
+            scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
+            waitFor("Back cancels Freeze without pausing", () -> "true".equals(js(scenario, "!game.input.freezeAiming&&game.gameState==='playing'")));
+            armFreeze(scenario);
+            scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));
+            waitFor("landscape clears Freeze aim", () -> "true".equals(js(scenario, "innerWidth>innerHeight&&!game.input.freezeAiming&&game.player.freezeCooldown===0")));
+            armFreeze(scenario);
+            tapCss(scenario, "(()=>{const b=game.sim.boids.find(b=>b.team!==game.player.team&&b.team!=='neutral'),r=game.renderer,c=game.canvas.getBoundingClientRect();return [c.x+(b.pos.x*r.viewScale+r.offsetX)*c.width/game.canvas.width,c.y+(b.pos.y*r.viewScale+r.offsetY)*c.height/game.canvas.height,innerWidth,innerHeight]})()");
+            waitFor("native arena tap casts Freeze", () -> "true".equals(js(scenario, "!game.input.freezeAiming&&game.player.freezeCooldown>0&&game.player.freezeField!==null")));
+            long backgroundDown = pointer(scenario, MotionEvent.ACTION_DOWN, 0);
+            waitFor("Rally before background", () -> "true".equals(js(scenario, "game.player.rallying")));
+            scenario.moveToState(Lifecycle.State.CREATED).moveToState(Lifecycle.State.RESUMED);
+            assertEquals("true", js(scenario, "game.gameState==='paused'&&!game.player.rallying&&game.input.pointerId===null&&!game.input.freezeAiming"));
+            pointer(scenario, MotionEvent.ACTION_UP, backgroundDown);
+            scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
+            waitFor("explicit resume after held touch", () -> "true".equals(js(scenario, "game.gameState==='playing'")));
+            scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
+            waitFor("portrait before recovery", () -> "true".equals(js(scenario, "innerHeight>innerWidth")));
             // A real renderer termination, deliberately restricted to this debug test.
             scenario.onActivity(a -> ((WebView) frame(a).getChildAt(0)).loadUrl("chrome://crash"));
             waitFor("native recovery screen", () -> web(scenario) == null);
@@ -177,7 +232,7 @@ public class InstalledRecoveryTest {
             scenario.recreate();
             ready(scenario);
             assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()?.seed===424242"));
-            Log.i("SwarmSmoke", "PASS offline/Back/background/touch/rotation/renderer-crash/Continue/Activity-recreation");
+            Log.i("SwarmSmoke", "PASS offline/Back/background-held-Rally/touch/rotation/Freeze-button-aim-cast/Freeze-cancellation/HUD-bounds/font-scale/renderer-crash/Continue/Activity-recreation");
             } catch (AssertionError failure) {
                 screenshot("test-failure");
                 throw failure;

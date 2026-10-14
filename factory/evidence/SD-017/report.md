@@ -1,7 +1,8 @@
 # Android renderer recovery
 
-Base: #19 (main `aefd7fe` plus its Back policy). Date: 2026-10-12.
-PR: [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26). Merge #19 first.
+Initial base: #19 (main `aefd7fe` plus its Back policy). Date: 2026-10-12.
+PR: [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26). #19 merged on
+2026-10-14; this PR now targets main `886b3f4` with no outstanding stack dependency.
 
 The shipped shell has no `onRenderProcessGone` override. Its inherited callback
 returns false for both crash and memory-kill cases, which Android documents as
@@ -47,4 +48,23 @@ paid runner, new app permission, native bridge or signing credential is used.
 Compilation/installed results are pending; do not treat the test's assertions as
 executed evidence. Activity recreation is not system process death, and the
 headless emulator disables audible output. API 26 and physical-device checks
-remain required. The 2026-10-13 closing journal will record the observed outcome.
+remain required. The 2026-10-13 closing journal records the observed outcome.
+
+## 2026-10-14 current-main and touch coverage
+
+The installed run [38479187864](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38479187864)
+at `24caeb6` actually passed on API 35 / WebView 124.0.6367.219, airplane=1 and no
+active default network. XML reports one test, zero failures/errors/skips. Native
+portrait/landscape/recovery PNGs were downloaded and inspected.
+[Evidence](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38479187864/artifacts/11856512746).
+The initial pending statements above describe the first attempt, not the final result.
+
+After #19 merged, synchronized/retargeted to main. Extended the installed test
+using real MotionEvent injection for Freeze's button-then-arena-tap path, Back
+and rotation cancelling aim without spending the charge, and backgrounding
+cancelling held Rally before explicit Resume. CSS-to-native point conversion
+uses the current WebView dimensions after rotation. A ready-charge fixture reads
+the shared rules; production balance is unchanged. Script sets and records 1.3
+font scale; assertions check visible HUD bounds in both orientations. No app
+permission, native bridge, credentials or paid runner is added. Fresh native
+outcomes are pending until CI completes, recorded in the closing dated journal.

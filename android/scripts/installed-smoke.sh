@@ -13,5 +13,7 @@ trap collect_evidence EXIT
 adb shell cmd connectivity airplane-mode enable
 adb shell svc wifi disable
 adb shell svc data disable
+adb shell settings put system font_scale 1.3
+adb shell settings get system font_scale > android/app/build/smoke-evidence/font-scale.txt
 adb shell dumpsys connectivity > android/app/build/smoke-evidence/connectivity-before-launch.txt
 gradle -p android connectedDebugAndroidTest

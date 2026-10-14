@@ -54,7 +54,13 @@ Run locally with the documented SDK/build tools and a booted API 35 emulator:
 `gradle -p android assembleDebugAndroidTest`, then
 `bash android/scripts/installed-smoke.sh` from the repo root. The script enables
 airplane mode and leaves it enabled on that test emulator. No signing credentials
-or production account is needed. Native CI results are pending until observed.
+or production account is needed. The script sets font_scale=1.3 and leaves that
+test-emulator setting in place. The 2026-10-13 API 35 / WebView 124.0.6367.219 run
+passed (38479187864); its report and portrait/landscape/recovery screenshots were
+inspected. This run additionally checks native Freeze button/arena tap, aim
+cancellation through Back/rotation, held Rally cancellation on backgrounding and
+visible HUD bounds with the larger-font fixture. New assertions need fresh CI
+results; audible audio, system process death and updates are not covered.
 
 If Android reclaims or crashes the WebView renderer, the shell removes and destroys
 that instance, then offers **Return to Home**. It creates a fresh packaged WebView
