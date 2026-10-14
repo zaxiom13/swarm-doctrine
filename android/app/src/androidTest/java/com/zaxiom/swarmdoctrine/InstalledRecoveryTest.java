@@ -116,7 +116,25 @@ public class InstalledRecoveryTest {
         assertOffline(phase);
     }
 
-    private static void screenshot(String name) throws Exception {
+    private static void screenshot(ActivityScenario<MainActivity> scenario, String name) throws Exception {
+        // JS layout readiness can precede the Android compositor's displayed
+        // frame. Do not label a retained landscape/game frame as portrait/recovery.
+        CountDownLatch visual = new CountDownLatch(1);
+        scenario.onActivity(a -> {
+            if (frame(a).getChildAt(0) instanceof WebView) {
+                ((WebView) frame(a).getChildAt(0)).postVisualStateCallback(1, new WebView.VisualStateCallback() {
+                    @Override public void onComplete(long requestId) { visual.countDown(); }
+                });
+            } else {
+                frame(a).postOnAnimation(() -> frame(a).postOnAnimation(visual::countDown));
+            }
+        });
+        boolean rendered = visual.await(10, TimeUnit.SECONDS);
+        Log.i("SwarmSmoke", "SNAPSHOT " + name + " visualState=" + rendered);
+        if (!name.contains("failure")) assertTrue("screenshot visual state: " + name, rendered);
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        // Permit the ready frame to be presented; this is not a latency SLA.
+        SystemClock.sleep(250);
         Bitmap bitmap = InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();
         assertNotNull(bitmap);
         if (Build.VERSION.SDK_INT >= 29) {
@@ -217,7 +235,7 @@ public class InstalledRecoveryTest {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             Log.i("SwarmSmoke", "WebView=" + WebView.getCurrentWebViewPackage().packageName + " " + WebView.getCurrentWebViewPackage().versionName);
             try { ready(scenario); }
-            catch (AssertionError failure) { screenshot("startup-failure"); throw failure; }
+            catch (AssertionError failure) { screenshot(scenario, "startup-failure"); throw failure; }
             try {
             assertOffline("first game mounted");
             assertEquals("\"https://appassets.androidplatform.net\"", js(scenario, "location.origin"));
@@ -246,11 +264,11 @@ public class InstalledRecoveryTest {
             pointer(scenario, MotionEvent.ACTION_UP, down);
             assertEquals("true", js(scenario, "game.sim.boids.every(b=>Number.isFinite(b.pos.x)&&Number.isFinite(b.pos.y))"));
             hudFits(scenario);
-            screenshot("landscape");
+            screenshot(scenario, "landscape");
             scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
             waitFor("portrait viewport", () -> "true".equals(js(scenario, "innerHeight>innerWidth")));
             hudFits(scenario);
-            screenshot("portrait");
+            screenshot(scenario, "portrait");
             armFreeze(scenario);
             scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
             waitFor("Back cancels Freeze without pausing", () -> "true".equals(js(scenario, "!game.input.freezeAiming&&game.gameState==='playing'")));
@@ -274,7 +292,7 @@ public class InstalledRecoveryTest {
             // A real renderer termination, deliberately restricted to this debug test.
             scenario.onActivity(a -> ((WebView) frame(a).getChildAt(0)).loadUrl("chrome://crash"));
             waitFor("native recovery screen", () -> web(scenario) == null);
-            screenshot("renderer-recovery");
+            screenshot(scenario, "renderer-recovery");
             scenario.moveToState(Lifecycle.State.CREATED).moveToState(Lifecycle.State.RESUMED);
             disableNetwork("before renderer retry");
             scenario.onActivity(a -> {
@@ -291,7 +309,7 @@ public class InstalledRecoveryTest {
             assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()?.seed===424242"));
             Log.i("SwarmSmoke", "PASS offline/Back/background-held-Rally/touch/rotation/Freeze-button-aim-cast/Freeze-cancellation/HUD-bounds/font-scale/renderer-crash/Continue/Activity-recreation");
             } catch (AssertionError | RuntimeException failure) {
-                screenshot("test-failure");
+                screenshot(scenario, "test-failure");
                 throw failure;
             }
         }

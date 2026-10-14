@@ -93,3 +93,11 @@ before sending touches. Instrumentation's UID restriction remains intact; no
 broader/system-window injection or permission escalation. Runtime failures also
 capture diagnostics before rethrowing. Retained artifact 11933248808; next result
 must be observed rather than claiming the incomplete run passed.
+
+Run 38649076923 at 9be3f8f passes all assertions, including no default network
+before/after first mount and renderer retry, API 35 / WebView 124.0.6367.219,
+fontScale=1.3; one test/zero failures. Artifact 11934690853 logs this directly.
+Its downloaded portrait/recovery PNGs retain an earlier compositor frame despite
+logical layout/recovery readiness, so they are not accepted as finished visual
+proof. Capture now waits for WebView visual state or two native frames, then
+idle/presentation, within a bounded wait. Fresh stable-image outcome pending.
