@@ -77,11 +77,7 @@ public final class MainActivity extends ComponentActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override public void handleOnBackPressed() {
                 if (!isGame(Uri.parse(web.getUrl() == null ? "" : web.getUrl()))) { finish(); return; }
-                web.evaluateJavascript("(() => { const g=window.game; if(!g) return false; const ui=g.ui;"
-                    + "if(ui.detailsOpen){ui.setDetailsOpen(false);return true;}"
-                    + "if(g.input.freezeAiming){g.input.freezeAiming=false;return true;}"
-                    + "if(g.gameState==='playing'){ui.pausePressed();return true;}"
-                    + "if(ui.screen!=='main-menu'){ui.back();return true;}return false;})()",
+                web.evaluateJavascript("window.game?.ui.handleBack()??false",
                     handled -> { if (!"true".equals(handled)) finish(); });
             }
         });
