@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.provider.MediaStore;
@@ -25,6 +26,9 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -83,6 +87,33 @@ public class InstalledRecoveryTest {
             scenario.onActivity(a -> Log.i("SwarmSmoke", "loading=" + current.getProgress() + " url=" + current.getUrl()));
             return "true".equals(js(scenario, "!!window.game", false));
         });
+    }
+
+    private static String shell(String command) {
+        try (InputStream input = new ParcelFileDescriptor.AutoCloseInputStream(
+                InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(command));
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[4096];
+            int count;
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            return output.toString(StandardCharsets.UTF_8.name());
+        } catch (Exception failure) { throw new AssertionError("test shell command failed", failure); }
+    }
+
+    private static void assertOffline(String phase) {
+        assertTrue("no active default network at " + phase,
+            shell("dumpsys connectivity").contains("Active default network: none"));
+        Log.i("SwarmSmoke", "OFFLINE no active default network: " + phase);
+    }
+
+    private static void disableNetwork(String phase) {
+        // Airplane mode permits Wi-Fi. AGP/provider initialization can also
+        // change connectivity after the script's earlier snapshot. Check at
+        // the actual launch point with shell authority, not app permissions.
+        shell("svc wifi disable");
+        shell("svc data disable");
+        waitFor("offline launch fixture", () -> shell("dumpsys connectivity").contains("Active default network: none"));
+        assertOffline(phase);
     }
 
     private static void screenshot(String name) throws Exception {
@@ -164,11 +195,13 @@ public class InstalledRecoveryTest {
         Log.i("SwarmSmoke", "fontScale=" + InstrumentationRegistry.getInstrumentation().getTargetContext().getResources().getConfiguration().fontScale);
         assertEquals("larger-font fixture enabled", 1.3f,
             InstrumentationRegistry.getInstrumentation().getTargetContext().getResources().getConfiguration().fontScale, 0.01f);
+        disableNetwork("before first launch");
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             Log.i("SwarmSmoke", "WebView=" + WebView.getCurrentWebViewPackage().packageName + " " + WebView.getCurrentWebViewPackage().versionName);
             try { ready(scenario); }
             catch (AssertionError failure) { screenshot("startup-failure"); throw failure; }
             try {
+            assertOffline("first game mounted");
             assertEquals("\"https://appassets.androidplatform.net\"", js(scenario, "location.origin"));
             assertEquals("false", js(scenario, "!!navigator.serviceWorker?.controller"));
             // Zen has no game-over: a slow CI callback must not let a live
@@ -225,11 +258,13 @@ public class InstalledRecoveryTest {
             waitFor("native recovery screen", () -> web(scenario) == null);
             screenshot("renderer-recovery");
             scenario.moveToState(Lifecycle.State.CREATED).moveToState(Lifecycle.State.RESUMED);
+            disableNetwork("before renderer retry");
             scenario.onActivity(a -> {
                 ScrollView recovery = (ScrollView) frame(a).getChildAt(0);
                 ((Button) ((LinearLayout) recovery.getChildAt(0)).getChildAt(1)).performClick();
             });
             ready(scenario);
+            assertOffline("renderer retry mounted");
             assertNotSame(initial, web(scenario));
             assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()?.seed===424242&&game.ui.continueLabel!==null"));
             assertEquals("true", js(scenario, "game.resumeExpedition()&&game.level===3&&game.mapSeed===424242&&game.levelEnemies==='passive'"));

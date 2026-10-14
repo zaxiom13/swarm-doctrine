@@ -75,3 +75,12 @@ not a paused match or proven Back defect. The longer functional fixture now uses
 Zen's intentional no-game-over behavior and a test-only rival away from HUD
 buttons for native aim. No gameplay implementation or rules were changed to make
 the assertion pass. Failure artifact 11933107110 is retained; new outcome pending.
+
+Second run 38647284443 passed the expanded installed assertions (API 35,
+WebView 124.0.6367.219, fontScale=1.3; XML one test/zero failures). Downloaded
+PNG shows Wi-Fi enabled despite airplane mode; the early pre-Gradle connectivity
+dump cannot prove connectivity at actual launch. Thus this run proves the touch,
+lifecycle, recovery and font fixture, not strict no-network startup. Added
+test-only shell checks that disable Wi-Fi/data and assert no active default
+network before/after first mount and renderer retry. No app permission added.
+Fresh strict-offline result must be observed, not inferred from airplane=1.
