@@ -84,3 +84,12 @@ lifecycle, recovery and font fixture, not strict no-network startup. Added
 test-only shell checks that disable Wi-Fi/data and assert no active default
 network before/after first mount and renderer retry. No app permission added.
 Fresh strict-offline result must be observed, not inferred from airplane=1.
+
+Strict run 38648282353 logged no default network before first launch and after
+game mount, then Android rejected the first native edge touch after background/
+resume because it did not target the app-owned window. Added a bounded readiness
+wait for the existing Activity/WebView to own focus and have laid-out dimensions
+before sending touches. Instrumentation's UID restriction remains intact; no
+broader/system-window injection or permission escalation. Runtime failures also
+capture diagnostics before rethrowing. Retained artifact 11933248808; next result
+must be observed rather than claiming the incomplete run passed.

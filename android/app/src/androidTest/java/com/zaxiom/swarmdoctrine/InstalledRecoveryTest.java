@@ -143,6 +143,7 @@ public class InstalledRecoveryTest {
     }
 
     private static long pointer(ActivityScenario<MainActivity> scenario, int action, long down) {
+        touchWindowReady(scenario);
         int[] position = new int[2];
         scenario.onActivity(a -> {
             WebView view = (WebView) frame(a).getChildAt(0);
@@ -159,6 +160,7 @@ public class InstalledRecoveryTest {
 
     /** Real Android touch injection, with CSS-to-native viewport scaling after rotation. */
     private static void tapCss(ActivityScenario<MainActivity> scenario, String point) throws Exception {
+        touchWindowReady(scenario);
         JSONArray css = new JSONArray(js(scenario, point));
         int[] position = new int[2];
         scenario.onActivity(a -> {
@@ -186,6 +188,22 @@ public class InstalledRecoveryTest {
     private static void hudFits(ActivityScenario<MainActivity> scenario) {
         assertEquals("HUD controls within usable WebView", "true", js(scenario,
             "[...document.querySelectorAll('#game-screen button')].filter(b=>b.getClientRects().length&&!b.classList.contains('hidden')).every(b=>{const r=b.getBoundingClientRect();return r.x>=-1&&r.y>=-1&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1})"));
+    }
+
+    private static void touchWindowReady(ActivityScenario<MainActivity> scenario) {
+        // RESUMED/JavaScript readiness need not mean the Android window has
+        // focus yet. Keep Instrumentation's app-UID restriction; never route
+        // a touch into another window while background/resume settles.
+        waitFor("foreground app window owns native touch", () -> {
+            AtomicReference<Boolean> focused = new AtomicReference<>(false);
+            scenario.onActivity(a -> {
+                if (!(frame(a).getChildAt(0) instanceof WebView)) return;
+                WebView view = (WebView) frame(a).getChildAt(0);
+                focused.set(a.hasWindowFocus() && view.hasWindowFocus() && view.isShown()
+                    && view.getWidth() > 0 && view.getHeight() > 0);
+            });
+            return focused.get();
+        });
     }
 
     @Test public void offlineRotationBackgroundCrashAndContinue() throws Exception {
@@ -272,7 +290,7 @@ public class InstalledRecoveryTest {
             ready(scenario);
             assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()?.seed===424242"));
             Log.i("SwarmSmoke", "PASS offline/Back/background-held-Rally/touch/rotation/Freeze-button-aim-cast/Freeze-cancellation/HUD-bounds/font-scale/renderer-crash/Continue/Activity-recreation");
-            } catch (AssertionError failure) {
+            } catch (AssertionError | RuntimeException failure) {
                 screenshot("test-failure");
                 throw failure;
             }
