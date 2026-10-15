@@ -5,15 +5,20 @@ import static org.junit.Assert.*;
 import android.content.pm.ActivityInfo;
 import android.content.ContentValues;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.PixelCopy;
+import android.view.ViewTreeObserver;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -32,6 +37,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -137,6 +144,69 @@ public class InstalledRecoveryTest {
         SystemClock.sleep(250);
         Bitmap bitmap = InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();
         assertNotNull(bitmap);
+        saveBitmap(bitmap, name);
+    }
+
+    /** Preserve raw app-window and full-display captures separately. A submitted
+     * window frame is not itself proof that the display compositor presented it. */
+    static void committedWindowScreenshot(ActivityScenario<MainActivity> scenario, String name) throws Exception {
+        touchWindowReady(scenario);
+        CountDownLatch committed = new CountDownLatch(1);
+        scenario.onActivity(a -> {
+            WebView view = (WebView) frame(a).getChildAt(0);
+            view.postVisualStateCallback(2, new WebView.VisualStateCallback() {
+                @Override public void onComplete(long requestId) {
+                    if (Build.VERSION.SDK_INT >= 29 && view.isHardwareAccelerated()) {
+                        view.getViewTreeObserver().registerFrameCommitCallback(committed::countDown);
+                    } else {
+                        // API 26-28 have no frame-commit callback. Record the
+                        // weaker next-draw path rather than imply equivalence.
+                        AtomicBoolean once = new AtomicBoolean();
+                        ViewTreeObserver.OnDrawListener listener = new ViewTreeObserver.OnDrawListener() {
+                            @Override public void onDraw() {
+                                if (!once.compareAndSet(false, true)) return;
+                                view.post(() -> {
+                                    if (view.getViewTreeObserver().isAlive())
+                                        view.getViewTreeObserver().removeOnDrawListener(this);
+                                    committed.countDown();
+                                });
+                            }
+                        };
+                        view.getViewTreeObserver().addOnDrawListener(listener);
+                    }
+                    Log.i("SwarmSmoke", "PRESENT " + name + " hardware=" + view.isHardwareAccelerated()
+                        + " frameCommit=" + (Build.VERSION.SDK_INT >= 29 && view.isHardwareAccelerated()));
+                    view.invalidate();
+                }
+            });
+        });
+        assertTrue("next native frame after WebView visual callback: " + name,
+            committed.await(15, TimeUnit.SECONDS));
+        CountDownLatch copied = new CountDownLatch(1);
+        AtomicInteger result = new AtomicInteger(-1);
+        AtomicReference<Bitmap> capture = new AtomicReference<>();
+        scenario.onActivity(a -> {
+            WebView view = (WebView) frame(a).getChildAt(0);
+            int[] xy = new int[2];
+            view.getLocationInWindow(xy);
+            Rect bounds = new Rect(xy[0], xy[1], xy[0] + view.getWidth(), xy[1] + view.getHeight());
+            Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+            capture.set(bitmap);
+            Log.i("SwarmSmoke", "PRESENT " + name + " windowBounds=" + bounds
+                + " focused=" + a.hasWindowFocus() + " attached=" + view.isAttachedToWindow());
+            PixelCopy.request(a.getWindow(), bounds, bitmap, code -> {
+                result.set(code); copied.countDown();
+            }, new Handler(Looper.getMainLooper()));
+        });
+        assertTrue("PixelCopy callback: " + name, copied.await(10, TimeUnit.SECONDS));
+        assertEquals("PixelCopy app-window result: " + name, PixelCopy.SUCCESS, result.get());
+        saveBitmap(capture.get(), name + "-app-window");
+        // Keep the original native display evidence, including system bars.
+        // Do not replace it with an offscreen draw or retry until it looks right.
+        screenshot(scenario, name);
+    }
+
+    private static void saveBitmap(Bitmap bitmap, String name) throws Exception {
         if (Build.VERSION.SDK_INT >= 29) {
             // AGP uninstalls the tested APK and deletes its external-files tree.
             // Owned MediaStore images survive that cleanup without storage permission.

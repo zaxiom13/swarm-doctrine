@@ -126,3 +126,28 @@ not earn a score or complete sectors. New installed results require fresh CI;
 current-main check/80 tests/build and shell syntax pass locally. No production
 runtime/rules, native permissions or bridge changed. The closing dated report
 will record actual CI/artifacts and limitations.
+
+## 2026-10-16: Settings presentation diagnostics
+
+The prior 6971d4a process stages passed in run 38822187818, but image inspection
+rejected blank portrait/retained portrait-width landscape Settings captures.
+This follow-up does not assume a shipped layout defect. Hidden Settings inputs
+remain in the DOM; saved control values do not prove that their Screen is visible.
+The test now requires visible current-size Settings/heading bounds, loaded fonts,
+settled page animations and native app-window focus. It records CSS/native geometry,
+waits for a frame submitted after WebView visual readiness, and preserves a raw
+PixelCopy of the app-window bounds beside the existing full-display screenshot.
+No offscreen redraw, production style override, favorable-frame retry or new
+permission is used. API 26-28's next-draw fallback is weaker, not claimed equivalent.
+
+Contracts: Android's postVisualStateCallback describes readiness for the next
+draw, not current display presentation. registerFrameCommitCallback describes a
+submitted hardware frame, also not necessarily yet visible; PixelCopy reads the
+window surface's queued buffer. See official links in android/README.md. These
+sources motivate diagnostics, not proof of the captured outcome. New installed
+results/paired image review must be observed in the dated #24 journal.
+
+Local current-main check/80 tests/build pass. No runtime/rules/security-policy
+change; existing renderer/lifecycle/process tests remain. One fresh native attempt
+is budgeted for this investigation rather than repeatedly changing the app to
+obtain favorable evidence.

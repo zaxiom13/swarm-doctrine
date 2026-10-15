@@ -17,6 +17,21 @@ import org.junit.runner.RunWith;
  * ordinary app process between them without clearing data or reinstalling. */
 @RunWith(AndroidJUnit4.class)
 public class ProcessPersistenceTest {
+    private static void settingsPresented(ActivityScenario<MainActivity> scenario, String name) throws Exception {
+        // Controls exist while their Screen is hidden. Their saved values alone
+        // do not establish that Svelte made the Settings screen visible.
+        waitFor("visible, settled Settings viewport", () -> "true".equals(js(scenario,
+            "(()=>{const s=document.querySelector('#settings-screen'),h=document.querySelector('#settings-title');"
+            + "const r=s.getBoundingClientRect(),t=h.getBoundingClientRect();return game.ui.screen==='settings-screen'"
+            + "&&!s.classList.contains('hidden')&&getComputedStyle(s).display!=='none'"
+            + "&&Math.abs(r.width-innerWidth)<1&&Math.abs(r.height-innerHeight)<1"
+            + "&&t.width>0&&t.x>=0&&t.right<=innerWidth&&t.y>=0&&t.bottom<=innerHeight"
+            + "&&document.fonts.status==='loaded'&&!s.getAnimations({subtree:true}).some(a=>a.playState==='running')})()")));
+        Log.i("SwarmSmoke", "PRESENT " + name + " css=" + js(scenario,
+            "JSON.stringify({viewport:[innerWidth,innerHeight,devicePixelRatio],screen:document.querySelector('#settings-screen').getBoundingClientRect().toJSON(),heading:document.querySelector('#settings-title').getBoundingClientRect().toJSON(),focus:document.hasFocus()})"));
+        committedWindowScreenshot(scenario, name);
+    }
+
     @Test public void saveBeforeProcessStop() {
         disableNetwork("before persistence save");
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
@@ -64,10 +79,10 @@ public class ProcessPersistenceTest {
                 + "&&document.querySelector('#setting-boidCount').value==='180'")));
             scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
             waitFor("portrait settings", () -> "true".equals(js(scenario, "innerHeight>innerWidth")));
-            screenshot(scenario, "persisted-settings-portrait");
+            settingsPresented(scenario, "persisted-settings-portrait");
             scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));
             waitFor("landscape settings", () -> "true".equals(js(scenario, "innerWidth>innerHeight")));
-            screenshot(scenario, "persisted-settings-landscape");
+            settingsPresented(scenario, "persisted-settings-landscape");
             assertEquals("Continue preserves checkpoint fields after rotation", "true", js(scenario,
                 "game.resumeExpedition()&&game.gameMode==='levels'&&game.level===4"
                 + "&&game.mapSeed===767676&&game.levelEnemies==='passive'&&game.playerTeam==='dragon'"));

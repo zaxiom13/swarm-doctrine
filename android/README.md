@@ -61,7 +61,7 @@ test-emulator setting in place. The 2026-10-13 API 35 / WebView 124.0.6367.219 r
 passed (38479187864); its report and portrait/landscape/recovery screenshots were
 inspected. This run additionally checks native Freeze button/arena tap, aim
 cancellation through Back/rotation, held Rally cancellation on backgrounding and
-visible HUD bounds with the larger-font fixture. New assertions need fresh CI
+visible HUD bounds with the larger-font fixture. Fresh CI
 results are recorded in the dated factory journal; audible audio and updates are
 not covered.
 
@@ -85,6 +85,20 @@ tests ordinary save/background followed by whole-process force-stop/relaunch,
 not a low-memory kill during an unfinished write, task restoration, a reboot,
 an APK update or transfer between website/APK storage. New assertions require
 an observed CI pass; adding the test alone is not installed-app proof.
+
+The 2026-10-15 process test passed, but its new Settings display captures were
+blank/retained frames and are not accepted as layout proof. The follow-up waits
+for an actually visible Settings screen, loaded fonts, finished page animations,
+current viewport/heading bounds and an app-owned focused window. After WebView's
+visual callback, it waits for a submitted native frame (API 29+ hardware rendering)
+and saves a PixelCopy of the app-window WebView bounds alongside the full native
+display capture. API 26-28 use a weaker next-draw fallback, not equivalent proof.
+Both are actual captured buffers, not offscreen re-renderings or favorable-frame
+retries. Geometry/focus/frame diagnostics distinguish window content from display
+presentation; only inspected fresh results establish what was actually captured.
+Official contracts: https://developer.android.com/reference/android/webkit/WebView#postVisualStateCallback(long,%20android.webkit.WebView.VisualStateCallback),
+https://developer.android.com/reference/android/view/ViewTreeObserver#registerFrameCommitCallback(java.lang.Runnable),
+https://developer.android.com/reference/android/view/PixelCopy.
 
 If Android reclaims or crashes the WebView renderer, the shell removes and destroys
 that instance, then offers **Return to Home**. It creates a fresh packaged WebView
