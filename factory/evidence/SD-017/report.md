@@ -101,3 +101,28 @@ Its downloaded portrait/recovery PNGs retain an earlier compositor frame despite
 logical layout/recovery readiness, so they are not accepted as finished visual
 proof. Capture now waits for WebView visual state or two native frames, then
 idle/presentation, within a bounded wait. Fresh stable-image outcome pending.
+
+## 2026-10-15: whole-process persistence
+
+The stable `81e877d` run 38650144487 subsequently passed all expanded assertions
+and its three intended-phase PNGs were downloaded/inspected (dated 2026-10-14
+report in #24). The previous pending text above is chronological, not the final
+status.
+
+New staged tests save a deterministic checkpoint, settings and best-record
+fixture through the game's normal functions, background normally, then finish
+the first instrumentation invocation. The script launches the ordinary app,
+requires a live package PID, force-stops it externally, and requires no PID to
+remain. A second instrumentation process launches with no intervening reinstall
+or data clear. It checks offline Home (no live match restoration), all checkpoint
+fields, record, loaded runtime audio preferences and rendered saved settings,
+Settings in portrait/landscape, and Continue. Stage runner output must explicitly
+report one test passed; a zero shell status alone is not accepted. Each stage is
+bounded to three minutes within the existing free job's twenty-minute limit.
+
+This is normal-save/background plus process stop/relaunch, not low-memory death
+during an unfinished write, reboot/task restoration or APK update. Fixtures do
+not earn a score or complete sectors. New installed results require fresh CI;
+current-main check/80 tests/build and shell syntax pass locally. No production
+runtime/rules, native permissions or bridge changed. The closing dated report
+will record actual CI/artifacts and limitations.

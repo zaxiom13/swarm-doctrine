@@ -52,7 +52,7 @@ public class InstalledRecoveryTest {
         return value.get();
     }
 
-    private static String js(ActivityScenario<MainActivity> scenario, String script) {
+    static String js(ActivityScenario<MainActivity> scenario, String script) {
         return js(scenario, script, true);
     }
 
@@ -74,13 +74,13 @@ public class InstalledRecoveryTest {
         return value.get();
     }
 
-    private static void waitFor(String label, BooleanSupplier condition) {
+    static void waitFor(String label, BooleanSupplier condition) {
         long deadline = SystemClock.uptimeMillis() + 60000;
         while (!condition.getAsBoolean() && SystemClock.uptimeMillis() < deadline) SystemClock.sleep(100);
         assertTrue(label, condition.getAsBoolean());
     }
 
-    private static void ready(ActivityScenario<MainActivity> scenario) {
+    static void ready(ActivityScenario<MainActivity> scenario) {
         waitFor("packaged game mounted", () -> {
             WebView current = web(scenario);
             if (current == null) return false;
@@ -100,13 +100,13 @@ public class InstalledRecoveryTest {
         } catch (Exception failure) { throw new AssertionError("test shell command failed", failure); }
     }
 
-    private static void assertOffline(String phase) {
+    static void assertOffline(String phase) {
         assertTrue("no active default network at " + phase,
             shell("dumpsys connectivity").contains("Active default network: none"));
         Log.i("SwarmSmoke", "OFFLINE no active default network: " + phase);
     }
 
-    private static void disableNetwork(String phase) {
+    static void disableNetwork(String phase) {
         // Airplane mode permits Wi-Fi. AGP/provider initialization can also
         // change connectivity after the script's earlier snapshot. Check at
         // the actual launch point with shell authority, not app permissions.
@@ -116,7 +116,7 @@ public class InstalledRecoveryTest {
         assertOffline(phase);
     }
 
-    private static void screenshot(ActivityScenario<MainActivity> scenario, String name) throws Exception {
+    static void screenshot(ActivityScenario<MainActivity> scenario, String name) throws Exception {
         // JS layout readiness can precede the Android compositor's displayed
         // frame. Do not label a retained landscape/game frame as portrait/recovery.
         CountDownLatch visual = new CountDownLatch(1);
