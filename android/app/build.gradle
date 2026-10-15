@@ -1,5 +1,7 @@
 import groovy.json.JsonSlurper
 import java.util.zip.ZipFile
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 plugins { id 'com.android.application' }
 android {
@@ -39,16 +41,12 @@ tasks.named('preBuild').configure { dependsOn 'buildWebAssets' }
 
 // Fail CI if the installable archive loses an offline-critical file or an
 // index/manifest reference points at an asset that was not packaged.
-tasks.register('verifyDebugApk') {
-    dependsOn 'assembleDebug'
-    doLast {
-        def apk = layout.buildDirectory.file('outputs/apk/debug/app-debug.apk').get().asFile
+def verifyWebAssets = { File apk, File generated ->
         if (!apk.isFile()) throw new GradleException("Debug APK was not produced: ${apk}")
         new ZipFile(apk).withCloseable { zip ->
             def entry = { path -> zip.getEntry("assets/${path}") }
             // Index references alone miss lazy imports, workers, guides and model files.
             // Compare the entire generated tree with the installable archive, byte for byte.
-            def generated = layout.buildDirectory.dir('generated/webAssets').get().asFile
             def generatedPaths = fileTree(generated).files.collect { file ->
                 def path = generated.toPath().relativize(file.toPath()).toString().replace('\\', '/')
                 if (!entry(path)) throw new GradleException("Debug APK is missing generated assets/${path}")
@@ -83,5 +81,70 @@ tasks.register('verifyDebugApk') {
                 if (!entry(path)) throw new GradleException("manifest references missing assets/${path}")
             }
         }
+}
+
+// Exercise the same verifier used on the real APK, not a duplicate implementation.
+// Tiny synthetic ZIPs deliberately omit/mutate lazy assets and references.
+tasks.register('verifyAssetVerifier') {
+    doLast {
+        def directory = layout.buildDirectory.dir("asset-verifier-fixtures/${UUID.randomUUID()}").get().asFile
+        directory.mkdirs()
+        def fixture = [
+            'index.html': '<script src="/game/assets/main.js"></script><link href="/game/assets/main.css">',
+            'manifest.webmanifest': '{"icons":[{"src":"/game/icons/icon.svg"}]}',
+            'models/offline-policy.json': '{}',
+            'icons/icon.svg': '<svg/>', 'icons/icon-192.png': 'png192', 'icons/icon-512.png': 'png512',
+            'assets/main.js': 'import("./lazy.js")', 'assets/main.css': 'body{}',
+            'assets/lazy.js': 'export default 1', 'assets/search-worker.js': 'postMessage(1)',
+        ]
+        def checkFixture = { String name, Map generatedFiles, Map packagedFiles, String failureMessage ->
+            def generated = new File(directory, "${name}/generated")
+            generatedFiles.each { path, content ->
+                def file = new File(generated, path)
+                file.parentFile.mkdirs()
+                file.setText(content, 'UTF-8')
+            }
+            def apk = new File(directory, "${name}.apk")
+            apk.withOutputStream { output ->
+                new ZipOutputStream(output).withCloseable { zip ->
+                    packagedFiles.each { path, content ->
+                        zip.putNextEntry(new ZipEntry("assets/${path}"))
+                        zip.write(content.getBytes('UTF-8'))
+                        zip.closeEntry()
+                    }
+                }
+            }
+            String observed = null
+            try { verifyWebAssets(apk, generated) }
+            catch (GradleException failure) { observed = failure.message }
+            if (failureMessage == null ? observed != null : !(observed?.contains(failureMessage)))
+                throw new GradleException("Verifier fixture ${name}: expected ${failureMessage ?: 'success'}, got ${observed ?: 'success'}")
+            logger.lifecycle("PASS asset verifier ${name}: ${observed ?: 'exact match accepted'}")
+        }
+        checkFixture('exact', fixture, fixture, null)
+        checkFixture('missing-lazy', fixture, fixture.findAll { k, v -> k != 'assets/lazy.js' },
+            'missing generated assets/assets/lazy.js')
+        checkFixture('missing-worker', fixture, fixture.findAll { k, v -> k != 'assets/search-worker.js' },
+            'missing generated assets/assets/search-worker.js')
+        checkFixture('altered-model', fixture, fixture + ['models/offline-policy.json': '{"stale":true}'],
+            'stale or altered assets/models/offline-policy.json')
+        checkFixture('obsolete-chunk', fixture, fixture + ['assets/obsolete.js': 'old'],
+            'stale generated assets: assets/obsolete.js')
+        def noPolicy = fixture.findAll { k, v -> k != 'models/offline-policy.json' }
+        checkFixture('missing-required', noPolicy, noPolicy, 'missing assets/models/offline-policy.json')
+        def badIndex = fixture + ['index.html': '<script src="/game/assets/absent.js"></script><link href="/game/assets/main.css">']
+        checkFixture('broken-index', badIndex, badIndex, 'index.html references missing assets/assets/absent.js')
+        def badManifest = fixture + ['manifest.webmanifest': '{"icons":[{"src":"/game/icons/absent.png"}]}']
+        checkFixture('broken-manifest', badManifest, badManifest, 'manifest references missing assets/icons/absent.png')
+        def noCss = fixture + ['index.html': '<script src="/game/assets/main.js"></script>']
+        checkFixture('no-css-reference', noCss, noCss, 'must reference packaged JavaScript and CSS')
+    }
+}
+
+tasks.register('verifyDebugApk') {
+    dependsOn 'assembleDebug', 'verifyAssetVerifier'
+    doLast {
+        verifyWebAssets(layout.buildDirectory.file('outputs/apk/debug/app-debug.apk').get().asFile,
+            layout.buildDirectory.dir('generated/webAssets').get().asFile)
     }
 }

@@ -46,3 +46,18 @@ Merged main `aefd7fe` (including merged #25) into this working branch without
 conflicts. Independent `npm run check`, `npm test` (78 tests) and
 `npm run build` pass. This preserves the original PR outcome while refreshing
 its merge base and evidence; no new gameplay change was made.
+
+## 2026-10-15 verifier regression fixtures
+
+The real archive verifier is factored into one closure, called by both
+`verifyDebugApk` and `verifyAssetVerifier`. Nine tiny synthetic ZIPs require an
+exact match to pass and eight deliberate corruptions to fail with the expected
+diagnostic: missing lazy chunk/worker, altered policy, obsolete chunk, missing
+required policy, broken index/manifest paths and no CSS reference. Synthetic
+icons/model contents are deliberately minimal; they test packaging checks, not
+image/model decoding. `verifyDebugApk` depends on the fixture task, so CI cannot
+skip the negative regressions. No installed failure was inferred or game code
+changed. Reproduce: `gradle -p android lintDebug verifyDebugApk`.
+
+Node 24.19/current-main check/80 tests/build pass. Local SDK/Gradle are absent;
+the dated closing journal records the observed CI result, not assumed success.
