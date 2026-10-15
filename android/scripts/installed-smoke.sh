@@ -31,8 +31,9 @@ run_persistence_stage() {
         com.zaxiom.swarmdoctrine.test/androidx.test.runner.AndroidJUnitRunner | tee "$output"
     # am instrument can return a zero shell exit status on assertion failure.
     # Require the runner's one-test success and reject reported failure/crash.
-    rg -q '^OK \(1 test\)' "$output"
-    if rg -q 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=|Process crashed' "$output"; then return 1; fi
+    # The GitHub runner does not guarantee ripgrep; use its standard grep.
+    grep -Eq '^OK \(1 test\)' "$output"
+    if grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=|Process crashed' "$output"; then return 1; fi
 }
 run_persistence_stage saveBeforeProcessStop
 
