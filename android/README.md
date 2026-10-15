@@ -9,8 +9,17 @@ https://developer.android.com/develop/ui/views/layout/webapps/load-local-content
 ## Build a debug APK
 
 Use JDK 17, Gradle 8.9, Android SDK platform 35/build tools 35.0.0, Node >=22.18.
-Run `npm ci` in the repository root, then `gradle -p android assembleDebug`.
+Run `npm ci` in the repository root, then `gradle -p android verifyDebugApk`.
 The preBuild task regenerates web assets at base `/game/` and packages them.
+`verifyDebugApk` also requires the packaged asset set to exactly match the
+generated tree and compares every generated file with its packaged bytes,
+including lazy chunks, the search worker, field guides and offline policies.
+The verification task also opens the APK and checks its offline-critical files,
+generated JavaScript/CSS and local index/manifest references.
+It first runs `verifyAssetVerifier`: nine small ZIP fixtures use the same verifier
+to accept an exact match and reject missing/altered/obsolete assets and broken
+index/manifest references for the expected reason. Run this task alone to debug
+the packaging guard; it does not install or modify the app.
 APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
 Set ANDROID_HOME or android/local.properties to your SDK path (do not commit it).
 Open android/ in Android Studio if preferred. The Android debug CI workflow
