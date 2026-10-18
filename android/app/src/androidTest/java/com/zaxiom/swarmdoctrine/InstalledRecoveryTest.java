@@ -373,10 +373,23 @@ public class InstalledRecoveryTest {
             scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));
             waitFor("landscape clears Freeze aim", () -> "true".equals(js(scenario, "innerWidth>innerHeight&&!game.input.freezeAiming&&game.player.freezeCooldown===0")));
             armFreeze(scenario);
-            // Put a test-only rival away from HUD buttons; aim is still cast by
-            // the real native arena tap, not a direct Commander call.
-            tapCss(scenario, "(()=>{const b=game.sim.addBoid(game.sim.width*.5,game.sim.height*.6,game.teamOrder()[1]);b.vel.set(0,0);const r=game.renderer,c=game.canvas.getBoundingClientRect();return [c.x+(b.pos.x*r.viewScale+r.offsetX)*c.width/game.canvas.width,c.y+(b.pos.y*r.viewScale+r.offsetY)*c.height/game.canvas.height,innerWidth,innerHeight]})()");
-            waitFor("native arena tap casts Freeze", () -> "true".equals(js(scenario, "!game.input.freezeAiming&&game.player.freezeCooldown>0&&game.player.freezeField!==null")));
+            // Keep this test-only rival eligible while native input crosses the
+            // JS/Android boundary. A lone ship can otherwise be recruited before
+            // the tap. Capture the real emitted event; the live field expires
+            // and is unsuitable as a durable assertion on a slow emulator.
+            tapCss(scenario, "(()=>{const b=game.sim.addBoid(game.sim.width*.5,game.sim.height*.6,game.teamOrder()[1]);b.vel.set(0,0);"
+                + "b.conversionCooldown=game.rules.conversionCooldownTicks*60;"
+                + "window.__nativeFreeze={events:[],pointers:[],fixture:b.id};const original=game.sim.emit;"
+                + "game.sim.emit=function(e){if((e.type==='freeze'||e.type==='freeze-miss')&&e.team===game.playerTeam)"
+                + "window.__nativeFreeze.events.push({...e,time:this.time,fixtureTeam:b.team,cooldown:game.player.freezeCooldown,field:!!game.player.freezeField});return original.call(this,e)};"
+                + "game.canvas.addEventListener('pointerdown',e=>window.__nativeFreeze.pointers.push({x:e.clientX,y:e.clientY,time:game.sim.time,aim:game.input.freezeAiming,fixtureTeam:b.team}),{once:true,capture:true});"
+                + "const r=game.renderer,c=game.canvas.getBoundingClientRect();return [c.x+(b.pos.x*r.viewScale+r.offsetX)*c.width/game.canvas.width,c.y+(b.pos.y*r.viewScale+r.offsetY)*c.height/game.canvas.height,innerWidth,innerHeight]})()");
+            try {
+                waitFor("native arena tap emits successful Freeze", () -> "true".equals(js(scenario,
+                    "window.__nativeFreeze.events.some(e=>e.type==='freeze'&&e.victims>0&&e.cooldown>0&&e.field)&&!game.input.freezeAiming")));
+            } finally {
+                Log.i("SwarmSmoke", "FREEZE native cast=" + js(scenario, "JSON.stringify(window.__nativeFreeze)"));
+            }
             long backgroundDown = pointer(scenario, MotionEvent.ACTION_DOWN, 0);
             waitFor("Rally before background", () -> "true".equals(js(scenario, "game.player.rallying")));
             scenario.moveToState(Lifecycle.State.CREATED).moveToState(Lifecycle.State.RESUMED);

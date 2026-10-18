@@ -173,3 +173,17 @@ locally; native compilation, execution and image review need a new free CI run.
 The dated #24 journal records observed outcomes and any failed attempt. This is
 coverage of existing UI, not a reproduced layout bug, audible-audio proof,
 all-menu/device support or APK-update persistence.
+
+First native run 39170993815 at 7e7b6eb compiled/linted and passed callbacks but
+failed the pre-existing transient Freeze-field assertion before the new process/
+Settings stage. Downloaded artifact 12153045567 (SHA-256
+fea3b20723c6e62c62ecb6fa8c0892cc86e8a6a6e2e9eba916af146b5fc0c2fe) shows a
+normal playing Zen arena and ready Freeze button, not a crash. It did not record
+the input/event history, so miss, recruitment or an expired field cannot be
+distinguished; do not assert a production root cause. The follow-up protects
+the lone test rival with finite conversion cooldown derived from shared rules
+and observes the real successful Freeze event/state at emission, not a field
+that expires before polling. Records native pointer/event diagnostics on either
+outcome. Native tap remains the only casting action; no direct Commander call,
+runtime rule or permission change. One fresh attempt is justified; new Settings
+assertions remain unperformed until its actual result.
