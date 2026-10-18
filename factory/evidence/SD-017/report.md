@@ -151,3 +151,25 @@ Local current-main check/80 tests/build pass. No runtime/rules/security-policy
 change; existing renderer/lifecycle/process tests remain. One fresh native attempt
 is budgeted for this investigation rather than repeatedly changing the app to
 obtain favorable evidence.
+
+## 2026-10-18: native Settings interaction
+
+Prior e2bc185 run 38824179090 passed and its seven PNGs were inspected in #24.
+It established initial Settings viewports, not native bottom scrolling. A prior
+attempt to extend this test remained unpublished after a subscription approval
+limit; workspace cleanup removed that scratch checkout. Reconstructed from the
+recorded source changes on the unchanged remote head, not claimed recovered CI.
+
+Restore-stage tests inject bounded Android gutter drags using fresh WebView
+screen bounds. Both bottom actions must fit; raw app-window/full-display images
+preserve the actual buffers. Sound touches toggle false→true in portrait and
+true→false in landscape, checking UI/runtime/storage. Native Back returns Home;
+touching the actual Home Settings control reopens the choice. Checkpoint/record
+fixtures remain intact, then Continue restores the fields. No JS scrolling or
+clicking, destructive Reset/Clear action, production CSS override or permission.
+
+Local SDK/Gradle/adb/KVM are absent. Check/test/build and shell syntax can run
+locally; native compilation, execution and image review need a new free CI run.
+The dated #24 journal records observed outcomes and any failed attempt. This is
+coverage of existing UI, not a reproduced layout bug, audible-audio proof,
+all-menu/device support or APK-update persistence.

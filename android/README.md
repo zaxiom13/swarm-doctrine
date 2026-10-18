@@ -80,6 +80,16 @@ PID/stop evidence, settings PNGs and filtered logs are uploaded with the native
 artifact. A zero shell exit alone is insufficient: both stages must report
 `OK (1 test)` with no runner failure/crash.
 
+The restore stage also uses actual Android vertical drags in the menu gutter,
+not JavaScript scrolling, to reach both bottom Settings actions in portrait and
+landscape. It captures those viewports without pressing Reset settings or Clear
+progress. A real Sound touch must update the checkbox, runtime flag and stored
+preference; native Back returns Home and an actual Home Settings tap reopens the
+choice. Portrait enables Sound, landscape restores it to disabled. Progress and
+records must remain intact before Continue. Gestures use current usable WebView
+bounds after rotation. This is finite menu coverage, not audible output or every
+menu/device. Fresh results belong in the dated journal, not inferred from code.
+
 This closes a different gap from Activity recreation or a renderer crash. It
 tests ordinary save/background followed by whole-process force-stop/relaunch,
 not a low-memory kill during an unfinished write, task restoration, a reboot,

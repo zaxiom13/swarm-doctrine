@@ -247,7 +247,7 @@ public class InstalledRecoveryTest {
     }
 
     /** Real Android touch injection, with CSS-to-native viewport scaling after rotation. */
-    private static void tapCss(ActivityScenario<MainActivity> scenario, String point) throws Exception {
+    static void tapCss(ActivityScenario<MainActivity> scenario, String point) throws Exception {
         touchWindowReady(scenario);
         JSONArray css = new JSONArray(js(scenario, point));
         int[] position = new int[2];
@@ -263,6 +263,33 @@ public class InstalledRecoveryTest {
             try { InstrumentationRegistry.getInstrumentation().sendPointerSync(event); }
             finally { event.recycle(); }
         }
+    }
+
+    /** Real vertical drag in the menu gutter, away from sliders. Re-read usable
+     * WebView bounds after every rotation; finish slowly to avoid a fling. */
+    static void swipeMenu(ActivityScenario<MainActivity> scenario, boolean downPage) {
+        touchWindowReady(scenario);
+        int[] bounds = new int[4];
+        scenario.onActivity(a -> {
+            WebView view = (WebView) frame(a).getChildAt(0);
+            view.getLocationOnScreen(bounds);
+            bounds[2] = view.getWidth();
+            bounds[3] = view.getHeight();
+        });
+        float x = bounds[0] + bounds[2] * 0.06f;
+        float start = bounds[1] + bounds[3] * (downPage ? 0.8f : 0.2f);
+        float end = bounds[1] + bounds[3] * (downPage ? 0.2f : 0.8f);
+        long down = SystemClock.uptimeMillis();
+        for (int i = 0; i <= 21; i++) {
+            int action = i == 0 ? MotionEvent.ACTION_DOWN : i == 21 ? MotionEvent.ACTION_UP : MotionEvent.ACTION_MOVE;
+            float y = start + (end - start) * Math.min(i, 20) / 20f;
+            MotionEvent event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, x, y, 0);
+            try { InstrumentationRegistry.getInstrumentation().sendPointerSync(event); }
+            finally { event.recycle(); }
+            SystemClock.sleep(i == 20 ? 100 : 30);
+        }
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+        SystemClock.sleep(200);
     }
 
     private static void armFreeze(ActivityScenario<MainActivity> scenario) throws Exception {
