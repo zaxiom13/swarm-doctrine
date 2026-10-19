@@ -1,6 +1,6 @@
 # Swarm Doctrine board
 
-Updated 2026-10-18. Android remains a committed priority. Five improvement slots
+Updated 2026-10-19. Android remains a committed priority. Five improvement slots
 are occupied after #19 merged: #20/#22/#23/#26/#27. Maintain these before adding
 another batch. Merged code and archive/browser checks do not establish native
 installed-device readiness.
@@ -9,22 +9,24 @@ installed-device readiness.
 
 | Card | Outcome | PR | Actual state and evidence |
 | --- | --- | --- | --- |
-| SD-012 | Verify the generated web tree exactly matches debug APK assets | [#20](https://github.com/zaxiom13/swarm-doctrine/pull/20) | Unchanged `4193ba6`; 10-18 check/80 tests/build and current-head web/Android CI remain green, not a new native run. All nine shared-verifier ZIP fixtures and actual lintDebug/verifyDebugApk passed. [Verified APK](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38821195864/artifacts/12013980056). Card/report in its branch. |
-| SD-015 | Guard fleet spawn clearance over seeded aspect ratios | [#22](https://github.com/zaxiom13/swarm-doctrine/pull/22) | Unchanged `acd0c36`; 10-18 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Runtime TerrainField reach covers 2,048 seeds x eight aspects. No overlap bug was found. [Card](cards/SD-015.md). |
-| SD-014 | Clear stale conversion flashes on reused online guest ships | [#23](https://github.com/zaxiom13/swarm-doctrine/pull/23) | Unchanged `ab91651`; 10-18 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Frozen two-frame regression and both local-duel roles pass again. [Card](cards/SD-014.md). Real transport remains untested. |
-| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | `216c7dd`: check/80 tests/build and web CI pass; native CI **fails** at landscape Sound tap, NOT ready to merge. Original installed recovery/Freeze/lifecycle smoke and portrait scroll/toggle/Back pass; both bottom-action viewports captured. All eleven PNGs/logs inspected. Bounding-only probe misses sticky-header occlusion; browser reproduction confirms probe weakness, not native root cause. [Evidence](evidence/2026-10-18/report.md). |
-| SD-018 | First offline reload reuses a safe public Origin variant | [#27](https://github.com/zaxiom13/swarm-doctrine/pull/27) | Unchanged `159439b`; 10-18 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Exact public URL and Origin-only Vary guard; fresh four-case offline matrix passes. [Card](https://github.com/zaxiom13/swarm-doctrine/blob/night/offline-origin-variant/factory/cards/SD-018.md). |
+| SD-012 | Verify the generated web tree exactly matches debug APK assets | [#20](https://github.com/zaxiom13/swarm-doctrine/pull/20) | Unchanged `4193ba6`; 10-19 check/80 tests/build and current-head web/Android CI remain green, not a new native run. All nine shared-verifier ZIP fixtures and actual lintDebug/verifyDebugApk passed. [Verified APK](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38821195864/artifacts/12013980056). Card/report in its branch. |
+| SD-015 | Guard fleet spawn clearance over seeded aspect ratios | [#22](https://github.com/zaxiom13/swarm-doctrine/pull/22) | Unchanged `acd0c36`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Runtime TerrainField reach covers 2,048 seeds x eight aspects. No overlap bug was found. [Card](cards/SD-015.md). |
+| SD-014 | Clear stale conversion flashes on reused online guest ships | [#23](https://github.com/zaxiom13/swarm-doctrine/pull/23) | Unchanged `ab91651`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Frozen two-frame regression and both local-duel roles pass again. [Card](cards/SD-014.md). Real transport remains untested. |
+| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | `c9fabe3`: check/80 tests/build and web/native CI pass. API 35/WebView 124/fontScale 1.3: original smoke, both process stages, native scroll/Sound/Back/reopen/final Continue pass. Actual top captures and owned input hits verified; all eleven PNGs/logs inspected. Prior failures preserved; finite probe repair, not a production CSS fix. [Evidence](evidence/2026-10-19/report.md). |
+| SD-018 | First offline reload reuses a safe public Origin variant | [#27](https://github.com/zaxiom13/swarm-doctrine/pull/27) | Unchanged `159439b`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Exact public URL and Origin-only Vary guard; fresh four-case offline matrix passes. [Card](https://github.com/zaxiom13/swarm-doctrine/blob/night/offline-origin-variant/factory/cards/SD-018.md). |
 
 Main is `886b3f4`, which merged #19. All five PRs now target main with no
 pending stack dependencies. Local merges were conflict-free. All five
 merge automatically together and pass
 check/83 tests/build. Browser evidence covers three viewports, both local-duel
 roles and the previously failing immediate cold-offline path without warmup.
-[Current evidence](evidence/2026-10-18/report.md). Fresh 10-18 independent
+[Current evidence](evidence/2026-10-19/report.md). Fresh 10-19 independent
 check/test/build passes on every improvement branch, plus combined 83 tests.
 Browser controls/offline/Freeze/Settings and both local-duel roles pass with
-zero page errors. #26 `216c7dd` adds native bottom-scroll/toggle/Back checks and cast diagnostics.
-Native partial successes do not override its failed landscape Sound assertion.
+zero page errors. #26 `c9fabe3` repairs stationary/hit-owned native tap readiness
+and actual top capture scrolling. Fresh installed checks and capture inspection
+pass on the recorded finite configuration, separately from browser tests. The
+failed 10-18 evidence remains historical, not the current result.
 No GitHub PR was merged, auto-merged or deployed by this run.
 
 ## Merged
@@ -57,10 +59,10 @@ this table reconciles their latest actual states.
    Settings assertions pass. Focus/visible-state/frame diagnostics and inspected
    paired Settings images now establish correct initial portrait/landscape
    viewports on the finite API 35 configuration. Prior blank/retained PNGs remain
-   rejected. 10-18 bottom scrolling in both orientations and portrait Sound/Back
-   pass, but landscape Sound assertion fails. Correct native hit-test/settled-scroll
-   readiness and require actual scrollTop=0 before claiming a top capture;
-   rerun before merging #26. Then other menus/Freeze cooldown/cutouts,
+   rejected. The 10-18 landscape Sound failure is historical; 10-19's corrected
+   settled/hit-owned native probe passes both Sound directions, Back/reopen and
+   final Continue, with actual scrollTop=0 top captures. Next: installed API 26,
+   other menus/Freeze cooldown/cutouts, audible audio and APK-update persistence,
    not an all-menu/all-device claim or guaranteed first-frame latency.
 2. Exercise real two-device Firebase/WebRTC lifecycle for both roles, including
    rotation, background, disconnect and rematch. Local/protocol tests cannot prove this.
@@ -74,4 +76,4 @@ this table reconciles their latest actual states.
    real canvas/worker/frame costs still need device measurements before tuning.
 
 Interactive lessons remain hidden. Rules, shared Simulation/Commander and trained
-policy remain unchanged. [Latest journal](journal/2026-10-18.md).
+policy remain unchanged. [Latest journal](journal/2026-10-19.md).
