@@ -5,6 +5,7 @@ import static com.zaxiom.swarmdoctrine.InstalledRecoveryTest.*;
 
 import android.content.pm.ActivityInfo;
 import android.os.Process;
+import android.os.SystemClock;
 import android.util.Log;
 import android.webkit.WebView;
 import androidx.lifecycle.Lifecycle;
@@ -18,6 +19,8 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class ProcessPersistenceTest {
     private static void settingsPresented(ActivityScenario<MainActivity> scenario, String name) throws Exception {
+        assertEquals("top capture starts at scroll origin", "true", js(scenario,
+            "document.querySelector('#settings-screen').scrollTop<=1"));
         settingsPresented(scenario, name, "#settings-title");
     }
 
@@ -39,14 +42,51 @@ public class ProcessPersistenceTest {
     private static boolean visible(ActivityScenario<MainActivity> scenario, String selector) {
         return "true".equals(js(scenario,
             "(()=>{const e=document.querySelector('" + selector + "'),s=document.querySelector('#settings-screen');"
-            + "const r=e.getBoundingClientRect();return !s.classList.contains('hidden')&&r.width>0&&r.height>0"
-            + "&&r.x>=0&&r.right<=innerWidth&&r.y>=0&&r.bottom<=innerHeight})()"));
+            + "const r=e.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);"
+            + "return !s.classList.contains('hidden')&&r.width>0&&r.height>0"
+            + "&&r.x>=0&&r.right<=innerWidth&&r.y>=0&&r.bottom<=innerHeight&&(hit===e||e.contains(hit))})()"));
+    }
+
+    private static void settled(ActivityScenario<MainActivity> scenario, String selector) {
+        String[] previous = {null};
+        long[] since = {0};
+        waitFor("stationary menu viewport and target " + selector, () -> {
+            String sample = js(scenario, "JSON.stringify({scroll:document.querySelector('#settings-screen').scrollTop,"
+                + "rect:document.querySelector('" + selector + "').getBoundingClientRect().toJSON(),viewport:[innerWidth,innerHeight]})");
+            long now = SystemClock.uptimeMillis();
+            if (!sample.equals(previous[0])) { previous[0] = sample; since[0] = now; return false; }
+            return now - since[0] >= 250;
+        });
+    }
+
+    private static String soundState(ActivityScenario<MainActivity> scenario) {
+        return js(scenario, "(()=>{const s=document.querySelector('#settings-screen'),e=document.querySelector('#setting-sound'),"
+            + "r=e.getBoundingClientRect(),h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);"
+            + "return JSON.stringify({scroll:s.scrollTop,rect:r.toJSON(),viewport:[innerWidth,innerHeight],"
+            + "hit:{tag:h?.tagName,id:h?.id,class:h?.className},ownsHit:h===e||e.contains(h),"
+            + "checked:e.checked,runtime:game.audio.enabled,stored:JSON.parse(localStorage.getItem('swarm-doctrine-settings-v3')).sound})})()");
+    }
+
+    private static void scrollToTop(ActivityScenario<MainActivity> scenario) {
+        int gestures = 0;
+        settled(scenario, "#settings-title");
+        while (!"true".equals(js(scenario, "document.querySelector('#settings-screen').scrollTop<=1")) && gestures < 12) {
+            swipeMenu(scenario, false);
+            settled(scenario, "#settings-title");
+            gestures++;
+        }
+        assertEquals("native drags reach actual Settings scroll origin", "true", js(scenario,
+            "document.querySelector('#settings-screen').scrollTop<=1"));
+        Log.i("SwarmSmoke", "TOUCH Settings top gestures=" + gestures + " scroll="
+            + js(scenario, "document.querySelector('#settings-screen').scrollTop"));
     }
 
     private static void scrollTo(ActivityScenario<MainActivity> scenario, String selector, boolean downPage) {
         int gestures = 0;
+        settled(scenario, selector);
         while (!visible(scenario, selector) && gestures < 12) {
             swipeMenu(scenario, downPage);
+            settled(scenario, selector);
             gestures++;
         }
         assertTrue("native scrolling reaches " + selector, visible(scenario, selector));
@@ -55,7 +95,8 @@ public class ProcessPersistenceTest {
     }
 
     private static void touchSettings(ActivityScenario<MainActivity> scenario, String orientation, boolean sound) throws Exception {
-        scrollTo(scenario, "#settings-title", false);
+        // The sticky title remains visible even when the root is scrolled.
+        scrollToTop(scenario);
         settingsPresented(scenario, "persisted-settings-" + orientation);
         scrollTo(scenario, "#btn-reset-progress", true);
         assertEquals("native drag really scrolled the Settings root", "true", js(scenario,
@@ -67,18 +108,29 @@ public class ProcessPersistenceTest {
         scrollTo(scenario, "#setting-sound", false);
         assertEquals("fixture starts with the opposite sound choice", Boolean.toString(!sound),
             js(scenario, "document.querySelector('#setting-sound').checked"));
-        tapCss(scenario, "(()=>{const r=document.querySelector('#setting-sound').getBoundingClientRect();"
-            + "return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()");
-        waitFor("native sound touch updates UI/runtime/storage", () -> "true".equals(js(scenario,
-            "document.querySelector('#setting-sound').checked===" + sound + "&&game.audio.enabled===" + sound
-            + "&&JSON.parse(localStorage.getItem('swarm-doctrine-settings-v3')).sound===" + sound)));
+        Log.i("SwarmSmoke", "INPUT Sound " + orientation + " before=" + soundState(scenario));
+        try {
+            tapCss(scenario, "(()=>{const e=document.querySelector('#setting-sound'),r=e.getBoundingClientRect(),"
+                + "h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);"
+                + "if(h!==e&&!e.contains(h))throw Error('Sound tap is occluded');"
+                + "return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()");
+            waitFor("native sound touch updates UI/runtime/storage", () -> "true".equals(js(scenario,
+                "document.querySelector('#setting-sound').checked===" + sound + "&&game.audio.enabled===" + sound
+                + "&&JSON.parse(localStorage.getItem('swarm-doctrine-settings-v3')).sound===" + sound)));
+        } catch (Exception | AssertionError failure) {
+            screenshot(scenario, "settings-touch-" + orientation + "-failure");
+            throw failure;
+        } finally {
+            Log.i("SwarmSmoke", "INPUT Sound " + orientation + " after=" + soundState(scenario));
+        }
         scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
         waitFor("Back returns from scrolled Settings to Home", () -> "true".equals(js(scenario,
             "game.ui.screen==='main-menu'&&game.gameState==='menu'")));
         waitFor("Home Settings control visible and settled", () -> "true".equals(js(scenario,
             "(()=>{const s=document.querySelector('#main-menu'),b=[...s.querySelectorAll('button')].find(b=>b.textContent.trim()==='Settings');"
-            + "const r=b.getBoundingClientRect();return !s.classList.contains('hidden')&&r.width>0&&r.x>=0&&r.right<=innerWidth"
-            + "&&r.y>=0&&r.bottom<=innerHeight&&!s.getAnimations({subtree:true}).some(a=>a.playState==='running')})()")));
+            + "const r=b.getBoundingClientRect(),h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);"
+            + "return !s.classList.contains('hidden')&&r.width>0&&r.x>=0&&r.right<=innerWidth"
+            + "&&r.y>=0&&r.bottom<=innerHeight&&(h===b||b.contains(h))&&!s.getAnimations({subtree:true}).some(a=>a.playState==='running')})()")));
         tapCss(scenario, "(()=>{const b=[...document.querySelectorAll('#main-menu button')].find(b=>b.textContent.trim()==='Settings');"
             + "const r=b.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()");
         waitFor("Settings reopens with native choice", () -> "true".equals(js(scenario,

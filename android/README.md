@@ -90,6 +90,13 @@ records must remain intact before Continue. Gestures use current usable WebView
 bounds after rotation. This is finite menu coverage, not audible output or every
 menu/device. Fresh results belong in the dated journal, not inferred from code.
 
+Native menu readiness requires a stationary viewport/target and ownership of the
+actual center tap point via elementFromPoint, not just a rectangle inside the
+viewport. Sticky headings can cover otherwise in-bounds controls. Top captures
+require the Settings root at scrollTop <= 1 after real native drags. Sound checks
+log before/after geometry, center hit, checkbox/runtime/storage values, retaining
+failure screenshots rather than silently retrying taps or weakening assertions.
+
 This closes a different gap from Activity recreation or a renderer crash. It
 tests ordinary save/background followed by whole-process force-stop/relaunch,
 not a low-memory kill during an unfinished write, task restoration, a reboot,

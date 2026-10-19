@@ -187,3 +187,21 @@ that expires before polling. Records native pointer/event diagnostics on either
 outcome. Native tap remains the only casting action; no direct Commander call,
 runtime rule or permission change. One fresh attempt is justified; new Settings
 assertions remain unperformed until its actual result.
+
+## 2026-10-19: native menu hit ownership
+
+At 216c7dd, run 39171696118 passed original installed smoke and portrait Settings
+interaction, then failed landscape Sound. All eleven PNGs were inspected in #24.
+The landscape heading capture was scrolled Audio under a sticky header, not page
+top. Controlled browser reproduction in factory/evidence/2026-10-18/ proved that
+an entirely in-bounds Sound checkbox can have H2 at its center hit and not toggle
+on a real tap; this demonstrated a probe weakness, not that native run's exact
+unrecorded cause. Preserve both failures and do not invent a production bug.
+
+Require stationary geometry/scroll, center hit ownership and an actual native
+scroll to origin before top captures. Re-check hit ownership when calculating
+the native tap point. Log Sound rect/scroll/hit/checked/runtime/storage before
+and after, retaining a failure image. No JS scrolling/clicking, CSS override,
+direct preference mutation, assertion relaxation or expanded permission. Original
+Freeze/recovery/process contracts remain unchanged. Fresh native CI and capture
+review must establish the outcome; adding these checks alone does not prove it.
