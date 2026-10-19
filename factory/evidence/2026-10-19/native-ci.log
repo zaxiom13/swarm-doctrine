@@ -55,4 +55,3 @@ Selected verbatim CI lines, then selected verbatim device logcat lines.
 10-19 23:04:51.735  4350  4363 I SwarmSmoke: PASS native Settings scroll/bottom-actions/sound-touch/Back/reopen landscape
 10-19 23:04:51.771  4350  4363 I SwarmSmoke: OFFLINE no active default network: Continue after process relaunch
 10-19 23:04:51.772  4350  4363 I SwarmSmoke: PASS process-relaunch/Home/checkpoint/record/runtime-settings/portrait-landscape/Continue
-
