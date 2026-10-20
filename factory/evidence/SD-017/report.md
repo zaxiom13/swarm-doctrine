@@ -214,3 +214,9 @@ record, checkpoint and Continue with network disabled. The script records both
 package versions and rejects a failed update. Fresh CI is required before counting
 this as executed evidence. Same-source metadata change does not test future
 storage-schema or changed-asset migrations.
+
+Initial run 39507998799 stopped during Gradle configuration before compilation or
+emulator work: Groovy parsed the unparenthesized versionName fallback as a null
+method argument (`build.gradle` line 13, `Value is null`). Parenthesize the Elvis
+expression; no app/runtime behavior or assertion was involved. A fresh run is
+required and the failed run remains part of the evidence trail.
