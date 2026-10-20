@@ -33,6 +33,13 @@ and the existing free Firebase configuration; no TURN relay is introduced.
 Website and APK have separate DOM storage. An APK update needs a new build and
 versionCode; it does not silently fetch new game code from the website.
 
+The installed CI smoke builds the normal versionCode 1 APK, saves settings,
+records and a Levels checkpoint through the app, externally force-stops it, then
+builds versionCode 2 from the same source and performs `adb install -r`. The
+second instrumentation process must recover all saved state and Continue with
+network disabled. This proves Android update-install data continuity for the
+tested build/configuration; it does not prove arbitrary future schema migrations.
+
 ## Device verification still required
 
 ### Installed renderer smoke

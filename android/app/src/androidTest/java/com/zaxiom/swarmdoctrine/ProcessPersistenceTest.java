@@ -15,7 +15,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /** Two separate instrumentation invocations; installed-smoke.sh force-stops the
- * ordinary app process between them without clearing data or reinstalling. */
+ * ordinary app process, upgrades versionCode 1 to 2 with adb install -r, then
+ * restores without clearing app data. */
 @RunWith(AndroidJUnit4.class)
 public class ProcessPersistenceTest {
     private static void settingsPresented(ActivityScenario<MainActivity> scenario, String name) throws Exception {
@@ -195,7 +196,7 @@ public class ProcessPersistenceTest {
                 "game.resumeExpedition()&&game.gameMode==='levels'&&game.level===4"
                 + "&&game.mapSeed===767676&&game.levelEnemies==='passive'&&game.playerTeam==='dragon'"));
             assertOffline("Continue after process relaunch");
-            Log.i("SwarmSmoke", "PASS process-relaunch/Home/checkpoint/record/runtime-settings/portrait-landscape/Continue");
+            Log.i("SwarmSmoke", "PASS process-update/relaunch/Home/checkpoint/record/runtime-settings/portrait-landscape/Continue");
         }
     }
 }

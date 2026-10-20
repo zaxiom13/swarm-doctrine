@@ -8,8 +8,10 @@ android {
         applicationId 'com.zaxiom.swarmdoctrine'
         minSdk 26
         targetSdk 35
-        versionCode 1
-        versionName '0.1.0'
+        // CI can build a higher-version smoke APK to exercise Android's real
+        // update install path. Normal builds retain the shipped defaults.
+        versionCode (project.findProperty('swarmVersionCode') ?: '1') as Integer
+        versionName project.findProperty('swarmVersionName') ?: '0.1.0'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     compileOptions {

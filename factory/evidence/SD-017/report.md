@@ -205,3 +205,12 @@ and after, retaining a failure image. No JS scrolling/clicking, CSS override,
 direct preference mutation, assertion relaxation or expanded permission. Original
 Freeze/recovery/process contracts remain unchanged. Fresh native CI and capture
 review must establish the outcome; adding these checks alone does not prove it.
+
+## 2026-10-20: Android update-install persistence
+
+Add a real Android replace/update path: save through versionCode 1, force-stop,
+build the same source at versionCode 2, `adb install -r`, then restore settings,
+record, checkpoint and Continue with network disabled. The script records both
+package versions and rejects a failed update. Fresh CI is required before counting
+this as executed evidence. Same-source metadata change does not test future
+storage-schema or changed-asset migrations.

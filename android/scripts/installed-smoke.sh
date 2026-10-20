@@ -19,10 +19,16 @@ adb shell dumpsys connectivity > android/app/build/smoke-evidence/connectivity-b
 gradle -p android connectedDebugAndroidTest \
     -Pandroid.testInstrumentationRunnerArguments.class=com.zaxiom.swarmdoctrine.InstalledRecoveryTest
 
-# AGP uninstalls its test APKs. Install once for the staged persistence check;
-# nothing may clear storage or reinstall between save and restore.
+# AGP uninstalls its test APKs. Install version 1 for the staged persistence
+# check. After saving, the script upgrades to version 2 with adb install -r;
+# nothing may clear storage between the save and restore stages.
 adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 adb install -r android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb shell dumpsys package com.zaxiom.swarmdoctrine \
+    > android/app/build/smoke-evidence/package-version-1.txt
+grep -m 1 'versionCode=' android/app/build/smoke-evidence/package-version-1.txt \
+    | tee android/app/build/smoke-evidence/process-update.txt
+grep -Eq 'versionCode=1([[:space:]]|$)' android/app/build/smoke-evidence/process-update.txt
 run_persistence_stage() {
     local stage="$1"
     local output="android/app/build/smoke-evidence/process-${stage}.txt"
@@ -47,5 +53,19 @@ echo "Running app PID before force-stop: $app_pid_before_stop" | tee android/app
 adb shell am force-stop com.zaxiom.swarmdoctrine
 app_pid_after_stop="$(adb shell pidof com.zaxiom.swarmdoctrine 2>/dev/null | tr -d '\r' || true)"
 test -z "$app_pid_after_stop"
-echo 'PASS no app process remains after package force-stop; no clear-data/reinstall' | tee -a android/app/build/smoke-evidence/process-stop.txt
+echo 'PASS no app process remains after package force-stop; no clear-data' | tee -a android/app/build/smoke-evidence/process-stop.txt
+
+# Rebuild only the target APK with a higher package version, then use Android's
+# actual replace/update operation. The same source isolates data continuity from
+# app behavior changes; it is not a version-A-to-B migration compatibility claim.
+gradle -p android assembleDebug \
+    -PswarmVersionCode=2 -PswarmVersionName=0.1.1-smoke
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+adb shell dumpsys package com.zaxiom.swarmdoctrine \
+    > android/app/build/smoke-evidence/package-version-2.txt
+grep -m 1 'versionCode=' android/app/build/smoke-evidence/package-version-2.txt \
+    | tee -a android/app/build/smoke-evidence/process-update.txt
+grep -Eq 'versionCode=2([[:space:]]|$)' android/app/build/smoke-evidence/process-update.txt
+echo 'PASS versionCode 1 -> 2 installed with -r and no clear-data' \
+    | tee -a android/app/build/smoke-evidence/process-update.txt
 run_persistence_stage restoreAfterProcessStop
