@@ -226,3 +226,25 @@ the method-style `versionCode` assignment, whose `as Integer` cast applied to th
 null return from the DSL method rather than its argument. Replace both method-style
 expressions with typed Provider defaults outside `android {}` and explicit property
 assignments. The second run also stopped before compilation/emulator; preserve both.
+
+## 2026-10-21: compiled update path and native tap fixture
+
+Run [39685951547](https://github.com/zaxiom13/swarm-doctrine/actions/runs/39685951547)
+at `103c3d8` proves the typed Gradle repair: lint, APK verification/assembly,
+Robolectric callbacks and installed API 35 recovery smoke all pass. The staged
+process test records versionCode 1, saves normally, externally force-stops with
+no process/data clear, records versionCode 2 after `adb install -r`, then restores
+the checkpoint, record and preferences. Portrait and landscape Settings drags,
+bottom actions, owned Sound hits and UI/runtime/storage transitions all pass.
+
+The restore stage then fails `Settings reopens with native choice` after the final
+landscape Home Settings tap, before Continue. It used a synthetic DOWN and UP with
+effectively zero dwell; prior interactions and this same assertion passed before
+the update change. This does not identify a production navigation defect, and the
+run is not a full pass. Artifact 12386762002 (3,960,111 bytes, SHA-256
+26e2aae93b5f325cdb4be37a5f1a1e8fa6d3a5adda0dec09684063e518245de5,
+expires 2026-11-20) preserves XML, logs, both package dumps and eleven PNGs.
+
+Make native tap injection resemble a physical tap with a bounded 50 ms dwell and
+wait for Android idle after release. Do not retry or directly invoke the control;
+a wholly fresh run must still prove every real-touch assertion and final Continue.

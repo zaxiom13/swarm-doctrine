@@ -262,7 +262,11 @@ public class InstalledRecoveryTest {
             MotionEvent event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, position[0], position[1], 0);
             try { InstrumentationRegistry.getInstrumentation().sendPointerSync(event); }
             finally { event.recycle(); }
+            // A physical tap has a non-zero dwell. Keep the fixture realistic so
+            // a same-timestamp DOWN/UP is not coalesced on a busy software renderer.
+            if (action == MotionEvent.ACTION_DOWN) SystemClock.sleep(50);
         }
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     }
 
     /** Real vertical drag in the menu gutter, away from sliders. Re-read usable
