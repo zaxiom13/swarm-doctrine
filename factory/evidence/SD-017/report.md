@@ -220,3 +220,9 @@ emulator work: Groovy parsed the unparenthesized versionName fallback as a null
 method argument (`build.gradle` line 13, `Value is null`). Parenthesize the Elvis
 expression; no app/runtime behavior or assertion was involved. A fresh run is
 required and the failed run remains part of the evidence trail.
+
+Follow-up 39508400230 exposed the same error at line 13: that line was actually
+the method-style `versionCode` assignment, whose `as Integer` cast applied to the
+null return from the DSL method rather than its argument. Replace both method-style
+expressions with typed Provider defaults outside `android {}` and explicit property
+assignments. The second run also stopped before compilation/emulator; preserve both.

@@ -1,4 +1,8 @@
 plugins { id 'com.android.application' }
+
+def configuredVersionCode = providers.gradleProperty('swarmVersionCode').getOrElse('1').toInteger()
+def configuredVersionName = providers.gradleProperty('swarmVersionName').getOrElse('0.1.0')
+
 android {
     namespace 'com.zaxiom.swarmdoctrine'
     compileSdk 35
@@ -10,8 +14,8 @@ android {
         targetSdk 35
         // CI can build a higher-version smoke APK to exercise Android's real
         // update install path. Normal builds retain the shipped defaults.
-        versionCode (project.findProperty('swarmVersionCode') ?: '1') as Integer
-        versionName (project.findProperty('swarmVersionName') ?: '0.1.0')
+        versionCode = configuredVersionCode
+        versionName = configuredVersionName
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     compileOptions {
