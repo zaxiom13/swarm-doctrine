@@ -132,10 +132,22 @@ public class ProcessPersistenceTest {
             + "const r=b.getBoundingClientRect(),h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);"
             + "return !s.classList.contains('hidden')&&r.width>0&&r.x>=0&&r.right<=innerWidth"
             + "&&r.y>=0&&r.bottom<=innerHeight&&(h===b||b.contains(h))&&!s.getAnimations({subtree:true}).some(a=>a.playState==='running')})()")));
-        tapCss(scenario, "(()=>{const b=[...document.querySelectorAll('#main-menu button')].find(b=>b.textContent.trim()==='Settings');"
-            + "const r=b.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()");
-        waitFor("Settings reopens with native choice", () -> "true".equals(js(scenario,
-            "game.ui.screen==='settings-screen'&&document.querySelector('#setting-sound').checked===" + sound)));
+        Log.i("SwarmSmoke", "INPUT Home Settings " + orientation + " before=" + js(scenario,
+            "(()=>{const b=[...document.querySelectorAll('#main-menu button')].find(b=>b.textContent.trim()==='Settings'),r=b.getBoundingClientRect(),h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);"
+            + "window.__nativeHomeTap=[];for(const type of ['pointerdown','pointerup','click'])document.addEventListener(type,e=>window.__nativeHomeTap.push({type,target:e.target?.textContent?.trim(),x:e.clientX,y:e.clientY}),{capture:true,once:true});"
+            + "return JSON.stringify({rect:r.toJSON(),viewport:[innerWidth,innerHeight],hit:h?.textContent?.trim(),focus:document.activeElement?.textContent?.trim(),screen:game.ui.screen})})()"));
+        try {
+            tapCss(scenario, "(()=>{const b=[...document.querySelectorAll('#main-menu button')].find(b=>b.textContent.trim()==='Settings');"
+                + "const r=b.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()");
+            waitFor("Settings reopens with native choice", () -> "true".equals(js(scenario,
+                "game.ui.screen==='settings-screen'&&document.querySelector('#setting-sound').checked===" + sound)));
+        } catch (Exception | AssertionError failure) {
+            screenshot(scenario, "settings-reopen-" + orientation + "-failure");
+            throw failure;
+        } finally {
+            Log.i("SwarmSmoke", "INPUT Home Settings " + orientation + " after=" + js(scenario,
+                "JSON.stringify({events:window.__nativeHomeTap,screen:game.ui.screen,active:document.activeElement?.textContent?.trim()})"));
+        }
         assertEquals("native scrolling/touches did not reset saved progress", "true", js(scenario,
             "game.loadCheckpoint()?.seed===767676&&Number(localStorage.getItem('swarm-best-levels'))===2468"));
         Log.i("SwarmSmoke", "PASS native Settings scroll/bottom-actions/sound-touch/Back/reopen " + orientation);

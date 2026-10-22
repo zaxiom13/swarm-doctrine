@@ -257,6 +257,7 @@ public class InstalledRecoveryTest {
             position[0] += Math.round((float) (css.optDouble(0) * view.getWidth() / css.optDouble(2)));
             position[1] += Math.round((float) (css.optDouble(1) * view.getHeight() / css.optDouble(3)));
         });
+        Log.i("SwarmSmoke", "TOUCH native css=" + css + " screen=[" + position[0] + "," + position[1] + "]");
         long down = SystemClock.uptimeMillis();
         for (int action : new int[] {MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP}) {
             MotionEvent event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, position[0], position[1], 0);

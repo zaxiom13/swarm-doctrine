@@ -248,3 +248,13 @@ expires 2026-11-20) preserves XML, logs, both package dumps and eleven PNGs.
 Make native tap injection resemble a physical tap with a bounded 50 ms dwell and
 wait for Android idle after release. Do not retry or directly invoke the control;
 a wholly fresh run must still prove every real-touch assertion and final Continue.
+
+Run [39687460219](https://github.com/zaxiom13/swarm-doctrine/actions/runs/39687460219)
+at `888cb8a` again passes compilation/lint, callbacks, installed recovery, v1/v2
+package checks, replace install, restored state, both Settings orientations and
+both owned Sound touches, then fails the identical final landscape Home Settings
+tap before Continue. The dwell hypothesis is therefore unsupported. Preserve the
+red run and add diagnostics instead of another speculative behavior change:
+record CSS and native coordinates, captured pointerdown/pointerup/click targets,
+focus/screen before and after, plus a failure screenshot. Production navigation,
+assertions, permissions and security policy remain unchanged.
