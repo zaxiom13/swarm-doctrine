@@ -1,0 +1,54 @@
+{
+  "browser": "153.0.8010.0",
+  "viewport": [
+    732,
+    364
+  ],
+  "occluded": {
+    "x": 637.984375,
+    "y": 38.09375,
+    "rect": {
+      "x": 610.984375,
+      "y": 22.09375,
+      "width": 54,
+      "height": 32,
+      "top": 22.09375,
+      "right": 664.984375,
+      "bottom": 54.09375,
+      "left": 610.984375
+    },
+    "scroll": 342,
+    "oldPredicate": true,
+    "correctedPredicate": false,
+    "hitTag": "H2",
+    "hitId": "settings-title"
+  },
+  "reachable": {
+    "x": 637.984375,
+    "y": 220.09375,
+    "rect": {
+      "x": 610.984375,
+      "y": 204.09375,
+      "width": 54,
+      "height": 32,
+      "top": 204.09375,
+      "right": 664.984375,
+      "bottom": 236.09375,
+      "left": 610.984375
+    },
+    "scroll": 160,
+    "oldPredicate": true,
+    "correctedPredicate": true,
+    "hitTag": "INPUT",
+    "hitId": "setting-sound"
+  },
+  "occludedTapUnchanged": true,
+  "reachableTapUpdatesAll": true,
+  "state": {
+    "checked": false,
+    "runtime": false,
+    "stored": false
+  },
+  "pageErrors": [],
+  "limitation": "Controlled browser probe regression, not exact native font/scroll reproduction or installed-app proof."
+}
