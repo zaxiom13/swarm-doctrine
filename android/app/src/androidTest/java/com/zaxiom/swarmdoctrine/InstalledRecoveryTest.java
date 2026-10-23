@@ -260,12 +260,14 @@ public class InstalledRecoveryTest {
         Log.i("SwarmSmoke", "TOUCH native css=" + css + " screen=[" + position[0] + "," + position[1] + "]");
         long down = SystemClock.uptimeMillis();
         for (int action : new int[] {MotionEvent.ACTION_DOWN, MotionEvent.ACTION_UP}) {
-            MotionEvent event = MotionEvent.obtain(down, SystemClock.uptimeMillis(), action, position[0], position[1], 0);
+            // Encode a physical tap's dwell in event time without sleeping the
+            // instrumentation thread. A nominal 50 ms sleep can be descheduled
+            // past Chromium's long-press threshold on a loaded emulator, which
+            // opens text selection and suppresses the button's click event.
+            long eventTime = action == MotionEvent.ACTION_DOWN ? down : down + 50;
+            MotionEvent event = MotionEvent.obtain(down, eventTime, action, position[0], position[1], 0);
             try { InstrumentationRegistry.getInstrumentation().sendPointerSync(event); }
             finally { event.recycle(); }
-            // A physical tap has a non-zero dwell. Keep the fixture realistic so
-            // a same-timestamp DOWN/UP is not coalesced on a busy software renderer.
-            if (action == MotionEvent.ACTION_DOWN) SystemClock.sleep(50);
         }
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     }
