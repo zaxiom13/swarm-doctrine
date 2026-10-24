@@ -60,6 +60,10 @@ the app's navigation. The workflow collects test reports, native screenshots and
 filtered logs before terminating the emulator. These are two finite emulator
 configurations; successful results do not prove physical devices, current vendor
 WebViews, audible output, low-memory kills during writes or real Firebase/WebRTC.
+API 30+ uses `cmd connectivity airplane-mode`; API 26 uses the equivalent global
+setting and platform broadcast because that shell subcommand did not exist yet.
+Both paths separately disable Wi-Fi/mobile data, and the installed test requires
+airplane mode plus no active default network before accepting offline evidence.
 
 Run locally with the documented SDK/build tools and a booted API 26 or 35 emulator:
 `gradle -p android assembleDebugAndroidTest`, then
