@@ -44,8 +44,10 @@ tested build/configuration; it does not prove arbitrary future schema migrations
 
 ### Installed renderer smoke
 
-The debug workflow additionally attempts one API 35 x86_64 Pixel 2 emulator run
-on its existing Ubuntu runner (20-minute job bound, no larger/paid runner).
+The debug workflow additionally attempts API 26 and API 35 x86_64 Pixel 2
+emulator runs on existing Ubuntu runners (20-minute bound per matrix job, no
+larger/paid runner). API 26 is the declared minimum; API 35 remains the current
+regression control. Artifacts are named by API so concurrent jobs cannot collide.
 The script selects `InstalledRecoveryTest` with Gradle's instrumentation class
 argument (the staged process tests must not run in an arbitrary order), and
 launches the packaged app after
@@ -55,11 +57,11 @@ touch held through portrait/landscape rotation, real `chrome://crash` renderer
 termination, explicit retry, saved Levels Continue and Activity recreation.
 The crash URL is used only by this debug instrumentation test, never exposed in
 the app's navigation. The workflow collects test reports, native screenshots and
-filtered logs before terminating the emulator. This is one finite emulator
-configuration; successful results do not prove physical devices, API 26, audible
-output, low-memory kills during writes, update persistence or real Firebase/WebRTC.
+filtered logs before terminating the emulator. These are two finite emulator
+configurations; successful results do not prove physical devices, current vendor
+WebViews, audible output, low-memory kills during writes or real Firebase/WebRTC.
 
-Run locally with the documented SDK/build tools and a booted API 35 emulator:
+Run locally with the documented SDK/build tools and a booted API 26 or 35 emulator:
 `gradle -p android assembleDebugAndroidTest`, then
 `bash android/scripts/installed-smoke.sh` from the repo root. The script enables
 airplane mode and leaves it enabled on that test emulator. No signing credentials
