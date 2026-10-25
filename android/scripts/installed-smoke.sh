@@ -10,18 +10,32 @@ collect_evidence() {
 }
 trap collect_evidence EXIT
 
+fixture_log="android/app/build/smoke-evidence/offline-fixture.txt"
+run_fixture_step() {
+    local label="$1"
+    shift
+    echo "START ${label}" | tee -a "$fixture_log"
+    if "$@"; then
+        echo "PASS ${label}" | tee -a "$fixture_log"
+    else
+        local status=$?
+        echo "FAIL ${label} status=${status}" | tee -a "$fixture_log"
+        return "$status"
+    fi
+}
+
 device_api="$(adb shell getprop ro.build.version.sdk | tr -d '\r')"
 if (( device_api >= 30 )); then
-    adb shell cmd connectivity airplane-mode enable
+    run_fixture_step airplane-command adb shell cmd connectivity airplane-mode enable
 else
     # `cmd connectivity airplane-mode` does not exist on API 26, and its shell
     # identity cannot send the protected AIRPLANE_MODE broadcast. Set the flag
     # directly; the test proves it, while the explicit radio shutdown below and
     # the in-app assertion prove that no default network remains.
-    adb shell settings put global airplane_mode_on 1
+    run_fixture_step airplane-setting adb shell settings put global airplane_mode_on 1
 fi
-adb shell svc wifi disable
-adb shell svc data disable
+run_fixture_step wifi-disable adb shell svc wifi disable
+run_fixture_step data-disable adb shell svc data disable
 adb shell settings put system font_scale 1.3
 adb shell settings get system font_scale > android/app/build/smoke-evidence/font-scale.txt
 adb shell dumpsys connectivity > android/app/build/smoke-evidence/connectivity-before-launch.txt
