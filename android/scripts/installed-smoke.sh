@@ -14,12 +14,11 @@ device_api="$(adb shell getprop ro.build.version.sdk | tr -d '\r')"
 if (( device_api >= 30 )); then
     adb shell cmd connectivity airplane-mode enable
 else
-    # `cmd connectivity airplane-mode` does not exist on API 26. The shell
-    # identity can update this global setting and send the platform broadcast;
-    # the test still proves the resulting state and absence of a default network.
+    # `cmd connectivity airplane-mode` does not exist on API 26, and its shell
+    # identity cannot send the protected AIRPLANE_MODE broadcast. Set the flag
+    # directly; the test proves it, while the explicit radio shutdown below and
+    # the in-app assertion prove that no default network remains.
     adb shell settings put global airplane_mode_on 1
-    adb shell am broadcast -a android.intent.action.AIRPLANE_MODE \
-        --ez state true > /dev/null
 fi
 adb shell svc wifi disable
 adb shell svc data disable

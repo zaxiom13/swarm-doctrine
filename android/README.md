@@ -60,8 +60,10 @@ the app's navigation. The workflow collects test reports, native screenshots and
 filtered logs before terminating the emulator. These are two finite emulator
 configurations; successful results do not prove physical devices, current vendor
 WebViews, audible output, low-memory kills during writes or real Firebase/WebRTC.
-API 30+ uses `cmd connectivity airplane-mode`; API 26 uses the equivalent global
-setting and platform broadcast because that shell subcommand did not exist yet.
+API 30+ uses `cmd connectivity airplane-mode`. API 26 sets the equivalent global
+flag because that subcommand did not exist yet and the shell identity cannot send
+the protected platform broadcast; explicit Wi-Fi/data shutdown and the app's
+no-default-network assertion provide the connectivity proof.
 Both paths separately disable Wi-Fi/mobile data, and the installed test requires
 airplane mode plus no active default network before accepting offline evidence.
 
