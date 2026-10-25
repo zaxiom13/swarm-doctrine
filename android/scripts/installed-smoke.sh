@@ -48,11 +48,15 @@ device_api="$(adb shell getprop ro.build.version.sdk | tr -d '\r')"
 if (( device_api >= 30 )); then
     run_fixture_step airplane-command adb shell cmd connectivity airplane-mode enable
 else
-    # `cmd connectivity airplane-mode` does not exist on API 26, and its shell
-    # identity cannot send the protected AIRPLANE_MODE broadcast. Set the flag
-    # directly; the test proves it, while the explicit radio shutdown below and
-    # the in-app assertion prove that no default network remains.
+    # `cmd connectivity airplane-mode` does not exist on API 26. The legacy
+    # setting/broadcast and `svc wifi` path require the debuggable emulator's
+    # root ADB shell. This changes only the CI fixture; the app still runs under
+    # its ordinary package UID and permissions.
+    run_fixture_step adb-root adb root
+    run_fixture_step adb-root-wait adb wait-for-device
     run_fixture_step airplane-setting adb shell settings put global airplane_mode_on 1
+    run_fixture_step airplane-broadcast adb shell am broadcast \
+        -a android.intent.action.AIRPLANE_MODE --ez state true
 fi
 run_fixture_step_with_global wifi-disable wifi_on 0 adb shell svc wifi disable
 run_fixture_step data-disable adb shell svc data disable
