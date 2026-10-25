@@ -24,6 +24,26 @@ run_fixture_step() {
     fi
 }
 
+run_fixture_step_with_global() {
+    local label="$1"
+    local setting="$2"
+    local expected="$3"
+    shift 3
+    local status=0
+    echo "START ${label}" | tee -a "$fixture_log"
+    "$@" || status=$?
+    local observed
+    observed="$(adb shell settings get global "$setting" | tr -d '\r')"
+    if [[ "$observed" == "$expected" ]]; then
+        echo "PASS ${label} command-status=${status} ${setting}=${observed}" \
+            | tee -a "$fixture_log"
+    else
+        echo "FAIL ${label} command-status=${status} ${setting}=${observed}" \
+            | tee -a "$fixture_log"
+        return 1
+    fi
+}
+
 device_api="$(adb shell getprop ro.build.version.sdk | tr -d '\r')"
 if (( device_api >= 30 )); then
     run_fixture_step airplane-command adb shell cmd connectivity airplane-mode enable
@@ -34,7 +54,7 @@ else
     # the in-app assertion prove that no default network remains.
     run_fixture_step airplane-setting adb shell settings put global airplane_mode_on 1
 fi
-run_fixture_step wifi-disable adb shell svc wifi disable
+run_fixture_step_with_global wifi-disable wifi_on 0 adb shell svc wifi disable
 run_fixture_step data-disable adb shell svc data disable
 adb shell settings put system font_scale 1.3
 adb shell settings get system font_scale > android/app/build/smoke-evidence/font-scale.txt

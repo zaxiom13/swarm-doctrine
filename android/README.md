@@ -63,7 +63,9 @@ WebViews, audible output, low-memory kills during writes or real Firebase/WebRTC
 API 30+ uses `cmd connectivity airplane-mode`. API 26 sets the equivalent global
 flag because that subcommand did not exist yet and the shell identity cannot send
 the protected platform broadcast; explicit Wi-Fi/data shutdown and the app's
-no-default-network assertion provide the connectivity proof.
+no-default-network assertion provide the connectivity proof. Android 8 may kill
+the legacy `svc wifi` client while applying the change, so the fixture records its
+status and requires the resulting global Wi-Fi state to be off before continuing.
 Both paths separately disable Wi-Fi/mobile data, and the installed test requires
 airplane mode plus no active default network before accepting offline evidence.
 
