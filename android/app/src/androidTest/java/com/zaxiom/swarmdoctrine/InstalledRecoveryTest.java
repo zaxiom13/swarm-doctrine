@@ -343,7 +343,7 @@ public class InstalledRecoveryTest {
             try {
             assertOffline("first game mounted");
             assertEquals("\"https://appassets.androidplatform.net\"", js(scenario, "location.origin"));
-            assertEquals("false", js(scenario, "!!navigator.serviceWorker?.controller"));
+            assertEquals("false", js(scenario, "!!(navigator.serviceWorker&&navigator.serviceWorker.controller)"));
             // Zen has no game-over: a slow CI callback must not let a live
             // Conquest match end between input-policy assertions.
             js(scenario, "game.showTeamSelect('zen');game.selectTeam('dragon');Object.assign(game,{level:3,mapSeed:424242,levelEnemies:'passive'});game.saveCheckpoint();true");
@@ -419,11 +419,11 @@ public class InstalledRecoveryTest {
             ready(scenario);
             assertOffline("renderer retry mounted");
             assertNotSame(initial, web(scenario));
-            assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()?.seed===424242&&game.ui.continueLabel!==null"));
+            assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()&&game.loadCheckpoint().seed===424242&&game.ui.continueLabel!==null"));
             assertEquals("true", js(scenario, "game.resumeExpedition()&&game.level===3&&game.mapSeed===424242&&game.levelEnemies==='passive'"));
             scenario.recreate();
             ready(scenario);
-            assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()?.seed===424242"));
+            assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()&&game.loadCheckpoint().seed===424242"));
             Log.i("SwarmSmoke", "PASS offline/Back/background-held-Rally/touch/rotation/Freeze-button-aim-cast/Freeze-cancellation/HUD-bounds/font-scale/renderer-crash/Continue/Activity-recreation");
             } catch (AssertionError | RuntimeException failure) {
                 screenshot(scenario, "test-failure");

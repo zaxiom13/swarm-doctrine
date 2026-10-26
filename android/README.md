@@ -48,6 +48,10 @@ The debug workflow additionally attempts API 26 and API 35 x86_64 Pixel 2
 emulator runs on existing Ubuntu runners (20-minute bound per matrix job, no
 larger/paid runner). API 26 is the declared minimum; API 35 remains the current
 regression control. Artifacts are named by API so concurrent jobs cannot collide.
+The web production build targets Chrome 69 syntax and prepends the few required
+built-in shims because that is the provider bundled by the API 26 Google APIs
+image; relying on a post-install WebView update would make the declared minimum's
+first offline launch conditional on the network.
 The script selects `InstalledRecoveryTest` with Gradle's instrumentation class
 argument (the staged process tests must not run in an arbitrary order), and
 launches the packaged app after

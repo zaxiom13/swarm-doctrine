@@ -64,7 +64,7 @@ public class ProcessPersistenceTest {
         return js(scenario, "(()=>{const s=document.querySelector('#settings-screen'),e=document.querySelector('#setting-sound'),"
             + "r=e.getBoundingClientRect(),h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);"
             + "return JSON.stringify({scroll:s.scrollTop,rect:r.toJSON(),viewport:[innerWidth,innerHeight],"
-            + "hit:{tag:h?.tagName,id:h?.id,class:h?.className},ownsHit:h===e||e.contains(h),"
+            + "hit:{tag:h&&h.tagName,id:h&&h.id,class:h&&h.className},ownsHit:h===e||e.contains(h),"
             + "checked:e.checked,runtime:game.audio.enabled,stored:JSON.parse(localStorage.getItem('swarm-doctrine-settings-v3')).sound})})()");
     }
 
@@ -134,8 +134,8 @@ public class ProcessPersistenceTest {
             + "&&r.y>=0&&r.bottom<=innerHeight&&(h===b||b.contains(h))&&!s.getAnimations({subtree:true}).some(a=>a.playState==='running')})()")));
         Log.i("SwarmSmoke", "INPUT Home Settings " + orientation + " before=" + js(scenario,
             "(()=>{const b=[...document.querySelectorAll('#main-menu button')].find(b=>b.textContent.trim()==='Settings'),r=b.getBoundingClientRect(),h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);"
-            + "window.__nativeHomeTap=[];for(const type of ['pointerdown','pointerup','click'])document.addEventListener(type,e=>window.__nativeHomeTap.push({type,target:e.target?.textContent?.trim(),x:e.clientX,y:e.clientY}),{capture:true,once:true});"
-            + "return JSON.stringify({rect:r.toJSON(),viewport:[innerWidth,innerHeight],hit:h?.textContent?.trim(),focus:document.activeElement?.textContent?.trim(),screen:game.ui.screen})})()"));
+            + "window.__nativeHomeTap=[];for(const type of ['pointerdown','pointerup','click'])document.addEventListener(type,e=>window.__nativeHomeTap.push({type,target:e.target&&e.target.textContent&&e.target.textContent.trim(),x:e.clientX,y:e.clientY}),{capture:true,once:true});"
+            + "return JSON.stringify({rect:r.toJSON(),viewport:[innerWidth,innerHeight],hit:h&&h.textContent&&h.textContent.trim(),focus:document.activeElement&&document.activeElement.textContent&&document.activeElement.textContent.trim(),screen:game.ui.screen})})()"));
         try {
             tapCss(scenario, "(()=>{const b=[...document.querySelectorAll('#main-menu button')].find(b=>b.textContent.trim()==='Settings');"
                 + "const r=b.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()");
@@ -146,10 +146,10 @@ public class ProcessPersistenceTest {
             throw failure;
         } finally {
             Log.i("SwarmSmoke", "INPUT Home Settings " + orientation + " after=" + js(scenario,
-                "JSON.stringify({events:window.__nativeHomeTap,screen:game.ui.screen,active:document.activeElement?.textContent?.trim()})"));
+                "JSON.stringify({events:window.__nativeHomeTap,screen:game.ui.screen,active:document.activeElement&&document.activeElement.textContent&&document.activeElement.textContent.trim()})"));
         }
         assertEquals("native scrolling/touches did not reset saved progress", "true", js(scenario,
-            "game.loadCheckpoint()?.seed===767676&&Number(localStorage.getItem('swarm-best-levels'))===2468"));
+            "game.loadCheckpoint()&&game.loadCheckpoint().seed===767676&&Number(localStorage.getItem('swarm-best-levels'))===2468"));
         Log.i("SwarmSmoke", "PASS native Settings scroll/bottom-actions/sound-touch/Back/reopen " + orientation);
     }
 
@@ -166,7 +166,7 @@ public class ProcessPersistenceTest {
                 + "game.showTeamSelect('levels');game.selectTeam('dragon');"
                 + "Object.assign(game,{level:4,mapSeed:767676,levelEnemies:'passive'});"
                 + "game.saveCheckpoint();game.ui.saveRecord(2468);"
-                + "game.loadCheckpoint()?.seed===767676"));
+                + "game.loadCheckpoint()&&game.loadCheckpoint().seed===767676"));
             // Exercise the normal background/save contract before stopping the
             // whole process. This does not test a kill during an unfinished write.
             scenario.moveToState(Lifecycle.State.CREATED);
@@ -184,10 +184,10 @@ public class ProcessPersistenceTest {
             assertEquals("fresh process starts safely at Home", "true", js(scenario,
                 "game.ui.screen==='main-menu'&&game.gameState==='menu'"
                 + "&&location.origin==='https://appassets.androidplatform.net'"
-                + "&&!navigator.serviceWorker?.controller"));
+                + "&&!(navigator.serviceWorker&&navigator.serviceWorker.controller)"));
             assertEquals("checkpoint and record survived process stop", "true", js(scenario,
-                "game.loadCheckpoint()?.seed===767676&&game.loadCheckpoint()?.level===4"
-                + "&&game.loadCheckpoint()?.team==='dragon'&&game.loadCheckpoint()?.enemies==='passive'"
+                "game.loadCheckpoint()&&game.loadCheckpoint().seed===767676&&game.loadCheckpoint().level===4"
+                + "&&game.loadCheckpoint().team==='dragon'&&game.loadCheckpoint().enemies==='passive'"
                 + "&&game.ui.continueLabel!==null&&Number(localStorage.getItem('swarm-best-levels'))===2468"
                 + "&&game.ui.records.includes('Levels')"));
             assertEquals("loaded preferences affect runtime, not just stored bytes", "true", js(scenario,
