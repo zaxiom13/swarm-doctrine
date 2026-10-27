@@ -63,7 +63,7 @@ run_fixture_step data-disable adb shell svc data disable
 adb shell settings put system font_scale 1.3
 adb shell settings get system font_scale > android/app/build/smoke-evidence/font-scale.txt
 adb shell dumpsys connectivity > android/app/build/smoke-evidence/connectivity-before-launch.txt
-gradle -p android connectedDebugAndroidTest \
+timeout 240s gradle -p android connectedDebugAndroidTest \
     -Pandroid.testInstrumentationRunnerArguments.class=com.zaxiom.swarmdoctrine.InstalledRecoveryTest
 
 # AGP uninstalls its test APKs. Install version 1 for the staged persistence
