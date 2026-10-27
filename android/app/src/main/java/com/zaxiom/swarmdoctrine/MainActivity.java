@@ -6,6 +6,8 @@ import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+import android.webkit.ConsoleMessage;
 import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -105,7 +107,13 @@ public final class MainActivity extends ComponentActivity {
             }
         });
         // Supports the game's existing confirmation dialog; no permission grants or bridges.
-        web.setWebChromeClient(new WebChromeClient());
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override public boolean onConsoleMessage(ConsoleMessage message) {
+                if (BuildConfig.DEBUG && message.messageLevel() == ConsoleMessage.MessageLevel.ERROR)
+                    Log.e("SwarmWeb", message.message() + " @" + message.sourceId() + ":" + message.lineNumber());
+                return super.onConsoleMessage(message);
+            }
+        });
         // A recreated process starts safely at Home; persistent records/Levels survive in DOM storage.
         // WebView.saveState only saves navigation, not the live JS simulation.
         web.loadUrl(HOME);

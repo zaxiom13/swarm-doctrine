@@ -4,7 +4,7 @@ set -euo pipefail
 mkdir -p android/app/build/smoke-evidence
 collect_evidence() {
     # Collect while the emulator is still alive, including after a failed test.
-    adb logcat -d -s SwarmSmoke:I chromium:E AndroidRuntime:E > android/app/build/smoke-evidence/logcat.txt || true
+    adb logcat -d -s SwarmSmoke:I SwarmWeb:E chromium:E AndroidRuntime:E > android/app/build/smoke-evidence/logcat.txt || true
     adb pull /sdcard/Android/data/com.zaxiom.swarmdoctrine/files/smoke android/app/build/smoke-evidence/ || true
     adb pull /sdcard/Pictures/SwarmSmoke android/app/build/smoke-evidence/ || true
 }
