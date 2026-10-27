@@ -60,7 +60,7 @@ public final class MainActivity extends ComponentActivity {
                 if (web == null) { finish(); return; }
                 if (!isGame(Uri.parse(web.getUrl() == null ? "" : web.getUrl()))) { finish(); return; }
                 WebView requestedWeb = web;
-                web.evaluateJavascript("window.game?.ui.handleBack()??false",
+                web.evaluateJavascript("(window.game&&window.game.ui&&window.game.ui.handleBack())||false",
                     handled -> { if (web == requestedWeb && !"true".equals(handled)) finish(); });
             }
         });
@@ -142,7 +142,7 @@ public final class MainActivity extends ComponentActivity {
             web.evaluateJavascript(script, null);
     }
     @Override protected void onPause() {
-        runInGame("window.game?.resetHeldInput();window.game?.pause();window.game?.audio.suspend();");
+        runInGame("if(window.game){window.game.resetHeldInput();window.game.pause();window.game.audio.suspend();}");
         if (web != null) web.onPause();
         super.onPause();
     }
@@ -151,7 +151,7 @@ public final class MainActivity extends ComponentActivity {
         if (web != null) {
             web.onResume();
             // Offline matches stay paused until Resume is tapped.
-            runInGame("if(window.game?.gameState!=='paused')window.game?.audio.resume();");
+            runInGame("if(window.game&&window.game.gameState!=='paused')window.game.audio.resume();");
         }
     }
     @Override protected void onDestroy() {
