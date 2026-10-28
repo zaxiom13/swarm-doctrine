@@ -47,6 +47,8 @@ import org.json.JSONArray;
 /** Runs the packaged app and its real WebView renderer on an installed debug APK. */
 @RunWith(AndroidJUnit4.class)
 public class InstalledRecoveryTest {
+    private static final AtomicInteger JS_SEQUENCE = new AtomicInteger();
+
     private static FrameLayout frame(MainActivity activity) {
         return (FrameLayout) ((FrameLayout) activity.findViewById(android.R.id.content)).getChildAt(0);
     }
@@ -64,11 +66,18 @@ public class InstalledRecoveryTest {
     }
 
     private static String js(ActivityScenario<MainActivity> scenario, String script, boolean required) {
+        int sequence = JS_SEQUENCE.incrementAndGet();
         AtomicReference<String> value = new AtomicReference<>();
         CountDownLatch done = new CountDownLatch(1);
+        if (required) Log.i("SwarmSmoke", "JS " + sequence + " dispatch");
         scenario.onActivity(a -> {
             WebView view = (WebView) frame(a).getChildAt(0);
-            view.evaluateJavascript(script, result -> { value.set(result); done.countDown(); });
+            if (required) Log.i("SwarmSmoke", "JS " + sequence + " evaluate");
+            view.evaluateJavascript(script, result -> {
+                if (required) Log.i("SwarmSmoke", "JS " + sequence + " callback");
+                value.set(result);
+                done.countDown();
+            });
         });
         try {
             // Cold software-rendered CI can stall callbacks while Android starts
