@@ -113,6 +113,10 @@ public class InstalledRecoveryTest {
         Log.i("SwarmSmoke", "OFFLINE no active default network: " + phase);
     }
 
+    private static void phase(String name) {
+        Log.i("SwarmSmoke", "PHASE " + name);
+    }
+
     static void disableNetwork(String phase) {
         // Airplane mode permits Wi-Fi. AGP/provider initialization can also
         // change connectivity after the script's earlier snapshot. Check at
@@ -335,11 +339,14 @@ public class InstalledRecoveryTest {
             catch (AssertionError failure) { screenshot(scenario, "startup-failure"); throw failure; }
             try {
             assertOffline("first game mounted");
+            phase("origin checks start");
             assertEquals("\"https://appassets.androidplatform.net\"", js(scenario, "location.origin"));
             assertEquals("false", js(scenario, "!!(navigator.serviceWorker&&navigator.serviceWorker.controller)"));
+            phase("origin checks complete");
             // Zen has no game-over: a slow CI callback must not let a live
             // Conquest match end between input-policy assertions.
             js(scenario, "game.showTeamSelect('zen');game.selectTeam('dragon');Object.assign(game,{level:3,mapSeed:424242,levelEnemies:'passive'});game.saveCheckpoint();true");
+            phase("checkpoint fixture complete");
             WebView initial = web(scenario);
             scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
             waitFor("native Back pauses", () -> "\"paused\"".equals(js(scenario, "game.gameState")));
@@ -352,6 +359,7 @@ public class InstalledRecoveryTest {
             assertEquals("\"paused\"", js(scenario, "game.gameState"));
             scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
             waitFor("resumed match", () -> "\"playing\"".equals(js(scenario, "game.gameState")));
+            phase("Back and lifecycle complete");
             long down = pointer(scenario, MotionEvent.ACTION_DOWN, 0);
             waitFor("native edge touch rallies", () -> "true".equals(js(scenario, "game.player.rallying")));
             scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));
@@ -361,11 +369,13 @@ public class InstalledRecoveryTest {
             pointer(scenario, MotionEvent.ACTION_UP, down);
             assertEquals("true", js(scenario, "game.sim.boids.every(b=>Number.isFinite(b.pos.x)&&Number.isFinite(b.pos.y))"));
             hudFits(scenario);
+            phase("Rally rotation complete");
             screenshot(scenario, "landscape");
             scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
             waitFor("portrait viewport", () -> "true".equals(js(scenario, "innerHeight>innerWidth")));
             hudFits(scenario);
             screenshot(scenario, "portrait");
+            phase("orientation captures complete");
             armFreeze(scenario);
             scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
             waitFor("Back cancels Freeze without pausing", () -> "true".equals(js(scenario, "!game.input.freezeAiming&&game.gameState==='playing'")));
@@ -390,6 +400,7 @@ public class InstalledRecoveryTest {
             } finally {
                 Log.i("SwarmSmoke", "FREEZE native cast=" + js(scenario, "JSON.stringify(window.__nativeFreeze)"));
             }
+            phase("Freeze input complete");
             long backgroundDown = pointer(scenario, MotionEvent.ACTION_DOWN, 0);
             waitFor("Rally before background", () -> "true".equals(js(scenario, "game.player.rallying")));
             scenario.moveToState(Lifecycle.State.CREATED).moveToState(Lifecycle.State.RESUMED);
@@ -397,12 +408,14 @@ public class InstalledRecoveryTest {
             pointer(scenario, MotionEvent.ACTION_UP, backgroundDown);
             scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
             waitFor("explicit resume after held touch", () -> "true".equals(js(scenario, "game.gameState==='playing'")));
+            phase("background held input complete");
             scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
             waitFor("portrait before recovery", () -> "true".equals(js(scenario, "innerHeight>innerWidth")));
             // A real renderer termination, deliberately restricted to this debug test.
             scenario.onActivity(a -> ((WebView) frame(a).getChildAt(0)).loadUrl("chrome://crash"));
             waitFor("native recovery screen", () -> web(scenario) == null);
             screenshot(scenario, "renderer-recovery");
+            phase("renderer crash screen complete");
             scenario.moveToState(Lifecycle.State.CREATED).moveToState(Lifecycle.State.RESUMED);
             disableNetwork("before renderer retry");
             scenario.onActivity(a -> {
@@ -414,6 +427,7 @@ public class InstalledRecoveryTest {
             assertNotSame(initial, web(scenario));
             assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()&&game.loadCheckpoint().seed===424242&&game.ui.continueLabel!==null"));
             assertEquals("true", js(scenario, "game.resumeExpedition()&&game.level===3&&game.mapSeed===424242&&game.levelEnemies==='passive'"));
+            phase("renderer retry and Continue complete");
             scenario.recreate();
             ready(scenario);
             assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()&&game.loadCheckpoint().seed===424242"));
