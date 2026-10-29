@@ -63,8 +63,28 @@ run_fixture_step data-disable adb shell svc data disable
 adb shell settings put system font_scale 1.3
 adb shell settings get system font_scale > android/app/build/smoke-evidence/font-scale.txt
 adb shell dumpsys connectivity > android/app/build/smoke-evidence/connectivity-before-launch.txt
+smoke_status=0
 timeout 240s gradle -p android connectedDebugAndroidTest \
-    -Pandroid.testInstrumentationRunnerArguments.class=com.zaxiom.swarmdoctrine.InstalledRecoveryTest
+    -Pandroid.testInstrumentationRunnerArguments.class=com.zaxiom.swarmdoctrine.InstalledRecoveryTest \
+    || smoke_status=$?
+if (( smoke_status == 124 )); then
+    # Preserve the Java stacks at the exact bounded timeout. The API 26 fixture
+    # runs with root ADB only for legacy radio setup, so SIGQUIT can reach the
+    # ordinary app process without adding app permissions or a debug bridge.
+    app_pid="$(adb shell pidof com.zaxiom.swarmdoctrine | tr -d '\r' || true)"
+    if [[ -n "$app_pid" ]]; then
+        echo "SIGQUIT app PID ${app_pid} after connected-test timeout" \
+            | tee android/app/build/smoke-evidence/thread-dump.txt
+        adb shell kill -3 "$app_pid" || true
+        sleep 2
+        adb logcat -d -v threadtime \
+            > android/app/build/smoke-evidence/thread-dump-logcat.txt || true
+    else
+        echo 'No app process found after connected-test timeout' \
+            | tee android/app/build/smoke-evidence/thread-dump.txt
+    fi
+fi
+if (( smoke_status != 0 )); then exit "$smoke_status"; fi
 
 # AGP uninstalls its test APKs. Install version 1 for the staged persistence
 # check. After saving, the script upgrades to version 2 with adb install -r;
