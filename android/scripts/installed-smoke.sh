@@ -74,14 +74,21 @@ if (( smoke_status == 124 )); then
     app_pid="$(adb shell pidof com.zaxiom.swarmdoctrine | tr -d '\r' || true)"
     if [[ -n "$app_pid" ]]; then
         echo "SIGQUIT app PID ${app_pid} after connected-test timeout" \
-            | tee android/app/build/smoke-evidence/thread-dump.txt
+            > android/app/build/smoke-evidence/thread-dump-status.txt
+        # Android 8's signal catcher writes to this legacy path instead of
+        # logcat. The API 26 fixture already runs root ADB for radio controls;
+        # prepare a writable emulator-only target, then pull it as evidence.
+        adb shell 'mkdir -p /data/anr && : > /data/anr/traces.txt && chmod 0666 /data/anr/traces.txt' \
+            || true
         adb shell kill -3 "$app_pid" || true
         sleep 2
+        adb pull /data/anr/traces.txt \
+            android/app/build/smoke-evidence/thread-dump.txt || true
         adb logcat -d -v threadtime \
             > android/app/build/smoke-evidence/thread-dump-logcat.txt || true
     else
         echo 'No app process found after connected-test timeout' \
-            | tee android/app/build/smoke-evidence/thread-dump.txt
+            | tee android/app/build/smoke-evidence/thread-dump-status.txt
     fi
 fi
 if (( smoke_status != 0 )); then exit "$smoke_status"; fi
