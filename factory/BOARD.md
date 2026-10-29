@@ -1,6 +1,6 @@
 # Swarm Doctrine board
 
-Updated 2026-10-28. Android remains a committed priority. Five improvement slots
+Updated 2026-10-29. Android remains a committed priority. Five improvement slots
 are occupied after #19 merged: #20/#22/#23/#26/#27. Maintain these before adding
 another batch. Merged code and archive/browser checks do not establish native
 installed-device readiness.
@@ -12,13 +12,13 @@ installed-device readiness.
 | SD-012 | Verify the generated web tree exactly matches debug APK assets | [#20](https://github.com/zaxiom13/swarm-doctrine/pull/20) | Unchanged `4193ba6`; 10-19 check/80 tests/build and current-head web/Android CI remain green, not a new native run. All nine shared-verifier ZIP fixtures and actual lintDebug/verifyDebugApk passed. [Verified APK](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38821195864/artifacts/12013980056). Card/report in its branch. |
 | SD-015 | Guard fleet spawn clearance over seeded aspect ratios | [#22](https://github.com/zaxiom13/swarm-doctrine/pull/22) | Unchanged `acd0c36`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Runtime TerrainField reach covers 2,048 seeds x eight aspects. No overlap bug was found. [Card](cards/SD-015.md). |
 | SD-014 | Clear stale conversion flashes on reused online guest ships | [#23](https://github.com/zaxiom13/swarm-doctrine/pull/23) | Unchanged `ab91651`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Frozen two-frame regression and both local-duel roles pass again. [Card](cards/SD-014.md). Real transport remains untested. |
-| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | `76e2d8c`: API 35 again passes the full offline recovery/update/portrait/landscape path. API 26/Chrome 69 mounts offline, then logs the first post-mount JS dispatch but never enters the Activity UI-thread callback; the four-minute bound preserves red evidence. No product fix was guessed and minimum-provider compatibility remains open. [Evidence](evidence/2026-10-28/report.md). |
+| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | `6139eef` captures the legacy Android 8 trace without changing product code, assertions or timing. Main/UI, RenderThread and Chrome GPU stacks localize API 26 to the emulator Goldfish graphics pipe, not game JS or input. API 35's full portrait/landscape/update scenario passes on its single-job retry after one non-reproduced Settings-reopen timeout. Minimum-provider compatibility remains open. [Evidence](evidence/2026-10-29/report.md). |
 | SD-018 | First offline reload reuses a safe public Origin variant | [#27](https://github.com/zaxiom13/swarm-doctrine/pull/27) | Unchanged `159439b`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Exact public URL and Origin-only Vary guard; fresh four-case offline matrix passes. [Card](https://github.com/zaxiom13/swarm-doctrine/blob/night/offline-origin-variant/factory/cards/SD-018.md). |
 
 Main is `886b3f4`, which merged #19. All five PRs target main with no
 pending stack dependencies. Local merges were conflict-free. All five
 merge automatically together and pass
-check/83 tests/build again on 2026-10-28. [Current evidence](evidence/2026-10-28/report.md).
+check/83 tests/build again on 2026-10-29. [Current evidence](evidence/2026-10-29/report.md).
 Fresh current-main and #26 check/80 tests/build pass. The exact #26 web workflow
 and API 35 native job pass. API 26's post-mount stall is localized before the
 Activity UI-thread evaluation runnable executes; do not call the minimum-provider
@@ -47,7 +47,7 @@ this table reconciles their latest actual states.
 
 ## Next, in order
 
-1. Capture a bounded API 26 UI-thread stack after `JS dispatch`, then complete #26's API 26 and 35 installed matrix,
+1. Use the bounded API 26 UI-thread stack after `JS dispatch` to complete #26's API 26 and 35 installed matrix,
    and test airplane-mode first launch, portrait/landscape, cutouts/system bars,
    font scaling, edge touches, Back, Rally/Freeze through rotation, audio/background,
    abrupt process death and checkpoint persistence across APK updates. SDK/emulator/KVM
@@ -80,4 +80,4 @@ this table reconciles their latest actual states.
    real canvas/worker/frame costs still need device measurements before tuning.
 
 Interactive lessons remain hidden. Rules, shared Simulation/Commander and trained
-policy remain unchanged. [Latest journal](journal/2026-10-28.md).
+policy remain unchanged. [Latest journal](journal/2026-10-29.md).
