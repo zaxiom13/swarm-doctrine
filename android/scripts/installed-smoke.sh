@@ -63,6 +63,13 @@ run_fixture_step data-disable adb shell svc data disable
 adb shell settings put system font_scale 1.3
 adb shell settings get system font_scale > android/app/build/smoke-evidence/font-scale.txt
 adb shell dumpsys connectivity > android/app/build/smoke-evidence/connectivity-before-launch.txt
+{
+    printf 'requested=%s\n' "${SWARM_EMULATOR_GPU:-unspecified}"
+    printf 'ro.hardware.egl=%s\n' "$(adb shell getprop ro.hardware.egl | tr -d '\r')"
+    printf 'ro.opengles.version=%s\n' "$(adb shell getprop ro.opengles.version | tr -d '\r')"
+    printf 'ro.kernel.qemu.gles=%s\n' "$(adb shell getprop ro.kernel.qemu.gles | tr -d '\r')"
+    adb shell dumpsys SurfaceFlinger | grep -m 1 'GLES:' || true
+} > android/app/build/smoke-evidence/graphics-backend.txt
 smoke_status=0
 timeout 240s gradle -p android connectedDebugAndroidTest \
     -Pandroid.testInstrumentationRunnerArguments.class=com.zaxiom.swarmdoctrine.InstalledRecoveryTest \

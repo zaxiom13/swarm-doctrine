@@ -7,13 +7,17 @@ permissions:
   contents: read
 jobs:
   apk:
-    name: apk (API ${{ matrix.api-level }})
+    name: apk (API ${{ matrix.api-level }}, ${{ matrix.gpu-mode }} GPU)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        api-level: [26, 35]
+        include:
+          - api-level: 26
+            gpu-mode: software
+          - api-level: 35
+            gpu-mode: swiftshader_indirect
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,12 +50,14 @@ jobs:
         run: sudo chmod a+rw /dev/kvm
       - name: Installed offline WebView smoke (API ${{ matrix.api-level }})
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          SWARM_EMULATOR_GPU: ${{ matrix.gpu-mode }}
         with:
           api-level: ${{ matrix.api-level }}
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu swiftshader_indirect -camera-back none
+          emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu ${{ matrix.gpu-mode }} -camera-back none
           script: |
             bash android/scripts/installed-smoke.sh
       - uses: actions/upload-artifact@v4
