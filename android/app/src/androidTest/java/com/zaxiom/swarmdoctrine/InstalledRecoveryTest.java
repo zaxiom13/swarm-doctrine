@@ -414,9 +414,12 @@ public class InstalledRecoveryTest {
             waitFor("Rally before background", () -> "true".equals(js(scenario, "game.player.rallying")));
             scenario.moveToState(Lifecycle.State.CREATED).moveToState(Lifecycle.State.RESUMED);
             assertEquals("true", js(scenario, "game.gameState==='paused'&&!game.player.rallying&&game.input.pointerId===null&&!game.input.freezeAiming"));
+            assertEquals("paused foreground keeps Web Audio suspended", "\"suspended\"",
+                js(scenario, "game.audio.ctx&&game.audio.ctx.state"));
             pointer(scenario, MotionEvent.ACTION_UP, backgroundDown);
             scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
-            waitFor("explicit resume after held touch", () -> "true".equals(js(scenario, "game.gameState==='playing'")));
+            waitFor("explicit resume after held touch", () -> "true".equals(js(scenario,
+                "game.gameState==='playing'&&game.audio.ctx&&game.audio.ctx.state==='running'")));
             phase("background held input complete");
             scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
             waitFor("portrait before recovery", () -> "true".equals(js(scenario, "innerHeight>innerWidth")));
