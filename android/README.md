@@ -59,6 +59,9 @@ airplane mode and Wi-Fi/mobile data have been disabled, records API/WebView
 versions, and exercises native Back dispatch, background/foreground, an edge
 touch held through portrait/landscape rotation, real `chrome://crash` renderer
 termination, explicit retry, saved Levels Continue and Activity recreation.
+In both orientations it also compares the installed WebView's window bounds with
+Android's combined system-bar/display-cutout safe insets. Exact edge equality
+rejects both content under a bar/cutout and accidental double-insetting.
 The crash URL is used only by this debug instrumentation test, never exposed in
 the app's navigation. The workflow collects test reports, native screenshots and
 filtered logs before terminating the emulator. These are two finite emulator

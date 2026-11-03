@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import android.content.pm.ActivityInfo;
 import android.content.ContentValues;
 import android.graphics.Bitmap;
+import android.graphics.Insets;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
@@ -18,7 +19,9 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.PixelCopy;
+import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.WindowInsets;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -318,6 +321,52 @@ public class InstalledRecoveryTest {
             "[...document.querySelectorAll('#game-screen button')].filter(b=>b.getClientRects().length&&!b.classList.contains('hidden')).every(b=>{const r=b.getBoundingClientRect();return r.x>=-1&&r.y>=-1&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1})"));
     }
 
+    /** Prove the installed WebView occupies the complete safe window exactly:
+     * no system-bar/cutout overlap and no second inset that wastes play space. */
+    private static void systemBarsFit(ActivityScenario<MainActivity> scenario, String orientation) {
+        scenario.onActivity(a -> {
+            FrameLayout root = frame(a);
+            WebView view = (WebView) root.getChildAt(0);
+            View decor = a.getWindow().getDecorView();
+            WindowInsets windowInsets = decor.getRootWindowInsets();
+            assertNotNull("window insets available in " + orientation, windowInsets);
+            int left;
+            int top;
+            int right;
+            int bottom;
+            if (Build.VERSION.SDK_INT >= 30) {
+                Insets safe = windowInsets.getInsets(
+                    WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                left = safe.left;
+                top = safe.top;
+                right = safe.right;
+                bottom = safe.bottom;
+            } else {
+                left = windowInsets.getSystemWindowInsetLeft();
+                top = windowInsets.getSystemWindowInsetTop();
+                right = windowInsets.getSystemWindowInsetRight();
+                bottom = windowInsets.getSystemWindowInsetBottom();
+            }
+            assertTrue("system-bar fixture has a nonzero safe inset in " + orientation,
+                left + top + right + bottom > 0);
+            int[] position = new int[2];
+            view.getLocationInWindow(position);
+            Log.i("SwarmSmoke", "SAFE " + orientation
+                + " decor=" + decor.getWidth() + "x" + decor.getHeight()
+                + " insets=[" + left + "," + top + "," + right + "," + bottom + "]"
+                + " framePadding=[" + root.getPaddingLeft() + "," + root.getPaddingTop()
+                + "," + root.getPaddingRight() + "," + root.getPaddingBottom() + "]"
+                + " web=[" + position[0] + "," + position[1] + ","
+                + (position[0] + view.getWidth()) + "," + (position[1] + view.getHeight()) + "]");
+            assertEquals("WebView starts after the left safe inset in " + orientation, left, position[0]);
+            assertEquals("WebView starts after the top safe inset in " + orientation, top, position[1]);
+            assertEquals("WebView ends before the right safe inset in " + orientation,
+                decor.getWidth() - right, position[0] + view.getWidth());
+            assertEquals("WebView ends before the bottom safe inset in " + orientation,
+                decor.getHeight() - bottom, position[1] + view.getHeight());
+        });
+    }
+
     private static void touchWindowReady(ActivityScenario<MainActivity> scenario) {
         // RESUMED/JavaScript readiness need not mean the Android window has
         // focus yet. Keep Instrumentation's app-UID restriction; never route
@@ -378,11 +427,13 @@ public class InstalledRecoveryTest {
             pointer(scenario, MotionEvent.ACTION_UP, down);
             assertEquals("true", js(scenario, "game.sim.boids.every(b=>Number.isFinite(b.pos.x)&&Number.isFinite(b.pos.y))"));
             hudFits(scenario);
+            systemBarsFit(scenario, "landscape");
             phase("Rally rotation complete");
             screenshot(scenario, "landscape");
             scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
             waitFor("portrait viewport", () -> "true".equals(js(scenario, "innerHeight>innerWidth")));
             hudFits(scenario);
+            systemBarsFit(scenario, "portrait");
             screenshot(scenario, "portrait");
             phase("orientation captures complete");
             armFreeze(scenario);
