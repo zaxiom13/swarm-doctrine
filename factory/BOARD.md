@@ -1,6 +1,6 @@
 # Swarm Doctrine board
 
-Updated 2026-11-01. Android remains a committed priority. Five improvement slots
+Updated 2026-11-03. Android remains a committed priority. Five improvement slots
 are occupied after #19 merged: #20/#22/#23/#26/#27. Maintain these before adding
 another batch. Merged code and archive/browser checks do not establish native
 installed-device readiness.
@@ -12,13 +12,13 @@ installed-device readiness.
 | SD-012 | Verify the generated web tree exactly matches debug APK assets | [#20](https://github.com/zaxiom13/swarm-doctrine/pull/20) | Unchanged `4193ba6`; 10-19 check/80 tests/build and current-head web/Android CI remain green, not a new native run. All nine shared-verifier ZIP fixtures and actual lintDebug/verifyDebugApk passed. [Verified APK](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38821195864/artifacts/12013980056). Card/report in its branch. |
 | SD-015 | Guard fleet spawn clearance over seeded aspect ratios | [#22](https://github.com/zaxiom13/swarm-doctrine/pull/22) | Unchanged `acd0c36`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Runtime TerrainField reach covers 2,048 seeds x eight aspects. No overlap bug was found. [Card](cards/SD-015.md). |
 | SD-014 | Clear stale conversion flashes on reused online guest ships | [#23](https://github.com/zaxiom13/swarm-doctrine/pull/23) | Unchanged `ab91651`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Frozen two-frame regression and both local-duel roles pass again. [Card](cards/SD-014.md). Real transport remains untested. |
-| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | `ab56faf` fixes a reproduced foreground-audio lifecycle bug: a visibility event could resume Web Audio behind an explicitly paused offline match. A focused regression distinguishes visibility suspension from match suspension; API 35's installed flow passes suspended-while-paused then running-after-explicit-Resume alongside portrait/landscape/recovery/update coverage. API 26 retains its independent emulator graphics stall. [Evidence](evidence/2026-11-01/report.md). |
+| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | `8b71d48` adds installed exact safe-display bounds after portrait/landscape rotation. API 35/WebView 124 passes: 1920x1080 and 1080x1920 decor both expose 63px top/bottom insets, and WebView edges equal those safe bounds without overlap or double padding. Its prior audio/recovery/update/process coverage also passes. API 26 retains its independent emulator graphics stall before the new assertion. [Evidence](evidence/2026-11-03/report.md). |
 | SD-018 | First offline reload reuses a safe public Origin variant | [#27](https://github.com/zaxiom13/swarm-doctrine/pull/27) | Unchanged `159439b`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Exact public URL and Origin-only Vary guard; fresh four-case offline matrix passes. [Card](https://github.com/zaxiom13/swarm-doctrine/blob/night/offline-origin-variant/factory/cards/SD-018.md). |
 
 Main is `886b3f4`, which merged #19. All five PRs target main with no
 pending stack dependencies. Local merges were conflict-free. All five
 merge automatically together and pass
-check/84 tests/build again on 2026-11-01. [Current evidence](evidence/2026-11-01/report.md).
+check/84 tests/build again on 2026-11-03. [Current evidence](evidence/2026-11-03/report.md).
 Fresh current-main check/80 tests/build and #26 check/81 tests/build pass. The exact #26 web workflow
 and API 35 native job pass. API 26's post-mount stall reproduces with both
 requested emulator GPU modes before the Activity UI-thread evaluation runnable
@@ -59,7 +59,10 @@ this table reconciles their latest actual states.
    distinct from browser tests. Normal-save/whole-process force-stop/persisted
    Settings assertions pass. Focus/visible-state/frame diagnostics and inspected
    paired Settings images now establish correct initial portrait/landscape
-   viewports on the finite API 35 configuration. Prior blank/retained PNGs remain
+   viewports on the finite API 35 configuration. Exact native safe-display bounds
+   now additionally reject system-bar overlap and double-insetting in both
+   orientations on that configuration; arbitrary cutout shapes and navigation
+   modes remain unproved. Prior blank/retained PNGs remain
    rejected. The 10-18 landscape Sound failure is historical; 10-19's corrected
    settled/hit-owned native probe passes both Sound directions, Back/reopen and
    final Continue, with actual scrollTop=0 top captures. Next: installed API 26,
@@ -81,4 +84,4 @@ this table reconciles their latest actual states.
    real canvas/worker/frame costs still need device measurements before tuning.
 
 Interactive lessons remain hidden. Rules, shared Simulation/Commander and trained
-policy remain unchanged. [Latest journal](journal/2026-11-01.md).
+policy remain unchanged. [Latest journal](journal/2026-11-03.md).
