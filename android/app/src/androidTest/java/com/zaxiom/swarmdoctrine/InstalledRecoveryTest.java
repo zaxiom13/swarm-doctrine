@@ -338,7 +338,7 @@ public class InstalledRecoveryTest {
             String geometry = js(scenario,
                 "(()=>{const s=document.querySelector('#" + screen + "'),controls=[...s.querySelectorAll('button,input,select,a')].filter(e=>e.getClientRects().length&&!e.classList.contains('hidden'));"
                     + "const clipped=controls.filter(e=>{const r=e.getBoundingClientRect();return r.left<-1||r.right>innerWidth+1}).map(e=>e.id||e.textContent.trim().slice(0,32));"
-                    + "return JSON.stringify({screen:'" + screen + "',viewport:[innerWidth,innerHeight],scroll:[s.scrollWidth,s.scrollHeight],client:[s.clientWidth,s.clientHeight],controls:controls.length,clipped})})()";
+                    + "return JSON.stringify({screen:'" + screen + "',viewport:[innerWidth,innerHeight],scroll:[s.scrollWidth,s.scrollHeight],client:[s.clientWidth,s.clientHeight],controls:controls.length,clipped})})()");
             Log.i("SwarmSmoke", "MENU " + orientation + " " + geometry);
             assertEquals(screen + " has no horizontally clipped controls in " + orientation, "true", js(scenario,
                 "(()=>{const s=document.querySelector('#" + screen + "');return s.scrollWidth<=s.clientWidth+1&&[...s.querySelectorAll('button,input,select,a')].filter(e=>e.getClientRects().length&&!e.classList.contains('hidden')).every(e=>{const r=e.getBoundingClientRect();return r.left>=-1&&r.right<=innerWidth+1})})()"));
