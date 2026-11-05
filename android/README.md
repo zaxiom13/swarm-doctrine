@@ -59,6 +59,10 @@ airplane mode and Wi-Fi/mobile data have been disabled, records API/WebView
 versions, and exercises native Back dispatch, background/foreground, an edge
 touch held through portrait/landscape rotation, real `chrome://crash` renderer
 termination, explicit retry, saved Levels Continue and Activity recreation.
+With the 1.3 font-scale fixture, real Android taps also drive the new-player
+Home → Modes → Levels → Team path in portrait and landscape. Native Back must
+return Team → Modes → Home, and each screen must avoid horizontal control
+clipping; vertically long card grids remain intentionally scrollable.
 In both orientations it also compares the installed WebView's window bounds with
 Android's combined system-bar/display-cutout safe insets. Exact edge equality
 rejects both content under a bar/cutout and accidental double-insetting.
@@ -156,7 +160,8 @@ On a debug device, use the inspected WebView's `chrome://crash` in DevTools (not
 as an app link), then check recovery, Home, saved Continue and audio. Also kill
 the renderer under background memory pressure and check foreground recovery.
 
-This milestone is not a claim of Play Store readiness. On API 26 and 35+ with
+This milestone is not a claim of Play Store readiness. The installed menu path
+does not cover every card, guide page, dialog or font/accessibility setting. On API 26 and 35+ with
 current WebView, verify first launch in airplane mode, all offline modes/rivals,
 portrait/landscape rotation during Rally/Freeze, cutouts/gesture navigation,
 Back from every menu/overlay, background/foreground audio, process recreation,

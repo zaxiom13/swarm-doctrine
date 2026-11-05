@@ -321,6 +321,39 @@ public class InstalledRecoveryTest {
             "[...document.querySelectorAll('#game-screen button')].filter(b=>b.getClientRects().length&&!b.classList.contains('hidden')).every(b=>{const r=b.getBoundingClientRect();return r.x>=-1&&r.y>=-1&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1})"));
     }
 
+    /** Exercise the first-run menu path through Android input, not JavaScript
+     * navigation. Long pages may scroll vertically, but no control may spill
+     * sideways out of the usable WebView at the larger-font fixture. */
+    private static void menuPathFits(ActivityScenario<MainActivity> scenario, String orientation) throws Exception {
+        String[] screens = { "main-menu", "mode-screen", "team-select-screen" };
+        String[] points = {
+            "(()=>{const b=document.querySelector('#btn-play'),r=b.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()",
+            "(()=>{const b=[...document.querySelectorAll('#mode-screen .card')].find(b=>b.textContent.includes('Levels')),r=b.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()"
+        };
+        for (int i = 0; i < screens.length; i++) {
+            String screen = screens[i];
+            waitFor(screen + " visible and settled in " + orientation, () -> "true".equals(js(scenario,
+                "(()=>{const s=document.querySelector('#" + screen + "');return game.ui.screen==='" + screen
+                    + "'&&document.fonts.status==='loaded'&&!s.getAnimations({subtree:true}).some(a=>a.playState==='running')})()")));
+            String geometry = js(scenario,
+                "(()=>{const s=document.querySelector('#" + screen + "'),controls=[...s.querySelectorAll('button,input,select,a')].filter(e=>e.getClientRects().length&&!e.classList.contains('hidden'));"
+                    + "const clipped=controls.filter(e=>{const r=e.getBoundingClientRect();return r.left<-1||r.right>innerWidth+1}).map(e=>e.id||e.textContent.trim().slice(0,32));"
+                    + "return JSON.stringify({screen:'" + screen + "',viewport:[innerWidth,innerHeight],scroll:[s.scrollWidth,s.scrollHeight],client:[s.clientWidth,s.clientHeight],controls:controls.length,clipped})})()";
+            Log.i("SwarmSmoke", "MENU " + orientation + " " + geometry);
+            assertEquals(screen + " has no horizontally clipped controls in " + orientation, "true", js(scenario,
+                "(()=>{const s=document.querySelector('#" + screen + "');return s.scrollWidth<=s.clientWidth+1&&[...s.querySelectorAll('button,input,select,a')].filter(e=>e.getClientRects().length&&!e.classList.contains('hidden')).every(e=>{const r=e.getBoundingClientRect();return r.left>=-1&&r.right<=innerWidth+1})})()"));
+            screenshot(scenario, "menu-" + orientation + "-" + screen);
+            if (i < points.length) tapCss(scenario, points[i]);
+        }
+        scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
+        waitFor("Back returns Team to Modes in " + orientation,
+            () -> "\"mode-screen\"".equals(js(scenario, "game.ui.screen")));
+        scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
+        waitFor("Back returns Modes to Home in " + orientation,
+            () -> "\"main-menu\"".equals(js(scenario, "game.ui.screen")));
+        Log.i("SwarmSmoke", "PASS native Home/Modes/Levels/Team/Back menu path " + orientation);
+    }
+
     /** Prove the installed WebView occupies the complete safe window exactly:
      * no system-bar/cutout overlap and no second inset that wastes play space. */
     private static void systemBarsFit(ActivityScenario<MainActivity> scenario, String orientation) {
@@ -401,6 +434,13 @@ public class InstalledRecoveryTest {
             assertEquals("\"https://appassets.androidplatform.net\"", js(scenario, "location.origin"));
             assertEquals("false", js(scenario, "!!(navigator.serviceWorker&&navigator.serviceWorker.controller)"));
             phase("origin checks complete");
+            menuPathFits(scenario, "portrait");
+            scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));
+            waitFor("landscape menu viewport", () -> "true".equals(js(scenario, "innerWidth>innerHeight")));
+            menuPathFits(scenario, "landscape");
+            scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
+            waitFor("portrait menu viewport", () -> "true".equals(js(scenario, "innerHeight>innerWidth")));
+            phase("new-player menu paths complete");
             // Zen has no game-over: a slow CI callback must not let a live
             // Conquest match end between input-policy assertions.
             js(scenario, "game.showTeamSelect('zen');game.selectTeam('dragon');Object.assign(game,{level:3,mapSeed:424242,levelEnemies:'passive'});game.saveCheckpoint();true");
@@ -494,7 +534,7 @@ public class InstalledRecoveryTest {
             scenario.recreate();
             ready(scenario);
             assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()&&game.loadCheckpoint().seed===424242"));
-            Log.i("SwarmSmoke", "PASS offline/Back/background-held-Rally/touch/rotation/Freeze-button-aim-cast/Freeze-cancellation/HUD-bounds/font-scale/renderer-crash/Continue/Activity-recreation");
+            Log.i("SwarmSmoke", "PASS offline/new-player-menus/Back/background-held-Rally/touch/rotation/Freeze-button-aim-cast/Freeze-cancellation/HUD-bounds/font-scale/renderer-crash/Continue/Activity-recreation");
             } catch (AssertionError | RuntimeException failure) {
                 screenshot(scenario, "test-failure");
                 throw failure;
