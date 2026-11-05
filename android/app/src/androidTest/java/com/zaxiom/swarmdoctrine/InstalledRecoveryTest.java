@@ -342,7 +342,11 @@ public class InstalledRecoveryTest {
             Log.i("SwarmSmoke", "MENU " + orientation + " " + geometry);
             assertEquals(screen + " has no horizontally clipped controls in " + orientation, "true", js(scenario,
                 "(()=>{const s=document.querySelector('#" + screen + "');return s.scrollWidth<=s.clientWidth+1&&[...s.querySelectorAll('button,input,select,a')].filter(e=>e.getClientRects().length&&!e.classList.contains('hidden')).every(e=>{const r=e.getBoundingClientRect();return r.left>=-1&&r.right<=innerWidth+1})})()"));
-            screenshot(scenario, "menu-" + orientation + "-" + screen);
+            // A VisualStateCallback can run before SurfaceFlinger's displayed
+            // frame advances. Use the same committed-frame + PixelCopy path as
+            // the Settings evidence so sequential menu captures cannot retain
+            // the previous screen while the DOM assertions already pass.
+            committedWindowScreenshot(scenario, "menu-" + orientation + "-" + screen);
             if (i < points.length) tapCss(scenario, points[i]);
         }
         scenario.onActivity(a -> a.getOnBackPressedDispatcher().onBackPressed());
