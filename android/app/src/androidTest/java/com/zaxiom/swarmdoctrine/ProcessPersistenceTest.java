@@ -134,7 +134,7 @@ public class ProcessPersistenceTest {
             + "&&r.y>=0&&r.bottom<=innerHeight&&(h===b||b.contains(h))&&!s.getAnimations({subtree:true}).some(a=>a.playState==='running')})()")));
         Log.i("SwarmSmoke", "INPUT Home Settings " + orientation + " before=" + js(scenario,
             "(()=>{const b=[...document.querySelectorAll('#main-menu button')].find(b=>b.textContent.trim()==='Settings'),r=b.getBoundingClientRect(),h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);"
-            + "window.__nativeHomeTap=[];for(const type of ['pointerdown','pointerup','click'])document.addEventListener(type,e=>window.__nativeHomeTap.push({type,target:e.target&&e.target.textContent&&e.target.textContent.trim(),x:e.clientX,y:e.clientY}),{capture:true,once:true});"
+            + "window.__nativeHomeTap=[];for(const type of ['pointerdown','pointerup','click'])document.addEventListener(type,e=>window.__nativeHomeTap.push({type,target:e.target&&e.target.textContent&&e.target.textContent.trim(),x:e.clientX,y:e.clientY,t:performance.now()}),{capture:true,once:true});"
             + "return JSON.stringify({rect:r.toJSON(),viewport:[innerWidth,innerHeight],hit:h&&h.textContent&&h.textContent.trim(),focus:document.activeElement&&document.activeElement.textContent&&document.activeElement.textContent.trim(),screen:game.ui.screen})})()"));
         try {
             tapCss(scenario, "(()=>{const b=[...document.querySelectorAll('#main-menu button')].find(b=>b.textContent.trim()==='Settings');"

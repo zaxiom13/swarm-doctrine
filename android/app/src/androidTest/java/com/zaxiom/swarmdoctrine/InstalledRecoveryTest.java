@@ -17,6 +17,7 @@ import android.os.SystemClock;
 import android.provider.Settings;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.InputDevice;
 import android.view.MotionEvent;
 import android.view.PixelCopy;
 import android.view.View;
@@ -274,10 +275,26 @@ public class InstalledRecoveryTest {
             position[1] += Math.round((float) (css.optDouble(1) * view.getHeight() / css.optDouble(3)));
         });
         Log.i("SwarmSmoke", "TOUCH native css=" + css + " screen=[" + position[0] + "," + position[1] + "]");
-        // Let Android's input service generate a complete physical tap. Sending
-        // DOWN/UP separately can be descheduled between calls on a loaded emulator;
-        // Chromium then opens text selection and intentionally suppresses click.
-        shell("input tap " + position[0] + " " + position[1]);
+        // Queue DOWN without waiting for the app to become idle, then wait for
+        // the already-queued UP. Synchronous DOWN injection (including `input
+        // tap`) can block on a loaded software renderer long enough for Chromium
+        // to fire its long-press selection timer before UP is injected.
+        long downTime = SystemClock.uptimeMillis();
+        MotionEvent down = MotionEvent.obtain(downTime, downTime,
+            MotionEvent.ACTION_DOWN, position[0], position[1], 0);
+        MotionEvent up = MotionEvent.obtain(downTime, downTime + 50,
+            MotionEvent.ACTION_UP, position[0], position[1], 0);
+        down.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+        up.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+        try {
+            assertTrue("queue native tap DOWN",
+                InstrumentationRegistry.getInstrumentation().getUiAutomation().injectInputEvent(down, false));
+            assertTrue("deliver native tap UP",
+                InstrumentationRegistry.getInstrumentation().getUiAutomation().injectInputEvent(up, true));
+        } finally {
+            down.recycle();
+            up.recycle();
+        }
         InstrumentationRegistry.getInstrumentation().waitForIdleSync();
     }
 
