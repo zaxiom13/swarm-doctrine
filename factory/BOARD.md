@@ -1,6 +1,6 @@
 # Swarm Doctrine board
 
-Updated 2026-11-04. Android remains a committed priority. Five improvement slots
+Updated 2026-11-06. Android remains a committed priority. Five improvement slots
 are occupied after #19 merged: #20/#22/#23/#26/#27. Maintain these before adding
 another batch. Merged code and archive/browser checks do not establish native
 installed-device readiness.
@@ -12,16 +12,19 @@ installed-device readiness.
 | SD-012 | Verify the generated web tree exactly matches debug APK assets | [#20](https://github.com/zaxiom13/swarm-doctrine/pull/20) | Unchanged `4193ba6`; 10-19 check/80 tests/build and current-head web/Android CI remain green, not a new native run. All nine shared-verifier ZIP fixtures and actual lintDebug/verifyDebugApk passed. [Verified APK](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38821195864/artifacts/12013980056). Card/report in its branch. |
 | SD-015 | Guard fleet spawn clearance over seeded aspect ratios | [#22](https://github.com/zaxiom13/swarm-doctrine/pull/22) | Unchanged `acd0c36`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Runtime TerrainField reach covers 2,048 seeds x eight aspects. No overlap bug was found. [Card](cards/SD-015.md). |
 | SD-014 | Clear stale conversion flashes on reused online guest ships | [#23](https://github.com/zaxiom13/swarm-doctrine/pull/23) | Unchanged `ab91651`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Frozen two-frame regression and both local-duel roles pass again. [Card](cards/SD-014.md). Real transport remains untested. |
-| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | `6b580e6` fixes Team → Modes → Home Back history, adds focused regression and installed first-run menu geometry/Back coverage at 1.3 font scale. API 35/WebView 124 passes the path in portrait and landscape with zero horizontal clipping. Exact-head committed-frame captures are current, visually inspected and distinct across all six states. The same job later failed the separate persisted-Settings reopen assertion after its save stage passed; an earlier unchanged rerun passed the complete recovery/update/process scenario. API 26 retains its independent emulator graphics stall. [Evidence](evidence/2026-11-04/report.md). |
+| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | `dd2f995` addresses the now-reproduced persisted-Settings tap failure: the correct control received DOWN/UP, but blocking DOWN injection let Chromium open text selection before UP and suppress click. The fixture now queues DOWN asynchronously before synchronously delivering the already-queued UP, retaining real Android/WebView input and adding event-time diagnostics. Local check/82 tests/build and exact five-head integration pass. Exact native run 42310791880 passes the complete installed API 35 recovery/update/rotation path; API 26 retains its independent emulator graphics stall. [Evidence](evidence/2026-11-06/report.md). |
 | SD-018 | First offline reload reuses a safe public Origin variant | [#27](https://github.com/zaxiom13/swarm-doctrine/pull/27) | Unchanged `159439b`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Exact public URL and Origin-only Vary guard; fresh four-case offline matrix passes. [Card](https://github.com/zaxiom13/swarm-doctrine/blob/night/offline-origin-variant/factory/cards/SD-018.md). |
 
 Main is `886b3f4`, which merged #19. All five PRs target main with no
 pending stack dependencies. Local merges were conflict-free. All five
 merge automatically together and pass
-check/85 tests/build again on 2026-11-04. [Current evidence](evidence/2026-11-04/report.md).
+check/85 tests/build again on 2026-11-06. [Current evidence](evidence/2026-11-06/report.md).
 Fresh current-main check/80 tests/build and #26 check/82 tests/build pass. The exact #26 web workflows
-pass; API 35 passes the installed Back fix and committed-frame capture path. A later persisted-Settings
-reopen assertion is still intermittently red even though an unchanged earlier retry passed it. API 26's post-mount stall reproduces with both
+pass. The API 35 persisted-Settings reopen failure reproduced on two unchanged runs:
+the control received DOWN/UP but no click while Chromium displayed text selection.
+Head `dd2f995` removes the blocking gap in the instrumentation path; exact native run
+42310791880 passes the full API 35 installed path, including both process-persistence
+stages. API 26's post-mount stall reproduces with both
 requested emulator GPU modes before the Activity UI-thread evaluation runnable
 executes; do not call the minimum-provider gap closed until the full native
 scenario passes.
@@ -69,8 +72,14 @@ this table reconciles their latest actual states.
    frame-commit + PixelCopy path, and inspection confirms current, horizontally
    unclipped Home/Modes/Team images in both orientations. All 12 app-window and
    full-display files have distinct hashes. That job later failed the separate
-   persisted-Settings reopen assertion after its save stage passed, so the native
-   matrix remains red rather than being overstated. The 10-18 landscape Sound failure is historical; 10-19's corrected
+   persisted-Settings reopen assertion after its save stage passed. That same
+   failure reproduced again on run 42130000675: the correct control received
+   DOWN/UP but no click while Chromium displayed text selection. Head `dd2f995`
+   queues DOWN without an idle wait and injects the already-queued UP synchronously,
+   so renderer scheduling cannot stretch the synthetic hold. This is test-driver
+   reliability work, not evidence that production coordinates were defective;
+   exact run 42310791880 passes the full API 35 path and publishes installed-smoke
+   artifact 13547893996. The 10-18 landscape Sound failure is historical; 10-19's corrected
    settled/hit-owned native probe passes both Sound directions, Back/reopen and
    final Continue, with actual scrollTop=0 top captures. Next: installed API 26,
    other menus/Freeze cooldown/cutouts, audible audio and changed-schema/asset migration,
@@ -91,4 +100,4 @@ this table reconciles their latest actual states.
    real canvas/worker/frame costs still need device measurements before tuning.
 
 Interactive lessons remain hidden. Rules, shared Simulation/Commander and trained
-policy remain unchanged. [Latest journal](journal/2026-11-04.md).
+policy remain unchanged. [Latest journal](journal/2026-11-06.md).
