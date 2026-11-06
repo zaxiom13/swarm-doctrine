@@ -13,13 +13,23 @@ export class AudioSystem {
     declare musicGain: any;
     declare padTimer: any;
     declare chord: number;
+    declare resumeAfterVisibility: boolean;
     constructor() {
         this.ctx = null;
         this.sfxGain = null;
         this.musicGain = null;
         this.padTimer = null;
         this.chord = 0;
-        document.addEventListener?.('visibilitychange', () => document.hidden ? this.suspend() : this.resume());
+        this.resumeAfterVisibility = false;
+        document.addEventListener?.('visibilitychange', () => {
+            if (document.hidden) {
+                this.resumeAfterVisibility = this.ctx?.state === 'running';
+                this.suspendContext();
+            } else if (this.resumeAfterVisibility) {
+                this.resumeAfterVisibility = false;
+                this.resume();
+            }
+        });
         // Browsers only allow audio after a gesture; the first tap anywhere starts the music.
         document.addEventListener?.('pointerdown', () => this.init(), { once: true });
     }
@@ -46,13 +56,21 @@ export class AudioSystem {
         }
     }
 
-    suspend() {
+    private suspendContext() {
         clearInterval(this.padTimer);
         this.padTimer = null;
         if (this.ctx?.state === 'running') this.ctx.suspend();
     }
 
+    suspend() {
+        // A match pause is stronger than transient page visibility. Returning
+        // to the foreground must not restart audio behind the Pause overlay.
+        this.resumeAfterVisibility = false;
+        this.suspendContext();
+    }
+
     resume() {
+        this.resumeAfterVisibility = false;
         if (!this.ctx || document.hidden) return;
         if (this.ctx.state === 'suspended') this.ctx.resume();
     }
