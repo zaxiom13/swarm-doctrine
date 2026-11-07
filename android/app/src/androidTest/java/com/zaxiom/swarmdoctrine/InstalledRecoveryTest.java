@@ -504,22 +504,26 @@ public class InstalledRecoveryTest {
             scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));
             waitFor("landscape clears Freeze aim", () -> "true".equals(js(scenario, "innerWidth>innerHeight&&!game.input.freezeAiming&&game.player.freezeCooldown===0")));
             armFreeze(scenario);
-            // Keep this test-only rival eligible while native input crosses the
-            // JS/Android boundary. A lone ship can otherwise be recruited before
-            // the tap. Capture the real emitted event; the live field expires
-            // and is unsuitable as a durable assertion on a slow emulator.
-            tapCss(scenario, "(()=>{const b=game.sim.addBoid(game.sim.width*.5,game.sim.height*.6,game.teamOrder()[1]);b.vel.set(0,0);"
-                + "b.conversionCooldown=game.rules.conversionCooldownTicks*60;"
-                + "window.__nativeFreeze={events:[],pointers:[],fixture:b.id};const original=game.sim.emit;"
+            // Pin a test-only rival at a live player ship while native input
+            // crosses the JS/Android boundary. A zero initial velocity alone is
+            // not stationary: normal flocking resumes on the next simulation
+            // tick and can leave the computed point before a slow renderer
+            // receives the tap. Capture the real emitted event; the live field
+            // expires and is unsuitable as a durable assertion.
+            tapCss(scenario, "(()=>{const sim=game.sim,anchor=sim.boids.find(x=>x.team===game.playerTeam);"
+                + "const wasDormant=sim.dormant;sim.dormant=true;const b=sim.addBoid(anchor.pos.x,anchor.pos.y,game.teamOrder()[1]);b.vel.set(0,0);"
+                + "b.conversionCooldown=game.rules.conversionCooldownTicks*60;const original=sim.emit;"
+                + "window.__nativeFreeze={events:[],pointers:[],fixture:b.id,wasDormant,restore:()=>{sim.emit=original;sim.dormant=wasDormant}};"
                 + "game.sim.emit=function(e){if((e.type==='freeze'||e.type==='freeze-miss')&&e.team===game.playerTeam)"
-                + "window.__nativeFreeze.events.push({...e,time:this.time,fixtureTeam:b.team,cooldown:game.player.freezeCooldown,field:!!game.player.freezeField});return original.call(this,e)};"
-                + "game.canvas.addEventListener('pointerdown',e=>window.__nativeFreeze.pointers.push({x:e.clientX,y:e.clientY,time:game.sim.time,aim:game.input.freezeAiming,fixtureTeam:b.team}),{once:true,capture:true});"
+                + "window.__nativeFreeze.events.push({...e,time:this.time,fixtureTeam:b.team,fixturePresent:this.boids.includes(b),fixtureX:b.pos.x,fixtureY:b.pos.y,cooldown:game.player.freezeCooldown,field:!!game.player.freezeField});return original.call(this,e)};"
+                + "game.canvas.addEventListener('pointerdown',e=>window.__nativeFreeze.pointers.push({x:e.clientX,y:e.clientY,time:sim.time,aim:game.input.freezeAiming,fixtureTeam:b.team,fixturePresent:sim.boids.includes(b)}),{once:true,capture:true});"
                 + "const r=game.renderer,c=game.canvas.getBoundingClientRect();return [c.x+(b.pos.x*r.viewScale+r.offsetX)*c.width/game.canvas.width,c.y+(b.pos.y*r.viewScale+r.offsetY)*c.height/game.canvas.height,innerWidth,innerHeight]})()");
             try {
                 waitFor("native arena tap emits successful Freeze", () -> "true".equals(js(scenario,
                     "window.__nativeFreeze.events.some(e=>e.type==='freeze'&&e.victims>0&&e.cooldown>0&&e.field)&&!game.input.freezeAiming")));
             } finally {
                 Log.i("SwarmSmoke", "FREEZE native cast=" + js(scenario, "JSON.stringify(window.__nativeFreeze)"));
+                js(scenario, "window.__nativeFreeze.restore();true");
             }
             phase("Freeze input complete");
             long backgroundDown = pointer(scenario, MotionEvent.ACTION_DOWN, 0);
