@@ -1,6 +1,6 @@
 # Swarm Doctrine board
 
-Updated 2026-11-06. Android remains a committed priority. Five improvement slots
+Updated 2026-11-07. Android remains a committed priority. Five improvement slots
 are occupied after #19 merged: #20/#22/#23/#26/#27. Maintain these before adding
 another batch. Merged code and archive/browser checks do not establish native
 installed-device readiness.
@@ -12,13 +12,13 @@ installed-device readiness.
 | SD-012 | Verify the generated web tree exactly matches debug APK assets | [#20](https://github.com/zaxiom13/swarm-doctrine/pull/20) | Unchanged `4193ba6`; 10-19 check/80 tests/build and current-head web/Android CI remain green, not a new native run. All nine shared-verifier ZIP fixtures and actual lintDebug/verifyDebugApk passed. [Verified APK](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38821195864/artifacts/12013980056). Card/report in its branch. |
 | SD-015 | Guard fleet spawn clearance over seeded aspect ratios | [#22](https://github.com/zaxiom13/swarm-doctrine/pull/22) | Unchanged `acd0c36`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Runtime TerrainField reach covers 2,048 seeds x eight aspects. No overlap bug was found. [Card](cards/SD-015.md). |
 | SD-014 | Clear stale conversion flashes on reused online guest ships | [#23](https://github.com/zaxiom13/swarm-doctrine/pull/23) | Unchanged `ab91651`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Frozen two-frame regression and both local-duel roles pass again. [Card](cards/SD-014.md). Real transport remains untested. |
-| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | `dd2f995` addresses the now-reproduced persisted-Settings tap failure: the correct control received DOWN/UP, but blocking DOWN injection let Chromium open text selection before UP and suppress click. The fixture now queues DOWN asynchronously before synchronously delivering the already-queued UP, retaining real Android/WebView input and adding event-time diagnostics. Local check/82 tests/build and exact five-head integration pass. Exact native run 42310791880 passes the complete installed API 35 recovery/update/rotation path; API 26 retains its independent emulator graphics stall. [Evidence](evidence/2026-11-06/report.md). |
+| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | `79a6240` repairs the native Freeze fixture after the 11-06 evidence-only rerun delivered a real arena pointer and emitted `freeze-miss`: its lone zero-velocity rival was still advanced by normal flocking while a slow renderer crossed the JS/native boundary. The fixture now becomes dormant briefly and pins an opponent at a live player-safe point, restoring all state afterward and recording membership/position diagnostics. Production input and Freeze are unchanged. Local check/82 tests/build, exact five-head check/85 tests/build and the full API 35 installed scenario pass; the native event records 68 eligible ships and 34 victims. API 26 retains its independent emulator graphics stall. [Evidence](evidence/2026-11-07/report.md). |
 | SD-018 | First offline reload reuses a safe public Origin variant | [#27](https://github.com/zaxiom13/swarm-doctrine/pull/27) | Unchanged `159439b`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Exact public URL and Origin-only Vary guard; fresh four-case offline matrix passes. [Card](https://github.com/zaxiom13/swarm-doctrine/blob/night/offline-origin-variant/factory/cards/SD-018.md). |
 
 Main is `886b3f4`, which merged #19. All five PRs target main with no
 pending stack dependencies. Local merges were conflict-free. All five
 merge automatically together and pass
-check/85 tests/build again on 2026-11-06. [Current evidence](evidence/2026-11-06/report.md).
+check/85 tests/build again on 2026-11-07. [Current evidence](evidence/2026-11-07/report.md).
 Fresh current-main check/80 tests/build and #26 check/82 tests/build pass. The exact #26 web workflows
 pass. The API 35 persisted-Settings reopen failure reproduced on two unchanged runs:
 the control received DOWN/UP but no click while Chromium displayed text selection.
@@ -30,6 +30,13 @@ executes; do not call the minimum-provider gap closed until the full native
 scenario passes.
 The prior fixture failures and API 35 control results remain recorded rather than
 erased.
+The later documentation-triggered run 42312102445 reproduced a separate native
+Freeze fixture miss: the arena pointer arrived correctly, but the test's lone
+moving target was no longer guaranteed eligible. Head `79a6240` pins that
+test-only victim while the native event crosses the renderer. Exact run
+42424879489 passes the full API 35 path and records 68 eligible ships, 34 victims,
+cooldown 10 and a live field. This remains fixture reliability work, not a
+production Freeze or coordinate fix.
 No GitHub PR was merged, auto-merged or deployed by this run.
 
 ## Merged
@@ -87,7 +94,12 @@ this table reconciles their latest actual states.
    scheduler-stretched 50 ms test sleep was repaired with immediate DOWN/UP
    injection and an encoded 50 ms event interval; API 35/WebView 124 now passes
    the full update/rotation path. This is a test-driver repair, not evidence that
-   production touch coordinates were defective.
+   production touch coordinates were defective. The 11-06 documentation follow-up
+   then emitted a real `freeze-miss` because its lone zero-velocity fixture could
+   resume flocking before the delayed native tap. Head `79a6240` briefly pins a
+   test-only enemy at a live player-safe point and restores all state afterward;
+   exact run 42424879489 passes with 68 eligible ships and 34 victims. Artifact
+   13595311561 preserves the event and complete installed scenario.
 2. Exercise real two-device Firebase/WebRTC lifecycle for both roles, including
    rotation, background, disconnect and rematch. Local/protocol tests cannot prove this.
 3. Finish Cloudflare Worker/PR previews when authenticated Cloudflare access and
@@ -100,4 +112,4 @@ this table reconciles their latest actual states.
    real canvas/worker/frame costs still need device measurements before tuning.
 
 Interactive lessons remain hidden. Rules, shared Simulation/Commander and trained
-policy remain unchanged. [Latest journal](journal/2026-11-06.md).
+policy remain unchanged. [Latest journal](journal/2026-11-07.md).
