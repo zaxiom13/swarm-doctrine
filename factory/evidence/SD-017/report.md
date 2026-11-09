@@ -258,3 +258,46 @@ red run and add diagnostics instead of another speculative behavior change:
 record CSS and native coordinates, captured pointerdown/pointerup/click targets,
 focus/screen before and after, plus a failure screenshot. Production navigation,
 assertions, permissions and security policy remain unchanged.
+
+## 2026-11-09: unobstructed native Freeze target
+
+The documentation-only head reran unchanged Android code in
+[42425613895](https://github.com/zaxiom13/swarm-doctrine/actions/runs/42425613895).
+API 35 reached the native Freeze cast, but `window.__nativeFreeze` recorded an
+intact fixture with empty `pointers` and `events`. The requested point was CSS
+`[648.99,318.06]`; the same run measured the 104 px Freeze control centre at
+`[683.19,317.19]`. The point was therefore inside the landscape button, and the
+failure frame visibly shows the target ship behind that control. Android routed
+the touch consistently; the canvas was never the hit target.
+
+Head `acddc66` makes target ownership an explicit precondition. It chooses the
+canvas centre, requires `document.elementFromPoint` to return `game-canvas`,
+inverts the renderer transform for that exact CSS point and places the dormant
+enemy at the resulting simulation coordinate. Production TypeScript, Android
+application code, Freeze behavior, rules, permissions, storage and timeouts are
+unchanged.
+
+- Local head: diff check, check, 82 tests and production build pass.
+- Exact five-head integration (`4193ba6`, `acd0c36`, `ab91651`, `acddc66`,
+  `159439b`): conflict-free; check, 85 tests and build pass.
+- [Exact web run 42719563184](https://github.com/zaxiom13/swarm-doctrine/actions/runs/42719563184)
+  passes; deployment is skipped.
+- [Exact native run 42719563217](https://github.com/zaxiom13/swarm-doctrine/actions/runs/42719563217)
+  passes the full API 35/WebView 124 installed scenario. Pointer
+  `[365.71,181.71]` lands on `game-canvas` at CSS fixture `[366.10,182.10]` and
+  simulation fixture `[723.96,360]`. The emitted Freeze records the fixture
+  present, one eligible ship, one victim, cooldown 10 and a live field.
+- The same job then passes background/foreground, renderer recovery,
+  process-save/force-stop, versionCode 1→2 `adb install -r` without clear-data,
+  portrait and landscape Settings interaction, restored checkpoint/preferences
+  and Continue.
+- Installed artifact
+  [13721050085](https://github.com/zaxiom13/swarm-doctrine/actions/runs/42719563217/artifacts/13721050085):
+  15,481,293 bytes; SHA-256
+  `957f8e79c44218cfbfa1911f04a806e079c1fb422b4031c52bb8e586b7a0baea`.
+
+API 26 still fails only at the independently localized emulator graphics-pipe
+stage after lint, APK/test-APK builds and renderer callback checks pass. This
+finite emulator evidence does not establish physical-device/all-provider input,
+audible output, arbitrary cutouts/navigation modes, changed-schema migration or
+real two-device Firebase/WebRTC behavior.
