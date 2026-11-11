@@ -529,6 +529,28 @@ public class InstalledRecoveryTest {
                 Log.i("SwarmSmoke", "FREEZE native cast=" + js(scenario, "JSON.stringify(window.__nativeFreeze)"));
                 js(scenario, "window.__nativeFreeze.restore();true");
             }
+            // Keep the post-cast cooldown comfortably above zero while native
+            // input crosses the Android/WebView boundary. A touch on the visible
+            // cooling control must not arm an aim that could fire later at an
+            // unrelated arena tap. Once the same charge becomes ready, the same
+            // native control must arm and cancel normally again.
+            js(scenario, "game.player.freezeCooldown=Math.max(game.player.freezeCooldown,5);true");
+            waitFor("Freeze cooldown is visible", () -> "true".equals(js(scenario,
+                "document.querySelector('#slot-freeze').classList.contains('cooling')"
+                    + "&&document.querySelector('#freeze-status').textContent.endsWith('s')")));
+            tapCss(scenario, "(()=>{const r=document.querySelector('#slot-freeze').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()");
+            assertEquals("cooling Freeze touch remains disarmed", "true", js(scenario,
+                "game.player.freezeCooldown>0&&!game.input.freezeAiming"));
+            js(scenario, "game.player.freezeCooldown=0;true");
+            waitFor("Freeze control becomes ready again", () -> "true".equals(js(scenario,
+                "!document.querySelector('#slot-freeze').classList.contains('cooling')"
+                    + "&&document.querySelector('#freeze-status').textContent.includes('Tap to aim')")));
+            tapCss(scenario, "(()=>{const r=document.querySelector('#slot-freeze').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()");
+            waitFor("ready Freeze touch re-arms", () -> "true".equals(js(scenario,
+                "game.player.freezeCooldown===0&&game.input.freezeAiming")));
+            tapCss(scenario, "(()=>{const r=document.querySelector('#slot-freeze').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()");
+            waitFor("second Freeze touch cancels aim", () -> "true".equals(js(scenario,
+                "game.player.freezeCooldown===0&&!game.input.freezeAiming")));
             phase("Freeze input complete");
             long backgroundDown = pointer(scenario, MotionEvent.ACTION_DOWN, 0);
             waitFor("Rally before background", () -> "true".equals(js(scenario, "game.player.rallying")));
@@ -563,7 +585,7 @@ public class InstalledRecoveryTest {
             scenario.recreate();
             ready(scenario);
             assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()&&game.loadCheckpoint().seed===424242"));
-            Log.i("SwarmSmoke", "PASS offline/new-player-menus/Back/background-held-Rally/touch/rotation/Freeze-button-aim-cast/Freeze-cancellation/HUD-bounds/font-scale/renderer-crash/Continue/Activity-recreation");
+            Log.i("SwarmSmoke", "PASS offline/new-player-menus/Back/background-held-Rally/touch/rotation/Freeze-button-aim-cast/cooldown-re-aim/Freeze-cancellation/HUD-bounds/font-scale/renderer-crash/Continue/Activity-recreation");
             } catch (AssertionError | RuntimeException failure) {
                 screenshot(scenario, "test-failure");
                 throw failure;
