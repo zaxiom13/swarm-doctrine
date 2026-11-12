@@ -1,6 +1,6 @@
 # Swarm Doctrine board
 
-Updated 2026-11-09. Android remains a committed priority. Five improvement slots
+Updated 2026-11-11. Android remains a committed priority. Five improvement slots
 are occupied after #19 merged: #20/#22/#23/#26/#27. Maintain these before adding
 another batch. Merged code and archive/browser checks do not establish native
 installed-device readiness.
@@ -12,13 +12,14 @@ installed-device readiness.
 | SD-012 | Verify the generated web tree exactly matches debug APK assets | [#20](https://github.com/zaxiom13/swarm-doctrine/pull/20) | Unchanged `4193ba6`; 10-19 check/80 tests/build and current-head web/Android CI remain green, not a new native run. All nine shared-verifier ZIP fixtures and actual lintDebug/verifyDebugApk passed. [Verified APK](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38821195864/artifacts/12013980056). Card/report in its branch. |
 | SD-015 | Guard fleet spawn clearance over seeded aspect ratios | [#22](https://github.com/zaxiom13/swarm-doctrine/pull/22) | Unchanged `acd0c36`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Runtime TerrainField reach covers 2,048 seeds x eight aspects. No overlap bug was found. [Card](cards/SD-015.md). |
 | SD-014 | Clear stale conversion flashes on reused online guest ships | [#23](https://github.com/zaxiom13/swarm-doctrine/pull/23) | Unchanged `ab91651`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Frozen two-frame regression and both local-duel roles pass again. [Card](cards/SD-014.md). Real transport remains untested. |
-| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | Code `acddc66`, evidence `0e3abe5`. The 11-07 documentation rerun requested a landscape arena point inside the 104 px Freeze button, so the canvas correctly logged no pointer/event. The test now requires `elementFromPoint` ownership at canvas centre and inverts that exact point into simulation coordinates. Production input/Freeze are unchanged. Exact API 35/WebView 124 passes native Freeze, portrait/landscape menus and Settings, safe areas, background/audio, renderer recovery, process force-stop, replacement install and Continue. API 26 retains its independent emulator graphics stall. [Evidence](evidence/2026-11-09/report.md). |
+| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | Code `e91b3a1`, evidence `c38ec86`. The installed test now proves a successful native Freeze enters cooldown, rejects re-aiming while cooling, becomes ready again on the same charge, and then arms/cancels through real Android taps. Production input, rules and cooldown timing are unchanged. Exact API 35/WebView 124 passes native Freeze, portrait/landscape menus and Settings, safe areas, background/audio, renderer recovery, process force-stop, replacement install and Continue. API 26 retains its independent emulator graphics stall. [Evidence](evidence/2026-11-11/report.md). |
 | SD-018 | First offline reload reuses a safe public Origin variant | [#27](https://github.com/zaxiom13/swarm-doctrine/pull/27) | Unchanged `159439b`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Exact public URL and Origin-only Vary guard; fresh four-case offline matrix passes. [Card](https://github.com/zaxiom13/swarm-doctrine/blob/night/offline-origin-variant/factory/cards/SD-018.md). |
 
 Main is `886b3f4`, which merged #19. All five PRs target main with no
 pending stack dependencies. Local merges were conflict-free. All five
 merge automatically together and pass
-check/85 tests/build again on 2026-11-09. [Current evidence](evidence/2026-11-09/report.md).
+check/85 tests/build again on 2026-11-11 with exact heads `4193ba6`, `acd0c36`,
+`ab91651`, `e91b3a1` and `159439b`. [Current evidence](evidence/2026-11-11/report.md).
 Fresh current-main check/80 tests/build and #26 check/82 tests/build pass. The exact #26 web workflows
 pass. The API 35 persisted-Settings reopen failure reproduced on two unchanged runs:
 the control received DOWN/UP but no click while Chromium displayed text selection.
@@ -45,6 +46,12 @@ before placing the dormant enemy through the inverse live renderer transform.
 Exact native run 42719563217 passes the full API 35 path; the canvas pointer and
 successful Freeze event are recorded before later lifecycle/recovery/update/
 Settings stages also pass. API 26 remains red at its known graphics-pipe stage.
+Head `e91b3a1` extends that installed path through the post-cast cooldown and
+ready-again transition, then verifies a second native tap cancels aiming. Exact
+run 43124011457 passes API 35/WebView 124 with 80 eligible ships, 40 victims,
+cooldown 10 and `cooldown-re-aim` in installed artifact 13901743858. Its API 26
+job reaches offline app progress 70 and again stalls in `goldfish_pipe_wait_event`;
+artifact 13902152251 preserves that independent limitation.
 No GitHub PR was merged, auto-merged or deployed by this run.
 
 ## Merged
@@ -97,7 +104,7 @@ this table reconciles their latest actual states.
    artifact 13547893996. The 10-18 landscape Sound failure is historical; 10-19's corrected
    settled/hit-owned native probe passes both Sound directions, Back/reopen and
    final Continue, with actual scrollTop=0 top captures. Next: installed API 26,
-   other menus/Freeze cooldown/cutouts, audible audio and changed-schema/asset migration,
+   other menus/cutouts, audible audio and changed-schema/asset migration,
    not an all-menu/all-device claim or guaranteed first-frame latency. The
    scheduler-stretched 50 ms test sleep was repaired with immediate DOWN/UP
    injection and an encoded 50 ms event interval; API 35/WebView 124 now passes
@@ -111,9 +118,11 @@ this table reconciles their latest actual states.
    evidence rerun then showed that a later live ship position could sit behind
    the landscape Freeze button. Head `acddc66` now requires a canvas-owned
    centre point before placing its fixture; run 42719563217 passes the full API
-   35/WebView 124 path and artifact 13721050085 preserves the result. Next:
-   physical/current-vendor API 26, other menus/Freeze cooldown/cutouts, audible
-   audio and changed-schema/assets migration.
+   35/WebView 124 path and artifact 13721050085 preserves the result. Head
+   `e91b3a1` additionally proves cooldown rejection and ready-again arm/cancel
+   through native taps; run 43124011457 and artifact 13901743858 preserve the
+   API 35 result. Next: physical/current-vendor API 26, other menus/cutouts,
+   audible audio and changed-schema/assets migration.
 2. Exercise real two-device Firebase/WebRTC lifecycle for both roles, including
    rotation, background, disconnect and rematch. Local/protocol tests cannot prove this.
 3. Finish Cloudflare Worker/PR previews when authenticated Cloudflare access and
@@ -126,4 +135,4 @@ this table reconciles their latest actual states.
    real canvas/worker/frame costs still need device measurements before tuning.
 
 Interactive lessons remain hidden. Rules, shared Simulation/Commander and trained
-policy remain unchanged. [Latest journal](journal/2026-11-09.md).
+policy remain unchanged. [Latest journal](journal/2026-11-11.md).
