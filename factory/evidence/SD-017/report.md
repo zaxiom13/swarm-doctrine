@@ -301,3 +301,37 @@ stage after lint, APK/test-APK builds and renderer callback checks pass. This
 finite emulator evidence does not establish physical-device/all-provider input,
 audible output, arbitrary cutouts/navigation modes, changed-schema migration or
 real two-device Firebase/WebRTC behavior.
+
+## 2026-11-11: installed Freeze cooldown and re-aim
+
+Head `e91b3a1` adds an installed input regression after the successful native
+Freeze. The API 35 WebView must show the cooling state and countdown, ignore a
+real Android tap while the charge is cooling, then arm and cancel again through
+two real taps after that same charge becomes ready. The fixture holds cooldown
+above zero and later advances it to ready so the test does not spend ten seconds
+claiming a timing measurement. Production TypeScript, Android application code,
+Freeze behavior, rules, permissions, storage and timeouts are unchanged.
+
+- Fresh main `886b3f4`: Node 24.22.1, npm ci/check/80 tests/build pass.
+- Code head: diff check, check, 82 tests and production build pass.
+- Exact five-head octopus integration (`4193ba6`, `acd0c36`, `ab91651`,
+  `e91b3a1`, `159439b`): conflict-free; check, 85 tests and build pass.
+- [Exact web run 43124010888](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43124010888)
+  passes; deployment is skipped.
+- [Exact native run 43124011457](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43124011457)
+  passes API 35/WebView 124. Its live Freeze records 80 eligible rivals, 40
+  victims, cooldown 10 and a field; the installed test later logs the
+  `cooldown-re-aim` pass marker before completing recovery and update persistence.
+- Installed artifact
+  [13901743858](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43124011457/artifacts/13901743858):
+  15,201,039 bytes; SHA-256
+  `b702789795994f4a4158f47f494370d2d71769515b4371deda6521c5b18ac023`.
+- API 26/WebView 69 reaches the packaged offline origin at progress 70, then
+  repeats the known emulator graphics-pipe stall before the first post-mount
+  evaluation. Artifact
+  [13902152251](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43124011457/artifacts/13902152251)
+  preserves the fresh thread dump; no device-support claim is made.
+
+This proves the finite installed API 35 touch policy, not elapsed ten-second
+recharge accuracy, physical/current-vendor API 26, audible output, arbitrary
+cutouts/navigation modes, changed-schema migration or real two-device transport.
