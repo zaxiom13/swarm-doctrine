@@ -335,3 +335,40 @@ Freeze behavior, rules, permissions, storage and timeouts are unchanged.
 This proves the finite installed API 35 touch policy, not elapsed ten-second
 recharge accuracy, physical/current-vendor API 26, audible output, arbitrary
 cutouts/navigation modes, changed-schema migration or real two-device transport.
+
+## 2026-11-12: rotate while Freeze is cooling
+
+Head `296554d` extends the installed input regression across a real Android
+orientation change. After the successful landscape cast, a test-only long
+cooldown provides headroom for software-rendered CI. The Activity rotates to
+portrait while the charge remains visibly cooling and disarmed; HUD controls
+must remain inside the usable WebView and native safe bounds are checked again.
+A real Android tap must still remain disarmed. Once the same test charge is
+advanced to ready, two real taps must arm and cancel in portrait. Production
+TypeScript, Android application code, Freeze behavior, rules, permissions,
+storage and timing are unchanged.
+
+- Fresh main `886b3f4`: Node 24.22.1, npm ci/check/80 tests/build pass.
+- Code head: diff check, check, 82 tests and production build pass. The local
+  environment has no Android SDK/Gradle wrapper; native compilation and the
+  installed matrix are supplied by exact-head CI.
+- Exact five-head octopus integration (`4193ba6`, `acd0c36`, `ab91651`,
+  `296554d`, `159439b`): conflict-free; check, 85 tests and build pass.
+- [Exact web run 43329099491](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43329099491)
+  passes; deployment is skipped.
+- [Exact native run 43329099253](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43329099253)
+  passes the complete API 35/WebView 124 installed job, including the new
+  landscape-to-portrait cooling/ready-again path, recovery and update persistence.
+- Installed artifact
+  [13993289797](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43329099253/artifacts/13993289797):
+  15,226,182 bytes; SHA-256
+  `96c0752b65ff1e0fb198a0874b6c41c781d33f7d18311245efb7c3974791be86`.
+- API 26 fails only in the known installed smoke stage after lint, APK/test-APK
+  builds and renderer callbacks pass. Diagnostic artifact
+  [13993873145](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43329099253/artifacts/13993873145):
+  190,141 bytes; SHA-256
+  `c97b76202f94256a8c97036d60f542e8c8b4ed8709e3a0a49743f0913a2d26c6`.
+
+This finite emulator evidence does not establish elapsed recharge accuracy,
+physical/current-vendor API 26, audible output, arbitrary cutouts/navigation
+modes, changed-schema/assets migration or real two-device Firebase/WebRTC.
