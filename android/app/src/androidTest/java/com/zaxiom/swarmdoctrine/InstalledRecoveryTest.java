@@ -530,16 +530,24 @@ public class InstalledRecoveryTest {
                 js(scenario, "window.__nativeFreeze.restore();true");
             }
             // Keep the post-cast cooldown comfortably above zero while native
-            // input crosses the Android/WebView boundary. A touch on the visible
-            // cooling control must not arm an aim that could fire later at an
-            // unrelated arena tap. Once the same charge becomes ready, the same
-            // native control must arm and cancel normally again.
-            js(scenario, "game.player.freezeCooldown=Math.max(game.player.freezeCooldown,5);true");
+            // input and a configuration change cross the Android/WebView boundary.
+            // A touch on the visible cooling control must not arm an aim that
+            // could fire later at an unrelated arena tap. Once the same charge
+            // becomes ready, the same native control must arm and cancel normally.
+            // The long value is test-only headroom for slow software-rendered CI;
+            // production rules and timing are unchanged.
+            js(scenario, "game.player.freezeCooldown=Math.max(game.player.freezeCooldown,60);true");
             waitFor("Freeze cooldown is visible", () -> "true".equals(js(scenario,
                 "document.querySelector('#slot-freeze').classList.contains('cooling')"
                     + "&&document.querySelector('#freeze-status').textContent.endsWith('s')")));
+            scenario.onActivity(a -> a.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
+            waitFor("portrait rotation preserves cooling Freeze", () -> "true".equals(js(scenario,
+                "innerHeight>innerWidth&&game.player.freezeCooldown>0&&!game.input.freezeAiming"
+                    + "&&document.querySelector('#slot-freeze').classList.contains('cooling')")));
+            hudFits(scenario);
+            systemBarsFit(scenario, "portrait-cooldown");
             tapCss(scenario, "(()=>{const r=document.querySelector('#slot-freeze').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()");
-            assertEquals("cooling Freeze touch remains disarmed", "true", js(scenario,
+            assertEquals("cooling Freeze touch remains disarmed after rotation", "true", js(scenario,
                 "game.player.freezeCooldown>0&&!game.input.freezeAiming"));
             js(scenario, "game.player.freezeCooldown=0;true");
             waitFor("Freeze control becomes ready again", () -> "true".equals(js(scenario,
@@ -551,7 +559,7 @@ public class InstalledRecoveryTest {
             tapCss(scenario, "(()=>{const r=document.querySelector('#slot-freeze').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2,innerWidth,innerHeight]})()");
             waitFor("second Freeze touch cancels aim", () -> "true".equals(js(scenario,
                 "game.player.freezeCooldown===0&&!game.input.freezeAiming")));
-            phase("Freeze input complete");
+            phase("Freeze cooldown rotation input complete");
             long backgroundDown = pointer(scenario, MotionEvent.ACTION_DOWN, 0);
             waitFor("Rally before background", () -> "true".equals(js(scenario, "game.player.rallying")));
             scenario.moveToState(Lifecycle.State.CREATED).moveToState(Lifecycle.State.RESUMED);
@@ -585,7 +593,7 @@ public class InstalledRecoveryTest {
             scenario.recreate();
             ready(scenario);
             assertEquals("true", js(scenario, "game.ui.screen==='main-menu'&&game.loadCheckpoint()&&game.loadCheckpoint().seed===424242"));
-            Log.i("SwarmSmoke", "PASS offline/new-player-menus/Back/background-held-Rally/touch/rotation/Freeze-button-aim-cast/cooldown-re-aim/Freeze-cancellation/HUD-bounds/font-scale/renderer-crash/Continue/Activity-recreation");
+            Log.i("SwarmSmoke", "PASS offline/new-player-menus/Back/background-held-Rally/touch/rotation/Freeze-button-aim-cast/cooldown-rotation-re-aim/Freeze-cancellation/HUD-bounds/font-scale/renderer-crash/Continue/Activity-recreation");
             } catch (AssertionError | RuntimeException failure) {
                 screenshot(scenario, "test-failure");
                 throw failure;
