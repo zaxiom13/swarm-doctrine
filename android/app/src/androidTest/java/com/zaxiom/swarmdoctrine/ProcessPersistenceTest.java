@@ -208,7 +208,19 @@ public class ProcessPersistenceTest {
                 "game.resumeExpedition()&&game.gameMode==='levels'&&game.level===4"
                 + "&&game.mapSeed===767676&&game.levelEnemies==='passive'&&game.playerTeam==='dragon'"));
             assertOffline("Continue after process relaunch");
-            Log.i("SwarmSmoke", "PASS process-update/relaunch/Home/checkpoint/record/runtime-settings/portrait-landscape/Continue");
+            // A truncated write from an interrupted or older install must not
+            // make the next process launch crash or offer a broken Continue.
+            // Keep the record/preferences intact so this specifically exercises
+            // checkpoint validation rather than a clear-data recovery path.
+            js(scenario, "localStorage.setItem('swarm-expedition-v1','{\\\"level\\\":4');true");
+            scenario.recreate();
+            ready(scenario);
+            assertOffline("malformed checkpoint relaunch");
+            assertEquals("malformed checkpoint returns safely to Home without Continue", "true", js(scenario,
+                "game.ui.screen==='main-menu'&&game.gameState==='menu'&&game.loadCheckpoint()===null"
+                + "&&game.ui.continueLabel===null&&document.querySelector('#btn-continue').classList.contains('hidden')"
+                + "&&Number(localStorage.getItem('swarm-best-levels'))===2468"));
+            Log.i("SwarmSmoke", "PASS process-update/relaunch/Home/checkpoint/record/runtime-settings/portrait-landscape/Continue/malformed-checkpoint");
         }
     }
 }
