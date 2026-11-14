@@ -2,7 +2,6 @@ plugins { id 'com.android.application' }
 
 def configuredVersionCode = providers.gradleProperty('swarmVersionCode').getOrElse('1').toInteger()
 def configuredVersionName = providers.gradleProperty('swarmVersionName').getOrElse('0.1.0')
-def configuredAssetMarker = providers.gradleProperty('swarmAssetMarker').orNull
 
 android {
     namespace 'com.zaxiom.swarmdoctrine'
@@ -47,19 +46,3 @@ tasks.register('buildWebAssets', Exec) {
     outputs.dir layout.buildDirectory.dir('generated/webAssets')
 }
 tasks.named('preBuild').configure { dependsOn 'buildWebAssets' }
-
-// Installed-smoke builds can stamp a test-only packaged asset so the update
-// path proves Android serves replacement APK bytes, not only a new versionCode.
-// Normal builds omit the property and therefore never package this marker.
-tasks.register('writeSmokeAssetMarker') {
-    dependsOn 'buildWebAssets'
-    onlyIf { configuredAssetMarker != null }
-    inputs.property('swarmAssetMarker', configuredAssetMarker ?: '')
-    outputs.file layout.buildDirectory.file('generated/webAssets/smoke-update-marker.txt')
-    doLast {
-        def marker = layout.buildDirectory.file('generated/webAssets/smoke-update-marker.txt').get().asFile
-        marker.parentFile.mkdirs()
-        marker.text = configuredAssetMarker + '\n'
-    }
-}
-tasks.named('preBuild').configure { dependsOn 'writeSmokeAssetMarker' }

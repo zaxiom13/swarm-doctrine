@@ -7,6 +7,7 @@ collect_evidence() {
     adb logcat -d -s SwarmSmoke:I SwarmWeb:E chromium:E AndroidRuntime:E > android/app/build/smoke-evidence/logcat.txt || true
     adb pull /sdcard/Android/data/com.zaxiom.swarmdoctrine/files/smoke android/app/build/smoke-evidence/ || true
     adb pull /sdcard/Pictures/SwarmSmoke android/app/build/smoke-evidence/ || true
+    rm -f public/smoke-update-marker.txt
 }
 trap collect_evidence EXIT
 
@@ -104,7 +105,8 @@ if (( smoke_status != 0 )); then exit "$smoke_status"; fi
 # check. After saving, the script upgrades to version 2 with adb install -r;
 # nothing may clear storage between the save and restore stages. Distinct
 # marker assets prove the replacement APK's packaged web bytes are served.
-gradle -p android assembleDebug -PswarmAssetMarker=asset-version-1
+printf '%s\n' asset-version-1 > public/smoke-update-marker.txt
+gradle -p android assembleDebug
 unzip -p android/app/build/outputs/apk/debug/app-debug.apk \
     assets/smoke-update-marker.txt \
     | tee android/app/build/smoke-evidence/process-asset-version-1.txt
@@ -145,9 +147,9 @@ echo 'PASS no app process remains after package force-stop; no clear-data' | tee
 # Rebuild only the target APK with a higher package version, then use Android's
 # actual replace/update operation. The same source isolates data continuity from
 # app behavior changes; it is not a version-A-to-B migration compatibility claim.
+printf '%s\n' asset-version-2 > public/smoke-update-marker.txt
 gradle -p android assembleDebug \
-    -PswarmVersionCode=2 -PswarmVersionName=0.1.1-smoke \
-    -PswarmAssetMarker=asset-version-2
+    -PswarmVersionCode=2 -PswarmVersionName=0.1.1-smoke
 unzip -p android/app/build/outputs/apk/debug/app-debug.apk \
     assets/smoke-update-marker.txt \
     | tee android/app/build/smoke-evidence/process-asset-version-2.txt
