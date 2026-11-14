@@ -1,0 +1,21 @@
+10-15 23:17:31.303  3123  3295 I SwarmSmoke: API=35 model=sdk_gphone64_x86_64 airplane=1
+10-15 23:17:31.303  3123  3295 I SwarmSmoke: fontScale=1.3
+10-15 23:17:31.513  3123  3295 I SwarmSmoke: OFFLINE no active default network: before first launch
+10-15 23:17:34.430  3123  3295 I SwarmSmoke: WebView=com.google.android.webview 124.0.6367.219
+10-15 23:17:35.887  3123  3295 I SwarmSmoke: OFFLINE no active default network: first game mounted
+10-15 23:18:54.963  3123  3295 I SwarmSmoke: OFFLINE no active default network: before renderer retry
+10-15 23:18:55.237  3123  3295 I SwarmSmoke: OFFLINE no active default network: renderer retry mounted
+10-15 23:19:03.983  4094  4119 I SwarmSmoke: OFFLINE no active default network: before persistence save
+10-15 23:19:05.574  4094  4119 I SwarmSmoke: OFFLINE no active default network: persistence save mounted
+10-15 23:19:12.117  4094  4119 I SwarmSmoke: PASS persistence seed saved; instrumentationPid=4094
+10-15 23:19:59.778  4385  4398 I SwarmSmoke: OFFLINE no active default network: before process relaunch
+10-15 23:20:01.159  4385  4398 I SwarmSmoke: OFFLINE no active default network: process relaunch mounted
+10-15 23:20:01.159  4385  4398 I SwarmSmoke: RELAUNCH instrumentationPid=4385 WebView=124.0.6367.219
+10-15 23:20:01.229  4385  4398 I SwarmSmoke: SNAPSHOT persisted-settings-portrait visualState=true
+10-15 23:20:07.504  4385  4398 I SwarmSmoke: SNAPSHOT persisted-settings-landscape visualState=true
+10-15 23:20:08.349  4385  4398 I SwarmSmoke: OFFLINE no active default network: Continue after process relaunch
+10-15 23:20:08.349  4385  4398 I SwarmSmoke: PASS process-relaunch/Home/checkpoint/record/runtime-settings/portrait-landscape/Continue
+Running app PID before force-stop: 4274
+PASS no app process remains after package force-stop; no clear-data/reinstall
+saveBeforeProcessStop: OK (1 test)
+restoreAfterProcessStop: OK (1 test)

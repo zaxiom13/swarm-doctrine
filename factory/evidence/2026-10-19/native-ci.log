@@ -1,0 +1,57 @@
+# Native CI excerpts
+Run: https://github.com/zaxiom13/swarm-doctrine/actions/runs/39338519309
+Head: c9fabe3e5bed108f3298fce0a436aa033c0b8042
+Selected verbatim CI lines, then selected verbatim device logcat lines.
+
+2026-10-19T22:59:48.8738096Z BUILD SUCCESSFUL in 1m 10s
+2026-10-19T23:00:05.6339547Z BUILD SUCCESSFUL in 15s
+2026-10-19T23:00:09.4092577Z BUILD SUCCESSFUL in 3s
+2026-10-19T23:03:13.4214400Z BUILD SUCCESSFUL in 1m 33s
+2026-10-19T23:04:06.2707515Z Time: 51.875
+2026-10-19T23:04:06.2746690Z OK (1 test)
+2026-10-19T23:04:07.5276942Z Running app PID before force-stop: 4243
+2026-10-19T23:04:07.7551626Z PASS no app process remains after package force-stop; no clear-data/reinstall
+2026-10-19T23:04:57.3376912Z Time: 48.806
+2026-10-19T23:04:57.3447831Z OK (1 test)
+
+10-19 23:01:58.098  3434  3464 I SwarmSmoke: API=35 model=sdk_gphone64_x86_64 airplane=1
+10-19 23:01:58.098  3434  3464 I SwarmSmoke: fontScale=1.3
+10-19 23:01:58.461  3434  3464 I SwarmSmoke: OFFLINE no active default network: before first launch
+10-19 23:02:00.644  3434  3464 I SwarmSmoke: WebView=com.google.android.webview 124.0.6367.219
+10-19 23:02:01.531  3434  3464 I SwarmSmoke: OFFLINE no active default network: first game mounted
+10-19 23:02:51.934  3434  3464 I SwarmSmoke: FREEZE native cast="{\"events\":[{\"type\":\"freeze\",\"team\":\"dragon\",\"x\":723.2027106907847,\"y\":431.5481128633526,\"radius\":270,\"duration\":10,\"victims\":17,\"eligible\":34,\"time\":22.14999999999965,\"fixtureTeam\":\"salamander\",\"cooldown\":10,\"field\":true}],\"pointers\":[{\"x\":365.71429443359375,\"y\":218.2857208251953,\"time\":22.14999999999965,\"aim\":true,\"fixtureTeam\":\"salamander\"}],\"fixture\":184}"
+10-19 23:03:02.109  3434  3464 I SwarmSmoke: OFFLINE no active default network: before renderer retry
+10-19 23:03:02.348  3434  3464 I SwarmSmoke: OFFLINE no active default network: renderer retry mounted
+10-19 23:03:09.975  3434  3464 I SwarmSmoke: PASS offline/Back/background-held-Rally/touch/rotation/Freeze-button-aim-cast/Freeze-cancellation/HUD-bounds/font-scale/renderer-crash/Continue/Activity-recreation
+10-19 23:03:13.426  4067  4094 I SwarmSmoke: OFFLINE no active default network: before persistence save
+10-19 23:03:14.530  4067  4094 I SwarmSmoke: OFFLINE no active default network: persistence save mounted
+10-19 23:03:20.164  4067  4094 I SwarmSmoke: PASS persistence seed saved; instrumentationPid=4067
+10-19 23:04:07.377  4350  4363 I SwarmSmoke: OFFLINE no active default network: before process relaunch
+10-19 23:04:12.956  4350  4363 I SwarmSmoke: OFFLINE no active default network: process relaunch mounted
+10-19 23:04:12.956  4350  4363 I SwarmSmoke: RELAUNCH instrumentationPid=4350 WebView=124.0.6367.219
+10-19 23:04:14.763  4350  4363 I SwarmSmoke: TOUCH Settings top gestures=0 scroll=0
+10-19 23:04:14.765  4350  4363 I SwarmSmoke: PRESENT persisted-settings-portrait css="{\"viewport\":[412,684,2.625],\"scroll\":0,\"screen\":{\"x\":0,\"y\":0,\"width\":412.19049072265625,\"height\":684.1904907226562,\"top\":0,\"right\":412.19049072265625,\"bottom\":684.1904907226562,\"left\":0},\"target\":{\"x\":78,\"y\":34.619049072265625,\"width\":318.19049072265625,\"height\":37.1726188659668,\"top\":34.619049072265625,\"right\":396.19049072265625,\"bottom\":71.79166793823242,\"left\":78},\"focus\":false}"
+10-19 23:04:14.772  4350  4350 I SwarmSmoke: PRESENT persisted-settings-portrait hardware=true frameCommit=true
+10-19 23:04:15.258  4350  4350 I SwarmSmoke: PRESENT persisted-settings-portrait windowBounds=Rect(0, 63 - 1080, 1857) focused=true attached=true
+10-19 23:04:20.973  4350  4363 I SwarmSmoke: TOUCH reached #btn-reset-progress gestures=2 scroll=758.09521484375
+10-19 23:04:20.975  4350  4363 I SwarmSmoke: PRESENT settings-bottom-portrait css="{\"viewport\":[412,684,2.625],\"scroll\":758.09521484375,\"screen\":{\"x\":0,\"y\":0,\"width\":412.19049072265625,\"height\":684.1904907226562,\"top\":0,\"right\":412.19049072265625,\"bottom\":684.1904907226562,\"left\":0},\"target\":{\"x\":16,\"y\":598.2083740234375,\"width\":380.19049072265625,\"height\":54,\"top\":598.2083740234375,\"right\":396.19049072265625,\"bottom\":652.2083740234375,\"left\":16},\"focus\":false}"
+10-19 23:04:20.988  4350  4350 I SwarmSmoke: PRESENT settings-bottom-portrait hardware=true frameCommit=true
+10-19 23:04:21.022  4350  4350 I SwarmSmoke: PRESENT settings-bottom-portrait windowBounds=Rect(0, 63 - 1080, 1857) focused=true attached=true
+10-19 23:04:24.032  4350  4363 I SwarmSmoke: TOUCH reached #setting-sound gestures=1 scroll=356.19049072265625
+10-19 23:04:24.033  4350  4363 I SwarmSmoke: INPUT Sound portrait before="{\"scroll\":356.19049072265625,\"rect\":{\"x\":321.19049072265625,\"y\":109.24404907226562,\"width\":54,\"height\":32,\"top\":109.24404907226562,\"right\":375.19049072265625,\"bottom\":141.24404907226562,\"left\":321.19049072265625},\"viewport\":[412,684],\"hit\":{\"tag\":\"INPUT\",\"id\":\"setting-sound\",\"class\":\"switch\"},\"ownsHit\":true,\"checked\":false,\"runtime\":false,\"stored\":false}"
+10-19 23:04:24.070  4350  4363 I SwarmSmoke: INPUT Sound portrait after="{\"scroll\":356.19049072265625,\"rect\":{\"x\":321.19049072265625,\"y\":109.24404907226562,\"width\":54,\"height\":32,\"top\":109.24404907226562,\"right\":375.19049072265625,\"bottom\":141.24404907226562,\"left\":321.19049072265625},\"viewport\":[412,684],\"hit\":{\"tag\":\"INPUT\",\"id\":\"setting-sound\",\"class\":\"switch\"},\"ownsHit\":true,\"checked\":true,\"runtime\":true,\"stored\":true}"
+10-19 23:04:25.105  4350  4363 I SwarmSmoke: PASS native Settings scroll/bottom-actions/sound-touch/Back/reopen portrait
+10-19 23:04:30.440  4350  4363 I SwarmSmoke: TOUCH Settings top gestures=2 scroll=0
+10-19 23:04:30.442  4350  4363 I SwarmSmoke: PRESENT persisted-settings-landscape css="{\"viewport\":[732,364,2.625],\"scroll\":0,\"screen\":{\"x\":0,\"y\":0,\"width\":732.1904907226562,\"height\":364.19049072265625,\"top\":0,\"right\":732.1904907226562,\"bottom\":364.19049072265625,\"left\":0},\"target\":{\"x\":108.0952377319336,\"y\":34.619049072265625,\"width\":578,\"height\":41.875,\"top\":34.619049072265625,\"right\":686.0952377319336,\"bottom\":76.49404907226562,\"left\":108.0952377319336},\"focus\":true}"
+10-19 23:04:30.455  4350  4350 I SwarmSmoke: PRESENT persisted-settings-landscape hardware=true frameCommit=true
+10-19 23:04:30.498  4350  4350 I SwarmSmoke: PRESENT persisted-settings-landscape windowBounds=Rect(0, 63 - 1920, 1017) focused=true attached=true
+10-19 23:04:39.765  4350  4363 I SwarmSmoke: TOUCH reached #btn-reset-progress gestures=4 scroll=741.7142944335938
+10-19 23:04:39.767  4350  4363 I SwarmSmoke: PRESENT settings-bottom-landscape css="{\"viewport\":[732,364,2.625],\"scroll\":741.7142944335938,\"screen\":{\"x\":0,\"y\":0,\"width\":732.1904907226562,\"height\":364.19049072265625,\"top\":0,\"right\":732.1904907226562,\"bottom\":364.19049072265625,\"left\":0},\"target\":{\"x\":249.077392578125,\"y\":278.11309814453125,\"width\":320.3571472167969,\"height\":54,\"top\":278.11309814453125,\"right\":569.4345397949219,\"bottom\":332.11309814453125,\"left\":249.077392578125},\"focus\":true}"
+10-19 23:04:39.772  4350  4350 I SwarmSmoke: PRESENT settings-bottom-landscape hardware=true frameCommit=true
+10-19 23:04:39.812  4350  4350 I SwarmSmoke: PRESENT settings-bottom-landscape windowBounds=Rect(0, 63 - 1920, 1017) focused=true attached=true
+10-19 23:04:47.084  4350  4363 I SwarmSmoke: TOUCH reached #setting-sound gestures=3 scroll=111.61904907226562
+10-19 23:04:47.084  4350  4363 I SwarmSmoke: INPUT Sound landscape before="{\"scroll\":111.61904907226562,\"rect\":{\"x\":611.0892944335938,\"y\":277.9226379394531,\"width\":54,\"height\":32,\"top\":277.9226379394531,\"right\":665.0892944335938,\"bottom\":309.9226379394531,\"left\":611.0892944335938},\"viewport\":[732,364],\"hit\":{\"tag\":\"INPUT\",\"id\":\"setting-sound\",\"class\":\"switch\"},\"ownsHit\":true,\"checked\":true,\"runtime\":true,\"stored\":true}"
+10-19 23:04:47.133  4350  4363 I SwarmSmoke: INPUT Sound landscape after="{\"scroll\":111.61904907226562,\"rect\":{\"x\":611.0892944335938,\"y\":277.9226379394531,\"width\":54,\"height\":32,\"top\":277.9226379394531,\"right\":665.0892944335938,\"bottom\":309.9226379394531,\"left\":611.0892944335938},\"viewport\":[732,364],\"hit\":{\"tag\":\"INPUT\",\"id\":\"setting-sound\",\"class\":\"switch\"},\"ownsHit\":true,\"checked\":false,\"runtime\":false,\"stored\":false}"
+10-19 23:04:51.735  4350  4363 I SwarmSmoke: PASS native Settings scroll/bottom-actions/sound-touch/Back/reopen landscape
+10-19 23:04:51.771  4350  4363 I SwarmSmoke: OFFLINE no active default network: Continue after process relaunch
+10-19 23:04:51.772  4350  4363 I SwarmSmoke: PASS process-relaunch/Home/checkpoint/record/runtime-settings/portrait-landscape/Continue
