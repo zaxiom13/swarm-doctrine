@@ -152,6 +152,17 @@ test('Back closes transient UI in order and resumes a paused match', () => {
     assert.equal(ui.handleBack(), false, 'Home lets the native Activity finish');
 });
 
+test('Back from team choice returns through Modes before Home', () => {
+    game.quitToMenu();
+    ui.showScreen('mode-screen');
+    game.showTeamSelect('levels');
+    assert.equal(ui.screen, 'team-select-screen');
+    assert.equal(ui.handleBack(), true);
+    assert.equal(ui.screen, 'mode-screen');
+    assert.equal(ui.handleBack(), true);
+    assert.equal(ui.screen, 'main-menu');
+});
+
 test('Back from Pause Settings returns to the paused arena before resuming', () => {
     game.quitToMenu();
     game.showTeamSelect('conquest'); game.selectTeam('dragon');

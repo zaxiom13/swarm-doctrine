@@ -7,7 +7,17 @@ permissions:
   contents: read
 jobs:
   apk:
+    name: apk (API ${{ matrix.api-level }}, ${{ matrix.gpu-mode }} GPU)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - api-level: 26
+            gpu-mode: software
+          - api-level: 35
+            gpu-mode: swiftshader_indirect
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,5 +40,32 @@ jobs:
       - run: gradle -p android lintDebug assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: swarm-doctrine-debug
+          name: swarm-doctrine-debug-api${{ matrix.api-level }}
           path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Verify renderer recovery callbacks
+        run: gradle -p android testDebugUnitTest
+      - name: Build installed smoke tests
+        run: gradle -p android assembleDebugAndroidTest
+      - name: Enable runner KVM
+        run: sudo chmod a+rw /dev/kvm
+      - name: Installed offline WebView smoke (API ${{ matrix.api-level }})
+        uses: reactivecircus/android-emulator-runner@v2
+        env:
+          SWARM_EMULATOR_GPU: ${{ matrix.gpu-mode }}
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -no-snapshot -no-audio -no-boot-anim -gpu ${{ matrix.gpu-mode }} -camera-back none
+          script: |
+            bash android/scripts/installed-smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swarm-doctrine-installed-smoke-api${{ matrix.api-level }}
+          path: |
+            android/app/build/smoke-evidence/
+            android/app/build/outputs/androidTest-results/
+            android/app/build/reports/androidTests/
+          retention-days: 30
