@@ -1,6 +1,6 @@
 # Swarm Doctrine board
 
-Updated 2026-11-13. Android remains a committed priority. Five improvement slots
+Updated 2026-11-14. Android remains a committed priority. Five improvement slots
 are occupied after #19 merged: #20/#22/#23/#26/#27. Maintain these before adding
 another batch. Merged code and archive/browser checks do not establish native
 installed-device readiness.
@@ -12,14 +12,14 @@ installed-device readiness.
 | SD-012 | Verify the generated web tree exactly matches debug APK assets | [#20](https://github.com/zaxiom13/swarm-doctrine/pull/20) | Unchanged `4193ba6`; 10-19 check/80 tests/build and current-head web/Android CI remain green, not a new native run. All nine shared-verifier ZIP fixtures and actual lintDebug/verifyDebugApk passed. [Verified APK](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38821195864/artifacts/12013980056). Card/report in its branch. |
 | SD-015 | Guard fleet spawn clearance over seeded aspect ratios | [#22](https://github.com/zaxiom13/swarm-doctrine/pull/22) | Unchanged `acd0c36`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Runtime TerrainField reach covers 2,048 seeds x eight aspects. No overlap bug was found. [Card](cards/SD-015.md). |
 | SD-014 | Clear stale conversion flashes on reused online guest ships | [#23](https://github.com/zaxiom13/swarm-doctrine/pull/23) | Unchanged `ab91651`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Frozen two-frame regression and both local-duel roles pass again. [Card](cards/SD-014.md). Real transport remains untested. |
-| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | Code `9789396`, evidence `6b9dd5c`. After valid versionCode 1→2 update restore and Continue, the installed fixture truncates the real checkpoint, recreates the Activity, then requires offline Home with no Continue while preserving the independent record. Production storage/runtime code is unchanged. Exact API 35/WebView 124 passes portrait/landscape menus and Settings, safe areas, background/audio, renderer recovery, process/update restore, Continue and malformed-checkpoint recovery. API 26 retains its independent emulator graphics stall. [Evidence](evidence/2026-11-13/report.md). |
+| SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | Code `8be4705`, evidence `2b7765c`. The installed versionCode 1→2 update now proves the WebView switches from a v1 packaged marker to distinct v2 APK bytes while preserving progress, portrait/landscape Settings and Continue. The fixture marker never ships in normal builds; production runtime/schema is unchanged. Exact API 35/WebView 124 passes. API 26 retains its independent emulator graphics stall. [Evidence](evidence/2026-11-14/report.md). |
 | SD-018 | First offline reload reuses a safe public Origin variant | [#27](https://github.com/zaxiom13/swarm-doctrine/pull/27) | Unchanged `159439b`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Exact public URL and Origin-only Vary guard; fresh four-case offline matrix passes. [Card](https://github.com/zaxiom13/swarm-doctrine/blob/night/offline-origin-variant/factory/cards/SD-018.md). |
 
 Main is `886b3f4`, which merged #19. All five PRs target main with no
 pending stack dependencies. Local merges were conflict-free. All five
 merge automatically together and pass
-check/85 tests/build again on 2026-11-13 with exact heads `4193ba6`, `acd0c36`,
-`ab91651`, `9789396` and `159439b`. [Current evidence](evidence/2026-11-13/report.md).
+check/85 tests/build again on 2026-11-14 with exact heads `4193ba6`, `acd0c36`,
+`ab91651`, `8be4705` and `159439b`. [Current evidence](evidence/2026-11-14/report.md).
 Fresh current-main check/80 tests/build and #26 check/82 tests/build pass. The exact #26 web workflows
 pass. The API 35 persisted-Settings reopen failure reproduced on two unchanged runs:
 the control received DOWN/UP but no click while Chromium displayed text selection.
@@ -66,6 +66,14 @@ artifact 14087565824 records the explicit marker. Its first API 26 job hit a bro
 Gradle dependency outage before compilation. One unchanged job retry passed lint,
 both APK builds and renderer callbacks, then reproduced the known WebView 69
 progress-70 timeout; artifact 14087442530 preserves the diagnostic boundary.
+Head `8be4705` makes that update proof distinguish packaged bytes: the signed v1
+and v2 APKs contain different test-only marker assets, and the installed WebView
+reads v1 before saving then v2 after replacement while progress survives. An
+initial build.gradle implementation overlapped #20; moving the marker entirely
+into the smoke fixture restored a clean exact five-head merge. Exact API 35 run
+43652902003 passes and artifact 14137305975 records both markers and the full
+portrait/landscape/process/update path. API 26 repeats its known pre-update
+progress-70 emulator timeout in artifact 14136931864.
 No GitHub PR was merged, auto-merged or deployed by this run.
 
 ## Merged
@@ -144,11 +152,12 @@ this table reconciles their latest actual states.
    repository deployment secrets are available. Main run
    [38035800992](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38035800992)
    skipped deployment; this run did not deploy or modify credentials. Keep free configuration.
-4. Test service-worker version A → B, changed-schema/assets APK update recovery,
+4. Test service-worker version A → B, changed-JavaScript/schema APK migrations,
    and larger-font adaptive layouts in WebView. The current-schema truncated
-   checkpoint now returns safely Home without offering Continue on API 35.
+   checkpoint returns safely Home, and a changed static packaged marker is served
+   after a replacement APK without losing progress on API 35.
 5. Existing seeded 160/320-ship pre-rewrite comparison was measured on 2026-10-13;
    real canvas/worker/frame costs still need device measurements before tuning.
 
 Interactive lessons remain hidden. Rules, shared Simulation/Commander and trained
-policy remain unchanged. [Latest journal](journal/2026-11-13.md).
+policy remain unchanged. [Latest journal](journal/2026-11-14.md).
