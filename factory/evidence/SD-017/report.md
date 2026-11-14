@@ -412,3 +412,46 @@ is 199,722 bytes; SHA-256
 `2db25fbc804d248a40347bb61b0d7bd0224f385d6269a061b925267058ff284c`.
 It does not establish API 26 support, arbitrary corrupted-schema recovery,
 abrupt writes, physical-device behavior or installed-app equivalence broadly.
+
+## 2026-11-14: replacement APK serves changed packaged assets
+
+Head `8be4705` tightens the same update fixture without changing production app
+behavior. The script creates a test-only public marker before each signed APK
+build, verifies `asset-version-1` and `asset-version-2` inside their respective
+archives, and removes the source marker on every exit. The installed WebView
+must read v1 before saving and v2 after the real versionCode 1→2 `adb install
+-r`, while the existing checkpoint, record, preferences, portrait/landscape
+Settings and Continue assertions still pass. Normal builds never create or
+package this marker.
+
+The first implementation placed marker generation in `android/app/build.gradle`.
+An exact five-head merge exposed its avoidable overlap with #20, so final head
+`8be4705` isolates the fixture in `installed-smoke.sh`; the exact octopus merge
+is conflict-free again. This was a dependency/maintainability correction, not a
+test relaxation.
+
+- Fresh main `886b3f4`: Node 24.22.1; `npm ci`; check; 80 tests; build pass.
+- Code head: diff check; shell syntax; check; 82 tests; production build pass.
+- Exact five-head octopus integration (`4193ba6`, `acd0c36`, `ab91651`,
+  `8be4705`, `159439b`): conflict-free; check; 85 tests; build pass. The
+  integration branch was not published.
+- [Exact web run 43652902032](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43652902032)
+  passes; deployment is skipped.
+- [Exact Android run 43652902003](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43652902003)
+  passes the complete API 35 / WebView 124.0.6367.219 installed scenario. Its
+  console records both marker files, two one-test process stages, versionCode
+  1→2 and the no-clear-data update; logcat records the `assets-v1-v2` pass.
+- Installed artifact
+  [14137305975](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43652902003/artifacts/14137305975):
+  15,319,332 bytes; SHA-256
+  `b1de702c39a659c09834e5c395ac43b9bc0fb52694f6f26889080b4e60440691`.
+
+API 26 passes lint, debug/test APK builds and renderer callback checks, reaches
+API 26 / Chrome WebView 69.0.3497.100 offline, then repeats the known progress-70
+emulator timeout before the update stage. Diagnostic artifact
+[14136931864](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43652902003/artifacts/14136931864)
+is 197,736 bytes; SHA-256
+`e22a5062c066b92ffd8665363103fb6910db67456f5a3a87ff30b3c2e3e3b4e0`.
+This proves changed static marker delivery plus current-schema persistence on
+one emulator configuration, not changed JavaScript/schema migration, abrupt
+writes, physical API 26, arbitrary cutouts, audible audio or real networking.
