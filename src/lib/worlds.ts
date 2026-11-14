@@ -25,7 +25,8 @@ export function buildWorld(seed, level = 4, width = 1280, height = 720) {
     const types = level < 3 ? ['slowZone', 'asteroid'] : ['slowZone', 'asteroid', 'blackHole'];
     const terrain = slots.slice(0, rules.hazards).map(([x,y],i) => {
         const type = types[Math.floor(random() * types.length)];
-        const radius = scale * (type === 'blackHole' ? .026 + random() * .012 : .062 + random() * .018);
+        const radiusPermille = type === 'blackHole' ? 26 + random() * 12 : 62 + random() * 18;
+        const radius = scale * radiusPermille / 1_000;
         return { type, x: x * width, y: y * height, radius, id: `terrain-${i}` };
     });
     return { seed: seed >>> 0, name: NAMES[Math.floor(random() * NAMES.length)], terrain
