@@ -372,3 +372,43 @@ storage and timing are unchanged.
 This finite emulator evidence does not establish elapsed recharge accuracy,
 physical/current-vendor API 26, audible output, arbitrary cutouts/navigation
 modes, changed-schema/assets migration or real two-device Firebase/WebRTC.
+
+## 2026-11-13: malformed checkpoint after process/update restore
+
+Head `9789396` extends only the installed persistence fixture. After the normal
+save, whole-process force-stop, versionCode 1→2 `adb install -r`, restored
+portrait/landscape settings, record and Continue all pass, it writes truncated
+JSON to the actual `swarm-expedition-v1` key and recreates the Activity. The
+fresh offline launch must settle safely at Home, return no checkpoint, hide
+Continue and preserve the independent best record. This checks the shipped
+checkpoint parser through a real WebView lifecycle without changing production
+storage code, schema, permissions or navigation.
+
+- Fresh main `886b3f4`: Node 24.22.1; `npm ci`; check; 80 tests; build pass.
+- Code head: diff check; check; 82 tests; production build pass.
+- Exact five-head octopus integration (`4193ba6`, `acd0c36`, `ab91651`,
+  `9789396`, `159439b`): conflict-free; check; 85 tests; build pass. The
+  integration branch was not published.
+- [Exact web run 43529366165](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43529366165)
+  passes; deployment is skipped.
+- [Exact Android run 43529366271](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43529366271)
+  passes the complete API 35 / WebView 124.0.6367.219 installed scenario. The
+  restore process reports `OK (1 test)`, offline malformed-checkpoint relaunch,
+  and the explicit `malformed-checkpoint` pass marker.
+- Installed artifact
+  [14087565824](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43529366271/artifacts/14087565824):
+  15,174,391 bytes; SHA-256
+  `a30a165265c2191a0518541d859441ae6ab72e820ba6dc0a0f1251bbeab12cc8`.
+
+The first API 26 matrix job stopped before compilation when Gradle simultaneously
+failed to resolve dozens of standard artifacts. The same source had compiled in
+the API 35 job, so this was recorded as runner dependency failure and the single
+failed job was rerun unchanged. The rerun passed lint, debug/test APK builds and
+renderer callback checks, reached API 26 / Chrome WebView 69.0.3497.100 offline,
+then repeated the independently known progress-70 emulator timeout. Diagnostic
+artifact
+[14087442530](https://github.com/zaxiom13/swarm-doctrine/actions/runs/43529366271/artifacts/14087442530)
+is 199,722 bytes; SHA-256
+`2db25fbc804d248a40347bb61b0d7bd0224f385d6269a061b925267058ff284c`.
+It does not establish API 26 support, arbitrary corrupted-schema recovery,
+abrupt writes, physical-device behavior or installed-app equivalence broadly.
