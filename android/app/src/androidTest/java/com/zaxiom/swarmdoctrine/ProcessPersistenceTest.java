@@ -158,6 +158,9 @@ public class ProcessPersistenceTest {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             ready(scenario);
             assertOffline("persistence save mounted");
+            assertEquals("version 1 packaged asset is served", "true", js(scenario,
+                "(()=>{const x=new XMLHttpRequest();x.open('GET','/game/smoke-update-marker.txt',false);"
+                + "x.send();return x.status===200&&x.responseText.trim()==='asset-version-1'})()"));
             // Use the game's real save paths. These are deterministic fixtures,
             // not a claim that this test earned a score or completed four sectors.
             assertEquals("true", js(scenario,
@@ -185,6 +188,9 @@ public class ProcessPersistenceTest {
                 "game.ui.screen==='main-menu'&&game.gameState==='menu'"
                 + "&&location.origin==='https://appassets.androidplatform.net'"
                 + "&&!(navigator.serviceWorker&&navigator.serviceWorker.controller)"));
+            assertEquals("replacement APK serves version 2 packaged asset", "true", js(scenario,
+                "(()=>{const x=new XMLHttpRequest();x.open('GET','/game/smoke-update-marker.txt',false);"
+                + "x.send();return x.status===200&&x.responseText.trim()==='asset-version-2'})()"));
             assertEquals("checkpoint and record survived process stop", "true", js(scenario,
                 "game.loadCheckpoint()&&game.loadCheckpoint().seed===767676&&game.loadCheckpoint().level===4"
                 + "&&game.loadCheckpoint().team==='dragon'&&game.loadCheckpoint().enemies==='passive'"
@@ -219,8 +225,10 @@ public class ProcessPersistenceTest {
             assertEquals("malformed checkpoint returns safely to Home without Continue", "true", js(scenario,
                 "game.ui.screen==='main-menu'&&game.gameState==='menu'&&game.loadCheckpoint()===null"
                 + "&&game.ui.continueLabel===null&&document.querySelector('#btn-continue').classList.contains('hidden')"
-                + "&&Number(localStorage.getItem('swarm-best-levels'))===2468"));
-            Log.i("SwarmSmoke", "PASS process-update/relaunch/Home/checkpoint/record/runtime-settings/portrait-landscape/Continue/malformed-checkpoint");
+                + "&&Number(localStorage.getItem('swarm-best-levels'))===2468"
+                + "&&(()=>{const x=new XMLHttpRequest();x.open('GET','/game/smoke-update-marker.txt',false);x.send();"
+                + "return x.status===200&&x.responseText.trim()==='asset-version-2'})()"));
+            Log.i("SwarmSmoke", "PASS process-update/assets-v1-v2/relaunch/Home/checkpoint/record/runtime-settings/portrait-landscape/Continue/malformed-checkpoint");
         }
     }
 }

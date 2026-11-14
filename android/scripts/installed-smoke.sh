@@ -102,7 +102,13 @@ if (( smoke_status != 0 )); then exit "$smoke_status"; fi
 
 # AGP uninstalls its test APKs. Install version 1 for the staged persistence
 # check. After saving, the script upgrades to version 2 with adb install -r;
-# nothing may clear storage between the save and restore stages.
+# nothing may clear storage between the save and restore stages. Distinct
+# marker assets prove the replacement APK's packaged web bytes are served.
+gradle -p android assembleDebug -PswarmAssetMarker=asset-version-1
+unzip -p android/app/build/outputs/apk/debug/app-debug.apk \
+    assets/smoke-update-marker.txt \
+    | tee android/app/build/smoke-evidence/process-asset-version-1.txt
+grep -qx 'asset-version-1' android/app/build/smoke-evidence/process-asset-version-1.txt
 adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 adb install -r android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 adb shell dumpsys package com.zaxiom.swarmdoctrine \
@@ -140,13 +146,18 @@ echo 'PASS no app process remains after package force-stop; no clear-data' | tee
 # actual replace/update operation. The same source isolates data continuity from
 # app behavior changes; it is not a version-A-to-B migration compatibility claim.
 gradle -p android assembleDebug \
-    -PswarmVersionCode=2 -PswarmVersionName=0.1.1-smoke
+    -PswarmVersionCode=2 -PswarmVersionName=0.1.1-smoke \
+    -PswarmAssetMarker=asset-version-2
+unzip -p android/app/build/outputs/apk/debug/app-debug.apk \
+    assets/smoke-update-marker.txt \
+    | tee android/app/build/smoke-evidence/process-asset-version-2.txt
+grep -qx 'asset-version-2' android/app/build/smoke-evidence/process-asset-version-2.txt
 adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 adb shell dumpsys package com.zaxiom.swarmdoctrine \
     > android/app/build/smoke-evidence/package-version-2.txt
 grep -m 1 'versionCode=' android/app/build/smoke-evidence/package-version-2.txt \
     | tee -a android/app/build/smoke-evidence/process-update.txt
 grep -Eq 'versionCode=2([[:space:]]|$)' android/app/build/smoke-evidence/process-update.txt
-echo 'PASS versionCode 1 -> 2 installed with -r and no clear-data' \
+echo 'PASS versionCode 1 -> 2 and asset-version-1 -> 2 installed with -r and no clear-data' \
     | tee -a android/app/build/smoke-evidence/process-update.txt
 run_persistence_stage restoreAfterProcessStop
