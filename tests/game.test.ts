@@ -37,6 +37,8 @@ const { LESSONS } = await import('../src/lib/lessons.ts');
 const { UPGRADES } = await import('../src/lib/catalog.ts');
 const { levelRules, buildWorld, validCheckpoint } = await import('../src/lib/worlds.ts');
 const { UIManager } = await import('../src/lib/ui.svelte.ts');
+const { Simulation } = await import('../src/lib/simulation.ts');
+const { encodeSnapshot } = await import('../src/lib/net/sync.ts');
 const ui = new UIManager();
 const game = new Game({ canvas, ui });
 game.audio = new Proxy({}, { get: () => () => {} }) as any;
@@ -436,6 +438,26 @@ test('backgrounding an online guest releases controls even though the match cann
     assert.equal(game.input.freezeAiming, false);
     assert.ok(sent.some(([kind, action]) => kind === 'input' && action.type === 'release'));
     game.online = null; game.lobby = null;
+});
+
+test('a finished online guest ignores late host snapshots and effects', () => {
+    begin(index('wide-freeze'));
+    const originalBoids = game.sim.boids;
+    const handled: any[] = [];
+    const originalHandleEvent = game.handleEvent;
+    game.handleEvent = event => handled.push(event);
+    game.online = { role: 'guest', peerId: 'host', holding: false, ended: true } as any;
+
+    const host = new Simulation();
+    host.setTeams(['dragon', 'salamander']);
+    host.addBoid(100, 100, 'dragon');
+    game.onlineState(encodeSnapshot(host), 'host');
+    game.onlineFx([{ type: 'converted', x: 100, y: 100, from: 'dragon', to: 'salamander' }], 'host');
+
+    assert.equal(game.sim.boids, originalBoids, 'a late snapshot must not replace finished-match state');
+    assert.deepEqual(handled, [], 'late effects must not appear over the result screen');
+    game.handleEvent = originalHandleEvent;
+    game.online = null;
 });
 
 test('consumed Escape closes details without also pausing the match', () => {

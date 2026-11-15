@@ -79,7 +79,7 @@ export function applySnapshot(sim, buffer) {
         b.vel.set(view.getInt8(at + 6) / 20, view.getInt8(at + 7) / 20);
         b.team = team;
         b.frozen = Boolean(flags & 4);
-        if (flags & 8) b.justConverted = true;
+        b.justConverted = Boolean(flags & 8);
         b.conversionPressure = view.getUint8(at + 9) / 4;
         b.freezeRemaining = view.getUint8(at + 12) / 10;
         sources.push(view.getUint16(at + 10, true));
