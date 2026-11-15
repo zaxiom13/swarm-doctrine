@@ -135,7 +135,7 @@ export class UIManager {
     back() {
         const target = this.history.pop() || 'main-menu';
         if (target === 'game-screen') this.showScreen('game-screen', { push: false });
-        else if (['game-screen', 'team-select-screen'].includes(this.screen) || target === 'main-menu') this.game.quitToMenu();
+        else if (this.screen === 'game-screen' || target === 'main-menu') this.game.quitToMenu();
         else this.showScreen(target, { push: false });
     }
 

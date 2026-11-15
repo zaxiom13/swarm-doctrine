@@ -48,6 +48,27 @@ test('ships keep their identity across snapshots and vanished ships are removed'
     assert.ok(guest.boids.every(b => Number.isFinite(b.pos.x) && Number.isFinite(b.pos.y)));
 });
 
+test('a reused guest ship clears a conversion flash when the host clears it', () => {
+    const host = new Simulation();
+    const guest = new Simulation();
+    host.setTeams(['dragon', 'salamander']);
+    guest.setTeams(['dragon', 'salamander']);
+    const ship = host.addBoid(120, 80, 'dragon');
+    ship.frozen = true;
+    ship.freezeRemaining = 5;
+    ship.justConverted = true;
+    applySnapshot(guest, encodeSnapshot(host));
+    const reused = guest.boids[0];
+    assert.equal(reused.justConverted, true);
+    assert.equal(reused.frozen, true, 'exercise the frozen early-return path from the trigger');
+
+    ship.justConverted = false;
+    applySnapshot(guest, encodeSnapshot(host));
+    assert.equal(guest.boids[0], reused);
+    assert.equal(reused.frozen, true);
+    assert.equal(reused.justConverted, false);
+});
+
 test('malformed snapshots and guest input are rejected', () => {
     const sim = new Simulation();
     assert.equal(applySnapshot(sim, new ArrayBuffer(4)), false);

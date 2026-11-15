@@ -24,6 +24,13 @@ self.addEventListener('fetch', event => {
         const cache = await caches.open(CACHE);
         const cached = await cache.match(event.request);
         if (cached) return cached;
+        // These URLs are public build assets. Module/style requests add Origin,
+        // unlike the install request; Vary: Origin must not hide their precache.
+        if (SHELL.some(path => new URL(path, self.registration.scope).href === url.href)) {
+            const precached = await cache.match(event.request, { ignoreVary: true });
+            const vary = precached?.headers.get('Vary')?.trim().toLowerCase();
+            if (vary === 'origin') return precached;
+        }
         if (event.request.mode === 'navigate') {
             const index = await cache.match(new URL('index.html', self.registration.scope));
             if (index) return index;
