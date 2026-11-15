@@ -1,6 +1,6 @@
 # Swarm Doctrine board
 
-Updated 2026-11-14. Android remains a committed priority. Five improvement slots
+Updated 2026-11-15. Android remains a committed priority. Five improvement slots
 are occupied after #19 merged: #20/#22/#23/#26/#27. Maintain these before adding
 another batch. Merged code and archive/browser checks do not establish native
 installed-device readiness.
@@ -11,7 +11,7 @@ installed-device readiness.
 | --- | --- | --- | --- |
 | SD-012 | Verify the generated web tree exactly matches debug APK assets | [#20](https://github.com/zaxiom13/swarm-doctrine/pull/20) | Unchanged `4193ba6`; 10-19 check/80 tests/build and current-head web/Android CI remain green, not a new native run. All nine shared-verifier ZIP fixtures and actual lintDebug/verifyDebugApk passed. [Verified APK](https://github.com/zaxiom13/swarm-doctrine/actions/runs/38821195864/artifacts/12013980056). Card/report in its branch. |
 | SD-015 | Guard fleet spawn clearance over seeded aspect ratios | [#22](https://github.com/zaxiom13/swarm-doctrine/pull/22) | Unchanged `acd0c36`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Runtime TerrainField reach covers 2,048 seeds x eight aspects. No overlap bug was found. [Card](cards/SD-015.md). |
-| SD-014 | Clear stale conversion flashes on reused online guest ships | [#23](https://github.com/zaxiom13/swarm-doctrine/pull/23) | Unchanged `ab91651`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Frozen two-frame regression and both local-duel roles pass again. [Card](cards/SD-014.md). Real transport remains untested. |
+| SD-014 | Isolate a finished online guest from late host state | [#23](https://github.com/zaxiom13/swarm-doctrine/pull/23) | Head `77bf62d`; a valid late host snapshot can no longer replace finished-match fleets or render effects behind the result. Focused 26 tests, full check/82 tests/build, web CI and Android lint/APK pass. [Evidence](https://github.com/zaxiom13/swarm-doctrine/blob/night/net-conversion-flag/factory/evidence/SD-014/report.md). Fresh browser transport exercise was blocked; real transport remains untested. |
 | SD-017 | Recover from a crashed or reclaimed Android WebView renderer | [#26](https://github.com/zaxiom13/swarm-doctrine/pull/26) | Code `8be4705`, evidence `2b7765c`. The installed versionCode 1→2 update now proves the WebView switches from a v1 packaged marker to distinct v2 APK bytes while preserving progress, portrait/landscape Settings and Continue. The fixture marker never ships in normal builds; production runtime/schema is unchanged. Exact API 35/WebView 124 passes. API 26 retains its independent emulator graphics stall. [Evidence](evidence/2026-11-14/report.md). |
 | SD-018 | First offline reload reuses a safe public Origin variant | [#27](https://github.com/zaxiom13/swarm-doctrine/pull/27) | Unchanged `159439b`; 10-19 check/81 tests/build pass; current-head 10-14 web/Android CI remains green. Exact public URL and Origin-only Vary guard; fresh four-case offline matrix passes. [Card](https://github.com/zaxiom13/swarm-doctrine/blob/night/offline-origin-variant/factory/cards/SD-018.md). |
 
@@ -75,6 +75,17 @@ into the smoke fixture restored a clean exact five-head merge. Exact API 35 run
 portrait/landscape/process/update path. API 26 repeats its known pre-update
 progress-70 emulator timeout in artifact 14136931864.
 No GitHub PR was merged, auto-merged or deployed by this run.
+
+On 2026-11-15 the reliability/security draw selected #23 maintenance. The exact
+current heads `4193ba6`, `acd0c36`, `77bf62d`, `2b7765c` and `159439b` merge at
+published integration head `9423d30`; check, 86 tests and build pass. Main still
+passes check, 80 tests and build. Web run 43775273226 and Android lint/APK run
+43775273243 are green. A visible-browser `?net=local` attempt could not reach the
+workspace loopback namespace, and workspace Chromium was denied its local IPC
+socket; this run therefore makes no fresh two-context or Firebase/WebRTC claim.
+The Android appassets navigation audit was rejected as already correct: the
+localhost-only Jev configuration page is intentionally hidden and blocked in the
+APK. No production Android change was justified.
 
 ## Merged
 
@@ -160,4 +171,4 @@ this table reconciles their latest actual states.
    real canvas/worker/frame costs still need device measurements before tuning.
 
 Interactive lessons remain hidden. Rules, shared Simulation/Commander and trained
-policy remain unchanged. [Latest journal](journal/2026-11-14.md).
+policy remain unchanged. [Latest journal](journal/2026-11-15.md).
