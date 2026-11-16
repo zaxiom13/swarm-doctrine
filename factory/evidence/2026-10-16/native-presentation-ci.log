@@ -1,0 +1,26 @@
+10-15 23:38:20.334  3061  3182 I SwarmSmoke: API=35 model=sdk_gphone64_x86_64 airplane=1
+10-15 23:38:20.334  3061  3182 I SwarmSmoke: fontScale=1.3
+10-15 23:38:21.053  3061  3182 I SwarmSmoke: OFFLINE no active default network: before first launch
+10-15 23:38:23.342  3061  3182 I SwarmSmoke: WebView=com.google.android.webview 124.0.6367.219
+10-15 23:38:24.020  3061  3182 I SwarmSmoke: OFFLINE no active default network: first game mounted
+10-15 23:39:18.870  3061  3182 I SwarmSmoke: OFFLINE no active default network: before renderer retry
+10-15 23:39:19.727  3061  3182 I SwarmSmoke: OFFLINE no active default network: renderer retry mounted
+10-15 23:39:22.937  3061  3182 I SwarmSmoke: PASS offline/Back/background-held-Rally/touch/rotation/Freeze-button-aim-cast/Freeze-cancellation/HUD-bounds/font-scale/renderer-crash/Continue/Activity-recreation
+10-15 23:39:29.125  4176  4191 I SwarmSmoke: OFFLINE no active default network: before persistence save
+10-15 23:39:36.561  4176  4191 I SwarmSmoke: OFFLINE no active default network: persistence save mounted
+10-15 23:39:40.894  4176  4191 I SwarmSmoke: PASS persistence seed saved; instrumentationPid=4176
+10-15 23:40:29.560  4466  4480 I SwarmSmoke: OFFLINE no active default network: before process relaunch
+10-15 23:40:30.932  4466  4480 I SwarmSmoke: OFFLINE no active default network: process relaunch mounted
+10-15 23:40:30.932  4466  4480 I SwarmSmoke: RELAUNCH instrumentationPid=4466 WebView=124.0.6367.219
+10-15 23:40:35.507  4466  4480 I SwarmSmoke: PRESENT persisted-settings-portrait css="{\"viewport\":[412,684,2.625],\"screen\":{\"x\":0,\"y\":0,\"width\":412.19049072265625,\"height\":684.1904907226562,\"top\":0,\"right\":412.19049072265625,\"bottom\":684.1904907226562,\"left\":0},\"heading\":{\"x\":78,\"y\":34.619049072265625,\"width\":318.19049072265625,\"height\":37.1726188659668,\"top\":34.619049072265625,\"right\":396.19049072265625,\"bottom\":71.79166793823242,\"left\":78},\"focus\":false}"
+10-15 23:40:35.523  4466  4466 I SwarmSmoke: PRESENT persisted-settings-portrait hardware=true frameCommit=true
+10-15 23:40:35.562  4466  4466 I SwarmSmoke: PRESENT persisted-settings-portrait windowBounds=Rect(0, 63 - 1080, 1857) focused=true attached=true
+10-15 23:40:36.469  4466  4480 I SwarmSmoke: PRESENT persisted-settings-landscape css="{\"viewport\":[732,364,2.625],\"screen\":{\"x\":0,\"y\":0,\"width\":732.1904907226562,\"height\":364.19049072265625,\"top\":0,\"right\":732.1904907226562,\"bottom\":364.19049072265625,\"left\":0},\"heading\":{\"x\":108.0952377319336,\"y\":34.619049072265625,\"width\":578,\"height\":41.875,\"top\":34.619049072265625,\"right\":686.0952377319336,\"bottom\":76.49404907226562,\"left\":108.0952377319336},\"focus\":false}"
+10-15 23:40:36.544  4466  4466 I SwarmSmoke: PRESENT persisted-settings-landscape hardware=true frameCommit=true
+10-15 23:40:37.172  4466  4466 I SwarmSmoke: PRESENT persisted-settings-landscape windowBounds=Rect(0, 63 - 1920, 1017) focused=true attached=true
+10-15 23:40:37.787  4466  4480 I SwarmSmoke: OFFLINE no active default network: Continue after process relaunch
+10-15 23:40:37.787  4466  4480 I SwarmSmoke: PASS process-relaunch/Home/checkpoint/record/runtime-settings/portrait-landscape/Continue
+Running app PID before force-stop: 4353
+PASS no app process remains after package force-stop; no clear-data/reinstall
+saveBeforeProcessStop: OK (1 test)
+restoreAfterProcessStop: OK (1 test)

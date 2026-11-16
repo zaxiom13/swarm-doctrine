@@ -1,0 +1,74 @@
+{
+  "browser": "153.0.8010.0",
+  "results": [
+    {
+      "width": 390,
+      "height": 844,
+      "visibleSettledSettings": true,
+      "heading": {
+        "x": 78,
+        "y": 30.890625,
+        "width": 296,
+        "height": 28.59375
+      },
+      "bottomActionReachable": true,
+      "soundChoiceRetained": true
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "visibleSettledSettings": true,
+      "heading": {
+        "x": 164,
+        "y": 29.390625,
+        "width": 578,
+        "height": 37.140625
+      },
+      "bottomActionReachable": true,
+      "soundChoiceRetained": true
+    },
+    {
+      "width": 320,
+      "height": 568,
+      "visibleSettledSettings": true,
+      "heading": {
+        "x": 78,
+        "y": 30.890625,
+        "width": 226,
+        "height": 28.59375
+      },
+      "bottomActionReachable": true,
+      "soundChoiceRetained": true
+    },
+    {
+      "width": 568,
+      "height": 320,
+      "visibleSettledSettings": true,
+      "heading": {
+        "x": 78,
+        "y": 30.890625,
+        "width": 474,
+        "height": 28.59375
+      },
+      "bottomActionReachable": true,
+      "soundChoiceRetained": true
+    },
+    {
+      "width": 1280,
+      "height": 720,
+      "visibleSettledSettings": true,
+      "heading": {
+        "x": 382,
+        "y": 29.390625,
+        "width": 578,
+        "height": 39.59375
+      },
+      "bottomActionReachable": true,
+      "soundChoiceRetained": true
+    }
+  ],
+  "actualSettingChangeAndReload": true,
+  "doneReturnsHome": true,
+  "pageErrors": [],
+  "limitation": "Browser menus/DOM only, not Android frame/window/compositor proof."
+}

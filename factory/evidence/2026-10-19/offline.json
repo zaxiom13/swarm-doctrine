@@ -1,0 +1,574 @@
+{
+  "browser": "153.0.8010.0",
+  "root": "swarm-19-integration",
+  "results": [
+    {
+      "name": "first-visit",
+      "passed": true,
+      "state": {
+        "game": true,
+        "body": "SWARM\nDOCTRINE\n\nMOVE TOGETHER · RECRUIT EVERYONE\n\nPLAY\nFIELD GUIDE\nHOW TO PLAY\nSETTINGS",
+        "controller": true,
+        "ready": "complete",
+        "hidden": false
+      },
+      "cached": [
+        {
+          "url": "http://127.0.0.1:4185/assets/connect-R4x_wV-E.js",
+          "type": "text/javascript",
+          "bytes": 790
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/dist-DQJbmggL.js",
+          "type": "text/javascript",
+          "bytes": 49726
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-BeGpjAbq.js",
+          "type": "text/javascript",
+          "bytes": 33151
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-Beo_5XjP.js",
+          "type": "text/javascript",
+          "bytes": 693
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-CDg2XpU-.js",
+          "type": "text/javascript",
+          "bytes": 1383
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-DjvdTYWy.js",
+          "type": "text/javascript",
+          "bytes": 74
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-Y1lPQSip.js",
+          "type": "text/javascript",
+          "bytes": 141400
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/jev-iC41C1u0.js",
+          "type": "text/javascript",
+          "bytes": 7787
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/jev-nYdUGRNa.css",
+          "type": "text/css",
+          "bytes": 29844
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/main-DpC9yoc4.js",
+          "type": "text/javascript",
+          "bytes": 191639
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/search-worker-lWiNTD7Z.js",
+          "type": "text/javascript",
+          "bytes": 22846
+        }
+      ],
+      "events": [
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/"
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "request",
+          "url": "https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/assets/main-DpC9yoc4.js"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/assets/jev-iC41C1u0.js"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/assets/jev-nYdUGRNa.css"
+        },
+        {
+          "type": "failed",
+          "url": "https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap",
+          "error": {
+            "errorText": "net::ERR_INTERNET_DISCONNECTED"
+          }
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/assets/jev-iC41C1u0.js",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/assets/jev-nYdUGRNa.css",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/assets/main-DpC9yoc4.js",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/guide/phone/fleets.webp"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/guide/phone/hud.webp"
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/guide/phone/fleets.webp",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/guide/phone/hud.webp",
+          "status": 200,
+          "worker": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "match-restart",
+      "passed": true,
+      "state": {
+        "game": true,
+        "body": "SWARM\nDOCTRINE\n\nMOVE TOGETHER · RECRUIT EVERYONE\n\nPLAY\nFIELD GUIDE\nHOW TO PLAY\nSETTINGS",
+        "controller": true,
+        "ready": "complete",
+        "hidden": false
+      },
+      "cached": [
+        {
+          "url": "http://127.0.0.1:4185/assets/connect-R4x_wV-E.js",
+          "type": "text/javascript",
+          "bytes": 790
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/dist-DQJbmggL.js",
+          "type": "text/javascript",
+          "bytes": 49726
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-BeGpjAbq.js",
+          "type": "text/javascript",
+          "bytes": 33151
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-Beo_5XjP.js",
+          "type": "text/javascript",
+          "bytes": 693
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-CDg2XpU-.js",
+          "type": "text/javascript",
+          "bytes": 1383
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-DjvdTYWy.js",
+          "type": "text/javascript",
+          "bytes": 74
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-Y1lPQSip.js",
+          "type": "text/javascript",
+          "bytes": 141400
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/jev-iC41C1u0.js",
+          "type": "text/javascript",
+          "bytes": 7787
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/jev-nYdUGRNa.css",
+          "type": "text/css",
+          "bytes": 29844
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/main-DpC9yoc4.js",
+          "type": "text/javascript",
+          "bytes": 191639
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/search-worker-lWiNTD7Z.js",
+          "type": "text/javascript",
+          "bytes": 22846
+        }
+      ],
+      "events": [
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/"
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "request",
+          "url": "https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/assets/main-DpC9yoc4.js"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/assets/jev-iC41C1u0.js"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/assets/jev-nYdUGRNa.css"
+        },
+        {
+          "type": "failed",
+          "url": "https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap",
+          "error": {
+            "errorText": "net::ERR_INTERNET_DISCONNECTED"
+          }
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/assets/jev-nYdUGRNa.css",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/assets/jev-iC41C1u0.js",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/assets/main-DpC9yoc4.js",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/guide/phone/fleets.webp"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/guide/phone/hud.webp"
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/guide/phone/fleets.webp",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/guide/phone/hud.webp",
+          "status": 200,
+          "worker": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "rotation-restart",
+      "passed": true,
+      "state": {
+        "game": true,
+        "body": "SWARM\nDOCTRINE\n\nMOVE TOGETHER · RECRUIT EVERYONE\n\nPLAY\nFIELD GUIDE\nHOW TO PLAY\nSETTINGS",
+        "controller": true,
+        "ready": "complete",
+        "hidden": false
+      },
+      "cached": [
+        {
+          "url": "http://127.0.0.1:4185/assets/connect-R4x_wV-E.js",
+          "type": "text/javascript",
+          "bytes": 790
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/dist-DQJbmggL.js",
+          "type": "text/javascript",
+          "bytes": 49726
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-BeGpjAbq.js",
+          "type": "text/javascript",
+          "bytes": 33151
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-Beo_5XjP.js",
+          "type": "text/javascript",
+          "bytes": 693
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-CDg2XpU-.js",
+          "type": "text/javascript",
+          "bytes": 1383
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-DjvdTYWy.js",
+          "type": "text/javascript",
+          "bytes": 74
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-Y1lPQSip.js",
+          "type": "text/javascript",
+          "bytes": 141400
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/jev-iC41C1u0.js",
+          "type": "text/javascript",
+          "bytes": 7787
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/jev-nYdUGRNa.css",
+          "type": "text/css",
+          "bytes": 29844
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/main-DpC9yoc4.js",
+          "type": "text/javascript",
+          "bytes": 191639
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/search-worker-lWiNTD7Z.js",
+          "type": "text/javascript",
+          "bytes": 22846
+        }
+      ],
+      "events": [
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/"
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "request",
+          "url": "https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/assets/main-DpC9yoc4.js"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/assets/jev-iC41C1u0.js"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/assets/jev-nYdUGRNa.css"
+        },
+        {
+          "type": "failed",
+          "url": "https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap",
+          "error": {
+            "errorText": "net::ERR_INTERNET_DISCONNECTED"
+          }
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/assets/jev-nYdUGRNa.css",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/assets/jev-iC41C1u0.js",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/assets/main-DpC9yoc4.js",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/guide/phone/fleets.webp"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/guide/phone/hud.webp"
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/guide/phone/fleets.webp",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/guide/phone/hud.webp",
+          "status": 200,
+          "worker": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "name": "rotation-warm-reload",
+      "passed": true,
+      "state": {
+        "game": true,
+        "body": "SWARM\nDOCTRINE\n\nMOVE TOGETHER · RECRUIT EVERYONE\n\nPLAY\nFIELD GUIDE\nHOW TO PLAY\nSETTINGS",
+        "controller": true,
+        "ready": "complete",
+        "hidden": false
+      },
+      "cached": [
+        {
+          "url": "http://127.0.0.1:4185/assets/connect-R4x_wV-E.js",
+          "type": "text/javascript",
+          "bytes": 790
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/dist-DQJbmggL.js",
+          "type": "text/javascript",
+          "bytes": 49726
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-BeGpjAbq.js",
+          "type": "text/javascript",
+          "bytes": 33151
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-Beo_5XjP.js",
+          "type": "text/javascript",
+          "bytes": 693
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-CDg2XpU-.js",
+          "type": "text/javascript",
+          "bytes": 1383
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-DjvdTYWy.js",
+          "type": "text/javascript",
+          "bytes": 74
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/index.esm-Y1lPQSip.js",
+          "type": "text/javascript",
+          "bytes": 141400
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/search-worker-lWiNTD7Z.js",
+          "type": "text/javascript",
+          "bytes": 22846
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/jev-nYdUGRNa.css",
+          "type": "text/css",
+          "bytes": 29844
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/main-DpC9yoc4.js",
+          "type": "text/javascript",
+          "bytes": 191639
+        },
+        {
+          "url": "http://127.0.0.1:4185/assets/jev-iC41C1u0.js",
+          "type": "text/javascript",
+          "bytes": 7787
+        }
+      ],
+      "events": [
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/"
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "request",
+          "url": "https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/assets/main-DpC9yoc4.js"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/assets/jev-iC41C1u0.js"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/assets/jev-nYdUGRNa.css"
+        },
+        {
+          "type": "failed",
+          "url": "https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap",
+          "error": {
+            "errorText": "net::ERR_INTERNET_DISCONNECTED"
+          }
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/assets/jev-nYdUGRNa.css",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/assets/jev-iC41C1u0.js",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/assets/main-DpC9yoc4.js",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/guide/phone/fleets.webp"
+        },
+        {
+          "type": "request",
+          "url": "http://127.0.0.1:4185/guide/phone/hud.webp"
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/guide/phone/fleets.webp",
+          "status": 200,
+          "worker": true
+        },
+        {
+          "type": "response",
+          "url": "http://127.0.0.1:4185/guide/phone/hud.webp",
+          "status": 200,
+          "worker": true
+        }
+      ],
+      "errors": []
+    }
+  ]
+}

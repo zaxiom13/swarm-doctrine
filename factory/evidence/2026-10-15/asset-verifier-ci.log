@@ -1,0 +1,12 @@
+2026-10-15T23:06:04.3782590Z > Task :app:verifyAssetVerifier
+2026-10-15T23:06:04.3793734Z PASS asset verifier exact: exact match accepted
+2026-10-15T23:06:04.3794815Z PASS asset verifier missing-lazy: Debug APK is missing generated assets/assets/lazy.js
+2026-10-15T23:06:04.3796058Z PASS asset verifier missing-worker: Debug APK is missing generated assets/assets/search-worker.js
+2026-10-15T23:06:04.3797523Z PASS asset verifier altered-model: Debug APK has stale or altered assets/models/offline-policy.json
+2026-10-15T23:06:04.3798770Z PASS asset verifier obsolete-chunk: Debug APK has stale generated assets: assets/obsolete.js
+2026-10-15T23:06:04.3799975Z PASS asset verifier missing-required: Debug APK is missing assets/models/offline-policy.json
+2026-10-15T23:06:04.3801150Z PASS asset verifier broken-index: index.html references missing assets/assets/absent.js
+2026-10-15T23:06:04.3802313Z PASS asset verifier broken-manifest: manifest references missing assets/icons/absent.png
+2026-10-15T23:06:04.3803474Z PASS asset verifier no-css-reference: index.html must reference packaged JavaScript and CSS
+2026-10-15T23:06:04.8768918Z > Task :app:verifyDebugApk
+2026-10-15T23:06:04.8771036Z BUILD SUCCESSFUL in 1m 8s

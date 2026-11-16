@@ -1,0 +1,8 @@
+Source: https://github.com/zaxiom13/swarm-doctrine/actions/runs/39170993815/job/117803814521
+Head: 7e7b6eb511767b7b77c25cc6b6368a528010c6aa
+Raw job-log excerpt (failure, not a native Settings pass):
+2026-10-18T22:15:48.3301409Z com.zaxiom.swarmdoctrine.InstalledRecoveryTest > offlineRotationBackgroundCrashAndContinue[emulator-5554 - 15] [31mFAILED [0m
+2026-10-18T22:15:48.3310337Z 	java.lang.AssertionError: native arena tap casts Freeze
+2026-10-18T22:15:50.4205886Z Tests on emulator-5554 - 15 failed: There was 1 failure(s).
+2026-10-18T22:15:51.1260535Z > Task :app:connectedDebugAndroidTest FAILED
+2026-10-18T22:15:51.2475278Z BUILD FAILED in 2m 25s
