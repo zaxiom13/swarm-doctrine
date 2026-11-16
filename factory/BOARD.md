@@ -1,9 +1,15 @@
 # Swarm Doctrine board
 
-Updated 2026-11-15. Android remains a committed priority. Five improvement slots
+Updated 2026-11-16. Android remains a committed priority. Five improvement slots
 are occupied after #19 merged: #20/#22/#23/#26/#27. Maintain these before adding
 another batch. Merged code and archive/browser checks do not establish native
 installed-device readiness.
+
+The 2026-11-16 run was blocked because the managed execution workspace was unavailable
+at startup and after retry. GitHub catch-up confirmed main and all six open PR heads were
+unchanged, mergeable and had no submitted reviews or review threads. No source branches
+were changed; baseline, browser, Android and native lifecycle checks were not performed.
+See the [blocked-run evidence](evidence/2026-11-16/report.md).
 
 ## In review
 
@@ -171,4 +177,4 @@ this table reconciles their latest actual states.
    real canvas/worker/frame costs still need device measurements before tuning.
 
 Interactive lessons remain hidden. Rules, shared Simulation/Commander and trained
-policy remain unchanged. [Latest journal](journal/2026-11-15.md).
+policy remain unchanged. [Latest journal](journal/2026-11-16.md).
