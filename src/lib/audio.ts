@@ -35,9 +35,18 @@ export class AudioSystem {
             const master = this.ctx.createGain();
             master.gain.value = 0.8;
             master.connect(this.ctx.destination);
+
             this.sfxGain = this.ctx.createGain();
             this.sfxGain.gain.value = 0.5;
-            this.sfxGain.connect(master);
+            if (typeof this.ctx.createBiquadFilter === 'function') {
+                const sfxWarm = this.ctx.createBiquadFilter();
+                sfxWarm.type = 'lowpass';
+                sfxWarm.frequency.value = 4200;
+                this.sfxGain.connect(sfxWarm).connect(master);
+            } else {
+                this.sfxGain.connect(master);
+            }
+
             this.musicGain = this.ctx.createGain();
             this.musicGain.gain.value = 0.18;
             this.musicGain.connect(master);
@@ -83,7 +92,7 @@ export class AudioSystem {
             osc.type = type;
             osc.frequency.setValueAtTime(frequency, start);
             gain.gain.setValueAtTime(0.0001, start);
-            gain.gain.linearRampToValueAtTime(volume, start + Math.min(0.02, length / 4));
+            gain.gain.linearRampToValueAtTime(volume, start + Math.min(0.025, length / 4));
             gain.gain.exponentialRampToValueAtTime(0.0001, start + length);
             osc.connect(gain).connect(this.musicGain);
             osc.start(start);
@@ -94,9 +103,9 @@ export class AudioSystem {
             const now = this.ctx.currentTime + 0.05, chord = CHORDS[this.chord++ % CHORDS.length];
             // Soft sustained pad.
             chord.forEach(frequency => note(frequency, now, BAR_SECONDS * 0.95, 'sine', 0.045));
-            // Bouncy plucked arpeggio an octave up, with a high sparkle on the last beat.
+            // Gentle plucked arpeggio an octave up, with a high sparkle on the last beat.
             const step = BAR_SECONDS / ARPEGGIO.length, tones = [...chord, chord[0] * 2];
-            ARPEGGIO.forEach((index, i) => note(tones[index] * 2, now + i * step, step * 0.9, 'triangle', 0.05));
+            ARPEGGIO.forEach((index, i) => note(tones[index] * 2, now + i * step, step * 0.9, 'triangle', 0.045));
             note(tones[3] * 2, now + BAR_SECONDS - step, step * 1.5, 'sine', 0.025);
         };
         bar();
@@ -110,24 +119,32 @@ export class AudioSystem {
         osc.type = type;
         osc.frequency.setValueAtTime(frequency, start);
         if (bendTo) osc.frequency.exponentialRampToValueAtTime(Math.max(20, bendTo), start + duration);
-        gain.gain.setValueAtTime(volume, start);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.linearRampToValueAtTime(volume, start + Math.min(0.012, duration * 0.25));
         gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
         osc.connect(gain).connect(this.sfxGain);
         osc.start(start);
-        osc.stop(start + duration);
+        osc.stop(start + duration + 0.01);
     }
 
     playConversion(gained, combo = 1) {
-        if (!gained) { this.tone(180, 0.25, 'sawtooth', 0.08, 90); return; }
+        if (!gained) { this.tone(190, 0.22, 'triangle', 0.08, 105); return; }
         const frequency = SCALE[Math.min(SCALE.length - 1, (combo - 1) % SCALE.length)];
-        this.tone(frequency, 0.18, 'sine', 0.12);
-        this.tone(frequency * 1.5, 0.14, 'triangle', 0.06, null, 0.04);
+        this.tone(frequency, 0.18, 'sine', 0.11);
+        this.tone(frequency * 1.5, 0.14, 'triangle', 0.055, null, 0.035);
     }
 
-    playRally() { this.tone(520, 0.08, 'sine', 0.04, 380); }
-    playFreeze() { this.tone(900, 0.2, 'square', 0.1, 120); this.tone(450, 0.25, 'sawtooth', 0.08, 60, 0.06); }
-    playUpgrade() { [392, 523.25, 659.25, 783.99].forEach((f, i) => this.tone(f, 0.3, 'sine', 0.12, null, i * 0.08)); }
-    playVictory() { [440, 554.37, 659.25, 880].forEach((f, i) => this.tone(f, 0.5, 'triangle', 0.15, null, i * 0.12)); }
-    playDefeat() { [240, 210, 175, 130].forEach((f, i) => this.tone(f, 0.45, 'sawtooth', 0.1, f * 0.7, i * 0.14)); }
-    playClick() { this.tone(800, 0.03, 'sine', 0.04); }
+    playRally() { this.tone(540, 0.075, 'sine', 0.04, 410); }
+
+    playFreeze() {
+        // Crystalline high chime + soft cryo sub-drop
+        this.tone(1320, 0.24, 'sine', 0.08, 1760);
+        this.tone(880, 0.26, 'triangle', 0.07, 440, 0.02);
+        this.tone(240, 0.28, 'sine', 0.1, 75, 0.04);
+    }
+
+    playUpgrade() { [392, 523.25, 659.25, 783.99].forEach((f, i) => this.tone(f, 0.3, 'sine', 0.11, null, i * 0.075)); }
+    playVictory() { [440, 554.37, 659.25, 880].forEach((f, i) => this.tone(f, 0.5, 'triangle', 0.13, null, i * 0.11)); }
+    playDefeat() { [240, 210, 175, 130].forEach((f, i) => this.tone(f, 0.42, 'triangle', 0.1, f * 0.72, i * 0.13)); }
+    playClick() { this.tone(760, 0.028, 'sine', 0.035, 920); }
 }

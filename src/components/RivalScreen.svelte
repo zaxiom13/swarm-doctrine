@@ -13,7 +13,7 @@
         <PageHead eyebrow="Duel" title="Pick a rival" id="rival-title" />
         <div id="rival-grid" class="card-grid">
             {#each AVAILABLE_RIVALS as rival (rival.id)}
-                <Card icon={rival.icon} title={rival.name} text={rival.summary} class="tinted" style="--tint:{rival.color}" onclick={() => ui.pickRival(rival.id)} />
+                <Card icon={rival.icon} eyebrow={rival.tag} title={rival.name} text={rival.summary} class="tinted" style="--tint:{rival.color}" onclick={() => ui.pickRival(rival.id)} />
             {/each}
         </div>
     </div>

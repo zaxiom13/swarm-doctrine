@@ -9,7 +9,7 @@ import { settings, setSetting, resetSettings, SETTINGS_SCHEMA } from './settings
 import type { Lobby } from './net/lobby.ts';
 
 export type ScreenId =
-    | 'main-menu' | 'mode-screen' | 'lessons-screen' | 'guide-screen' | 'online-screen' | 'help-screen'
+    | 'main-menu' | 'mode-screen' | 'lessons-screen' | 'guide-screen' | 'online-screen'
     | 'team-select-screen' | 'rival-screen' | 'settings-screen' | 'game-screen';
 export type OverlayId = 'pause-overlay' | 'result-overlay' | 'upgrade-overlay' | 'intro-overlay';
 
@@ -78,7 +78,7 @@ export class UIManager {
 
     // Dialogs
     intro = $state<IntroContent>({ eyebrow: '', title: '', description: '', instruction: '', secondary: '' });
-    result = $state({ title: '', quote: '', stats: [] as [string, string][], primary: '', replay: false });
+    result = $state({ title: '', quote: '', stats: [] as [string, string][], primary: '', replay: false, won: false });
     upgrades = $state.raw<UpgradeChoice[]>([]);
     invite = $state<{ name: string } | null>(null);
     lobbyView = $state.raw<{ available: boolean; state: string; text: string; name: string; region: string; peers: PeerRow[] }>({
@@ -245,11 +245,23 @@ export class UIManager {
             for (const key of [...PROGRESS_KEYS, ...MODES.map(mode => RECORD_PREFIX + mode.id), RECORD_PREFIX + 'duel']) localStorage.removeItem(key);
         } catch { /* Storage unavailable. */ }
         this.game.tutorial.completed.clear();
+        this.refreshContinue();
         this.showRecords();
         this.toast('Progress and records cleared.');
     }
 
     // Records ----------------------------------------------------------------------
+
+    modeBest(id: string): string {
+        // Touch reactive telemetry fields so clearing/saving updates badges.
+        void this.records;
+        const checkpoint = id === 'levels' && this.continueLabel ? this.game?.loadCheckpoint() : null;
+        let best = 0;
+        try { best = Number(localStorage.getItem(RECORD_PREFIX + id)) || 0; } catch { /* Optional. */ }
+        if (checkpoint && best) return `Sector ${checkpoint.level} · ${best.toLocaleString()}`;
+        if (checkpoint) return `Sector ${checkpoint.level}`;
+        return best ? `Best ${best.toLocaleString()}` : '';
+    }
 
     saveRecord(score: number) {
         if (this.game.practice || !score) return;
@@ -518,6 +530,7 @@ export class UIManager {
             stats,
             primary: !won ? 'Retry' : practice ? (game.tutorial.index < game.tutorial.lessonCount - 1 ? 'Next lesson' : 'Pick a mode') : levels ? 'Next sector' : 'Again',
             replay: won && practice,
+            won,
         };
         this.resultWon = won;
         if (won) this.haptic([30, 40, 30]);

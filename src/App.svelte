@@ -7,7 +7,6 @@
     import LessonsScreen from './components/LessonsScreen.svelte';
     import GuideScreen from './components/GuideScreen.svelte';
     import OnlineScreen from './components/OnlineScreen.svelte';
-    import HelpScreen from './components/HelpScreen.svelte';
     import TeamSelectScreen from './components/TeamSelectScreen.svelte';
     import RivalScreen from './components/RivalScreen.svelte';
     import SettingsScreen from './components/SettingsScreen.svelte';
@@ -32,7 +31,6 @@
 <LessonsScreen />
 <GuideScreen />
 <OnlineScreen />
-<HelpScreen />
 <TeamSelectScreen />
 <RivalScreen />
 <SettingsScreen />

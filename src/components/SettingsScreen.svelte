@@ -2,11 +2,13 @@
     import Screen from './Screen.svelte';
     import PageHead from './PageHead.svelte';
     import SettingField from './SettingField.svelte';
+    import Icon from './Icon.svelte';
     import { SETTINGS_SCHEMA, SETTINGS_GROUPS } from '../lib/settings.ts';
     import { useUI } from './context.ts';
 
     const ui = useUI();
     const fields = (group: string) => SETTINGS_SCHEMA.filter(field => field.group === group);
+    const primaryGroups = Object.entries(SETTINGS_GROUPS).filter(([key]) => key !== 'physics');
 </script>
 
 <Screen id="settings-screen" labelledby="settings-title">
@@ -15,7 +17,7 @@
         <!-- Re-created after a reset so every control shows the stored defaults. -->
         {#key ui.settingsVersion}
             <form id="settings-form" class="settings" novalidate onsubmit={event => event.preventDefault()}>
-                {#each Object.entries(SETTINGS_GROUPS) as [group, title] (group)}
+                {#each primaryGroups as [group, title] (group)}
                     <fieldset class="settings-group">
                         <legend>{title}</legend>
                         {#each fields(group) as field (field.key)}
@@ -23,6 +25,17 @@
                         {/each}
                     </fieldset>
                 {/each}
+                <details class="settings-group settings-advanced">
+                    <summary>
+                        <span>Advanced · Swarm physics</span>
+                        <Icon name="chevron-down" size={18} class="chevron" />
+                    </summary>
+                    <div class="settings-advanced-body">
+                        {#each fields('physics') as field (field.key)}
+                            <SettingField {field} />
+                        {/each}
+                    </div>
+                </details>
             </form>
         {/key}
         <div class="page-actions">

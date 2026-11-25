@@ -29,18 +29,18 @@ export const DIFFICULTY = {
 };
 
 export const MODES = [
-    { id: 'levels', group: 'Solo', name: 'Levels', icon: '🗺️', color: '#ffb13b', summary: 'A new map each sector, harder each time.' },
-    { id: 'zen', group: 'Solo', name: 'Zen', icon: '🌿', color: '#4cf0a8', summary: 'Terrain shifts. No game over.' },
-    { id: 'survival', group: 'Solo', name: 'Survival', icon: '🛡️', color: '#ff5d7a', summary: 'Hold out against waves. Pick upgrades.' },
-    { id: 'duel', group: 'Duel', name: 'Duel', icon: '⚔️', color: '#6aa8ff', summary: 'One on one. Pick your rival.' },
-    { id: 'online', group: 'Duel', name: 'Online duel', icon: '🌐', color: '#4cf0a8', summary: 'Challenge real players in your region.' },
+    { id: 'levels', group: 'Solo', name: 'Levels', icon: 'levels', color: '#ffbe3b', summary: 'A new map each sector, harder each time.' },
+    { id: 'zen', group: 'Solo', name: 'Zen', icon: 'zen', color: '#4cf0a8', summary: 'Terrain shifts. No game over.' },
+    { id: 'survival', group: 'Solo', name: 'Survival', icon: 'survival', color: '#ff5a70', summary: 'Hold out against waves. Pick upgrades.' },
+    { id: 'duel', group: 'Duel', name: 'Duel', icon: 'duel', color: '#37e2d5', summary: 'One on one. Pick your rival.' },
+    { id: 'online', group: 'Duel', name: 'Online duel', icon: 'online', color: '#4cf0a8', summary: 'Challenge real players in your region.' },
 ];
 
 export const DUEL_RIVALS = [
-    { id: 'duel-hard', name: 'Hard bot', icon: '🤖', color: '#ff8a3d', summary: 'A fast scripted rival that reads the rules.' },
-    { id: 'duel-tactician', name: 'Tactician', icon: '🧠', color: '#c77dff', summary: 'Looks ahead by simulating each move.' },
-    { id: 'duel-local', name: 'Local rival', icon: '🎯', color: '#4cf0a8', summary: 'A trained policy. Runs offline.' },
-    { id: 'duel-jev', name: 'Jev', icon: '⚡', color: '#ffd23f', summary: 'Online decision model. Needs a key.', localOnly: true },
+    { id: 'duel-hard', name: 'Hard bot', tag: 'Scripted', icon: 'duel-hard', color: '#ff8a3d', summary: 'A fast scripted rival that reads the rules.' },
+    { id: 'duel-tactician', name: 'Tactician', tag: 'Lookahead', icon: 'duel-tactician', color: '#8f7bff', summary: 'Looks ahead by simulating each move.' },
+    { id: 'duel-local', name: 'Local rival', tag: 'Neural · Offline', icon: 'duel-local', color: '#4cf0a8', summary: 'A trained policy. Runs offline.' },
+    { id: 'duel-jev', name: 'Jev', tag: 'Cloud · Key', icon: 'duel-jev', color: '#ffbe3b', summary: 'Online decision model. Needs a key.', localOnly: true },
 ];
 
 /** Jev needs the local proxy (npm start), so hosted builds hide it. */
@@ -48,8 +48,8 @@ export const IS_LOCAL = ['localhost', '127.0.0.1', '[::1]'].includes(globalThis.
 export const AVAILABLE_RIVALS = DUEL_RIVALS.filter(rival => IS_LOCAL || !rival.localOnly);
 
 export const LEVEL_ENEMIES = [
-    { id: 'ai', name: 'AI rivals', icon: '🔥', color: '#ff5d7a', summary: 'Rival fleets rally, recruit and freeze like you.' },
-    { id: 'passive', name: 'Passive rivals', icon: '😴', color: '#6aa8ff', summary: 'Rival fleets drift and only fight back up close.' },
+    { id: 'ai', name: 'AI rivals', icon: 'ai', color: '#ff5a70', summary: 'Rival fleets rally, recruit and freeze like you.' },
+    { id: 'passive', name: 'Passive rivals', icon: 'passive', color: '#37e2d5', summary: 'Rival fleets drift and only fight back up close.' },
 ];
 export const LEVEL_ENEMY_IDS = LEVEL_ENEMIES.map(option => option.id);
 
@@ -58,17 +58,17 @@ export const LEVEL_ENEMY_IDS = LEVEL_ENEMIES.map(option => option.id);
  * to one team's modifiers, so it lasts for the current match only.
  */
 export const UPGRADES = [
-    { id: 'faster-recruitment', name: 'Faster recruitment', icon: '🧬', category: 'Offense', description: 'Your recruiting is 35% faster, up to its speed limit.',
+    { id: 'faster-recruitment', name: 'Faster recruitment', icon: 'faster-recruitment', category: 'Offense', description: 'Your recruiting is 35% faster, up to its speed limit.',
         apply: mods => { mods.pressure = Math.min(mods.pressure / 0.65, mods.pressure * 2.25); } },
-    { id: 'stronger-rally', name: 'Stronger Rally', icon: '🛰️', category: 'Tactics', description: 'Rally pulls 40% harder and pushes rivals from 50% farther away.',
+    { id: 'stronger-rally', name: 'Stronger Rally', icon: 'stronger-rally', category: 'Tactics', description: 'Rally pulls 40% harder and pushes rivals from 50% farther away.',
         apply: mods => { mods.rallyRadius *= 1.5; mods.rallyForce *= 1.4; } },
-    { id: 'fleet-defense', name: 'Fleet defense', icon: '🛡️', category: 'Defense', description: 'Rivals need 50% more nearby ships to recruit yours.',
+    { id: 'fleet-defense', name: 'Fleet defense', icon: 'fleet-defense', category: 'Defense', description: 'Rivals need 50% more nearby ships to recruit yours.',
         apply: mods => { mods.resist *= 1.5; } },
-    { id: 'chain-reaction', name: 'Chain reaction', icon: '⚡', category: 'Offense', description: 'Each recruit helps convert another nearby rival.',
+    { id: 'chain-reaction', name: 'Chain reaction', icon: 'chain-reaction', category: 'Offense', description: 'Each recruit helps convert another nearby rival.',
         apply: mods => { mods.chain = true; } },
-    { id: 'reinforcements', name: 'Reinforcements', icon: '🛸', category: 'Logistics', description: 'Add 25 ships beside your fleet.',
+    { id: 'reinforcements', name: 'Reinforcements', icon: 'reinforcements', category: 'Logistics', description: 'Add 25 ships beside your fleet.',
         apply: (mods, sim, team) => { sim.spawnNear(team, 25); } },
-    { id: 'wider-freeze', name: 'Wider Freeze', icon: '🌐', category: 'Tactics', description: 'Freeze reaches 40% farther and lasts 1.5 seconds longer.',
+    { id: 'wider-freeze', name: 'Wider Freeze', icon: 'wider-freeze', category: 'Tactics', description: 'Freeze reaches 40% farther and lasts 1.5 seconds longer.',
         apply: mods => { mods.freezeRadius *= 1.4; mods.freezeDuration += 1.5; } },
 ];
 export const UPGRADE_LIMIT = 2;
