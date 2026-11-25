@@ -6,6 +6,8 @@ def hasReleaseKey = releaseEnvKeys.every { System.getenv(it)?.trim() }
 if (playRelease && !hasReleaseKey) {
     throw new GradleException('Play release requires SD_KEYSTORE, SD_KEYSTORE_PASSWORD, SD_KEY_ALIAS and SD_KEY_PASSWORD.')
 }
+def sdVersionCode = (System.getenv('SD_VERSION_CODE')?.trim() ?: '1').toInteger()
+def sdVersionName = System.getenv('SD_VERSION_NAME')?.trim() ?: '1.0.0'
 
 android {
     namespace 'com.zaxiom.swarmdoctrine'
@@ -16,8 +18,8 @@ android {
         applicationId 'com.zaxiom.swarmdoctrine'
         minSdk 26
         targetSdk 35
-        versionCode (System.getenv('SD_VERSION_CODE')?.trim() ?: '1').toInteger()
-        versionName (System.getenv('SD_VERSION_NAME')?.trim() ?: '1.0.0')
+        versionCode sdVersionCode
+        versionName sdVersionName
     }
 
     signingConfigs {
