@@ -32,7 +32,7 @@ public final class MainActivity extends ComponentActivity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         web = new WebView(this);
-        web.setBackgroundColor(0xff0b0624);
+        web.setBackgroundColor(0xff060913);
         FrameLayout frame = new FrameLayout(this);
         frame.addView(web, new FrameLayout.LayoutParams(-1, -1));
         setContentView(frame);

@@ -1,13 +1,26 @@
-name: Android debug build
+name: Android release build
+
 on:
+  push:
+    branches: [main]
   pull_request:
     paths: ['android/**', 'src/**', 'public/**', 'index.html', 'connect.html', 'vite.config.ts', 'package*.json', '.github/workflows/android.yml']
   workflow_dispatch:
+
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  apk:
+  build:
+    name: Build APK and AAB
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SD_VERSION_CODE: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,8 +40,78 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - run: gradle -p android lintDebug assembleDebug
+
+      - name: Version
+        run: |
+          echo "SD_VERSION_NAME=1.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+          echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      - name: Configure release signing (optional)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+            echo "SD_KEYSTORE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+            echo "SD_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "SD_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+            echo "SD_KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
+            echo "SIGNING_MODE=release" >> "$GITHUB_ENV"
+          else
+            echo "SIGNING_MODE=debug-fallback" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build APK and App Bundle (AAB)
+        run: gradle -p android lintRelease assembleRelease bundleRelease
+
+      - name: Verify APK and AAB
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          test -s "$APK" && test -s "$AAB"
+          "$ANDROID_HOME"/build-tools/$(ls "$ANDROID_HOME"/build-tools | sort -V | tail -1)/apksigner verify --print-certs "$APK" | head -3
+          jarsigner -verify "$AAB"
+          unzip -l "$APK" | grep -q "assets/index.html"
+          unzip -l "$APK" | grep -q "assets/models/offline-policy.json"
+          unzip -l "$AAB" | grep -q "base/assets/index.html"
+          unzip -l "$AAB" | grep -q "base/assets/models/offline-policy.json"
+          cp "$APK" swarm-doctrine.apk
+          cp "$APK" "swarm-doctrine-${SD_VERSION_NAME}.apk"
+          cp "$AAB" swarm-doctrine.aab
+          cp "$AAB" "swarm-doctrine-${SD_VERSION_NAME}.aab"
+          echo "::notice::Built ${SD_VERSION_NAME} (${SIGNING_MODE}): APK $(du -h "$APK" | cut -f1), AAB $(du -h "$AAB" | cut -f1)"
+
       - uses: actions/upload-artifact@v4
         with:
-          name: swarm-doctrine-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: swarm-doctrine-android
+          retention-days: 30
+          path: |
+            swarm-doctrine-*.apk
+            swarm-doctrine-*.aab
+
+      - name: Publish GitHub Release
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-latest --yes --cleanup-tag 2>/dev/null || true
+          printf '%s\n' \
+            "**Swarm Doctrine ${SD_VERSION_NAME}** (versionCode \`${SD_VERSION_CODE}\`, commit \`${SHORT_SHA}\`, signing: \`${SIGNING_MODE}\`)." "" \
+            "- **Direct Android install (APK):** download \`swarm-doctrine.apk\` (or \`swarm-doctrine-${SD_VERSION_NAME}.apk\`) on your phone and open it to install." \
+            "- **Google Play App Bundle (AAB):** \`swarm-doctrine.aab\` (or \`swarm-doctrine-${SD_VERSION_NAME}.aab\`)." "" \
+            "To sign releases with your own Play upload key, configure repository secrets \`ANDROID_KEYSTORE_BASE64\`, \`ANDROID_KEYSTORE_PASSWORD\`, \`ANDROID_KEY_ALIAS\`, and \`ANDROID_KEY_PASSWORD\`." > release-notes.md
+          gh release create android-latest \
+            swarm-doctrine.apk \
+            "swarm-doctrine-${SD_VERSION_NAME}.apk" \
+            swarm-doctrine.aab \
+            "swarm-doctrine-${SD_VERSION_NAME}.aab" \
+            --target "$GITHUB_SHA" \
+            --title "Swarm Doctrine for Android (${SD_VERSION_NAME})" \
+            --notes-file release-notes.md
+
+      - name: Clean up keystore
+        if: always()
+        run: rm -f -- "$RUNNER_TEMP/release.jks"

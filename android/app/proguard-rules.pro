@@ -1,0 +1,2 @@
+-keep class com.zaxiom.swarmdoctrine.MainActivity { *; }
+-keepclassmembers class com.zaxiom.swarmdoctrine.MainActivity { *; }
